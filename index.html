@@ -2210,6 +2210,97 @@ input {
   }
 
 }
+
+/* =========================
+   TEMA DELLA SETTIMANA
+   ========================= */
+
+.weekly-theme-panel {
+  margin-bottom: 18px;
+}
+
+.weekly-theme-content {
+  margin-top: 4px;
+}
+
+.weekly-theme-title {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.weekly-theme-description {
+  color: #6f7685;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.weekly-theme-proposals {
+  margin-top: 16px;
+}
+
+.weekly-theme-proposals-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 10px;
+}
+
+.weekly-theme-proposal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(127, 127, 127, .15);
+}
+
+.weekly-theme-proposal-info {
+  min-width: 0;
+}
+
+.weekly-theme-proposal-title {
+  font-weight: 700;
+}
+
+.weekly-theme-proposal-year {
+  color: #6f7685;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.weekly-theme-empty {
+  color: #6f7685;
+  font-size: 14px;
+}
+
+/* =========================
+   TEMA CHIUSO
+   ========================= */
+
+.weekly-theme-closed {
+  color: #6f7685;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  .weekly-theme-title {
+    font-size: 21px;
+  }
+
+  .weekly-theme-proposal {
+    align-items: flex-start;
+  }
+
+}  
   
 </style>
 </head>
@@ -2552,6 +2643,85 @@ input {
   style="display:none;"
 >
 
+ <!-- =========================
+     TEMA DELLA SETTIMANA
+     ========================= -->
+
+<div class="panel weekly-theme-panel">
+
+  <div class="head">
+
+    <div>
+      <h2 id="weeklyThemeTitle">
+        Tema della settimana
+      </h2>
+
+      <div class="muted">
+        Proponi un film per il tema della settimana.
+      </div>
+    </div>
+
+    <button
+      id="themeProposalButton"
+      class="btn primary"
+      type="button"
+      onclick="openThemeProposalForm()"
+      style="display:none;"
+    >
+      Proponi per il tema
+    </button>
+
+  </div>
+
+  <div
+    id="weeklyThemeContent"
+    class="weekly-theme-content"
+  >
+    <div class="empty">
+      Caricamento tema…
+    </div>
+  </div>
+
+  <div
+  id="themeProposalForm"
+  class="proposals-form"
+  style="display:none; margin-top:18px;"
+>
+
+  <input
+    id="themeProposalTitle"
+    type="text"
+    placeholder="Titolo del film"
+    autocomplete="off"
+  >
+
+  <input
+    id="themeProposalYear"
+    type="text"
+    inputmode="numeric"
+    maxlength="4"
+    placeholder="Anno"
+    autocomplete="off"
+  >
+
+  <select id="themeProposalGenre">
+    <option value="">
+      Seleziona genere
+    </option>
+  </select>
+
+  <button
+    class="btn primary"
+    type="button"
+    onclick="submitThemeProposal()"
+  >
+    Invia proposta
+  </button>
+
+</div>
+  
+</div>
+  
   <!-- FORM NUOVA PROPOSTA -->
 
   <div class="panel proposals-form-panel">
@@ -2568,37 +2738,59 @@ input {
 
     <div class="proposals-form">
 
-      <input
-        id="proposalTitle"
-        type="text"
-        placeholder="Titolo del film"
-        autocomplete="off"
-      >
+  <input
+    id="proposalTitle"
+    type="text"
+    placeholder="Titolo del film"
+    autocomplete="off"
+  >
 
-      <input
-        id="proposalYear"
-        type="text"
-        inputmode="numeric"
-        maxlength="4"
-        placeholder="Anno"
-        autocomplete="off"
-      >
+  <input
+    id="proposalYear"
+    type="text"
+    inputmode="numeric"
+    maxlength="4"
+    placeholder="Anno"
+    autocomplete="off"
+  >
 
-      <select id="proposalGenre">
-        <option value="">
-          Seleziona genere
-        </option>
-      </select>
+  <select id="proposalGenre">
+    <option value="">
+      Seleziona genere
+    </option>
+  </select>
 
-      <button
-        class="btn primary"
-        onclick="submitProposal()"
-      >
-        Proponi
-      </button>
+  <div
+    style="
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      grid-column:1 / -1;
+    "
+  >
 
-    </div>
+    <button
+      type="button"
+      class="btn primary"
+      onclick="submitProposal()"
+    >
+      Proponi al club
+    </button>
 
+    <button
+      id="themeProposalButton"
+      type="button"
+      class="btn"
+      onclick="submitThemeProposal()"
+      style="display:none;"
+    >
+      Proponi al tema
+    </button>
+
+  </div>
+
+</div>
+    
     <div
       id="proposalError"
       class="proposal-message proposal-error"
@@ -3000,6 +3192,9 @@ const PROPOSAL_GENRES = [
 let proposals = [];
 let proposalsLoaded = false;  
 
+let weeklyTheme = null;
+let weeklyThemeLoaded = false;  
+
 function renderProposalGenres() {
 
   const select =
@@ -3020,6 +3215,277 @@ function renderProposalGenres() {
       `;
 
     }).join('');
+}
+
+async function loadWeeklyTheme() {
+
+  const titleBox =
+    document.getElementById('weeklyThemeTitle');
+
+  const contentBox =
+    document.getElementById('weeklyThemeContent');
+
+  if (!titleBox || !contentBox) {
+    return;
+  }
+
+  titleBox.textContent =
+    'Caricamento tema…';
+
+  contentBox.innerHTML =
+    '<div class="empty">Caricamento…</div>';
+
+  try {
+
+    const result =
+      await api(
+        'getWeeklyTheme',
+        []
+      );
+
+    weeklyTheme =
+      result || null;
+
+    weeklyThemeLoaded = true;
+
+    renderWeeklyTheme();
+
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento tema della settimana:',
+      error
+    );
+
+    titleBox.textContent =
+      'Tema della settimana';
+
+    contentBox.innerHTML = `
+      <div class="empty">
+        Errore nel caricamento del tema.
+      </div>
+    `;
+
+  }
+}  
+
+function renderWeeklyTheme() {
+
+  const titleBox =
+    document.getElementById('weeklyThemeTitle');
+
+  const contentBox =
+    document.getElementById('weeklyThemeContent');
+
+  const themeButton =
+    document.getElementById('themeProposalButton');
+
+  if (!titleBox || !contentBox) {
+    return;
+  }
+
+
+  /*
+   * Nessun tema attivo
+   */
+
+  if (!weeklyTheme) {
+
+    titleBox.textContent =
+      'Nessun tema attivo';
+
+    contentBox.innerHTML = `
+      <div class="weekly-theme-empty">
+        Al momento non c'è una settimana a tema.
+      </div>
+    `;
+
+    if (themeButton) {
+      themeButton.style.display = 'none';
+    }
+
+    return;
+  }
+
+
+  /*
+   * Nome del tema
+   */
+
+  titleBox.textContent =
+    weeklyTheme.nome || 'Tema della settimana';
+
+
+  /*
+   * Tema chiuso
+   */
+
+  if (
+    String(weeklyTheme.stato || '').toUpperCase() ===
+    'CHIUSA'
+  ) {
+
+    contentBox.innerHTML = `
+      <div class="weekly-theme-closed">
+        Questa settimana a tema è conclusa.
+      </div>
+    `;
+
+    if (themeButton) {
+      themeButton.style.display = 'none';
+    }
+
+    return;
+  }
+
+
+  /*
+   * Tema aperto:
+   * mostra il pulsante per proporre un film.
+   */
+
+  if (themeButton) {
+    themeButton.style.display = 'inline-flex';
+  }
+
+
+  /*
+   * Descrizione
+   */
+
+  const description =
+    weeklyTheme.descrizione ||
+    weeklyTheme.description ||
+    '';
+
+
+  /*
+   * Proposte del tema
+   */
+
+  const themeProposals =
+    Array.isArray(weeklyTheme.proposte)
+      ? weeklyTheme.proposte
+      : [];
+
+
+  let html = '';
+
+
+  if (description) {
+
+    html += `
+      <div class="weekly-theme-description">
+        ${esc(description)}
+      </div>
+    `;
+
+  }
+
+
+  html += `
+    <div class="weekly-theme-proposals">
+
+      <div class="weekly-theme-proposals-title">
+        Film proposti per questo tema
+      </div>
+  `;
+
+
+  if (!themeProposals.length) {
+
+    html += `
+      <div class="weekly-theme-empty">
+        Nessun film ancora proposto.
+      </div>
+    `;
+
+  } else {
+
+    html +=
+    themeProposals.map(function(proposal) {
+  
+      const rawTitle =
+        String(proposal.title || '').trim();
+  
+      const match =
+        rawTitle.match(
+          /^(.*)\s+\((\d{4})\)$/
+        );
+  
+      const title =
+        match
+          ? match[1]
+          : rawTitle;
+  
+      const year =
+        match
+          ? match[2]
+          : '';
+  
+      const genre =
+        String(
+          proposal.genere ||
+          proposal.genre ||
+          ''
+        ).trim();
+  
+      const genreInfo =
+        PROPOSAL_GENRES.find(function(item) {
+          return item.value === genre;
+        });
+  
+      const genreLabel =
+        genreInfo
+          ? genreInfo.label
+          : genre;
+  
+      return `
+        <div class="weekly-theme-proposal">
+  
+          <div class="weekly-theme-proposal-info">
+  
+            <div class="weekly-theme-proposal-title">
+              ${esc(title)}
+            </div>
+  
+            ${
+              year
+                ? `
+                  <div class="weekly-theme-proposal-year">
+                    (${esc(year)})
+                  </div>
+                `
+                : ''
+            }
+  
+            ${
+              genreLabel
+                ? `
+                  <div class="weekly-theme-proposal-genre">
+                    ${esc(genreLabel)}
+                  </div>
+                `
+                : ''
+            }
+  
+          </div>
+  
+        </div>
+      `;
+  
+    }).join('');
+
+  }
+
+
+  html += `
+    </div>
+  `;
+
+
+  contentBox.innerHTML =
+    html;
 }
 
 async function loadProposals() {
@@ -3338,7 +3804,231 @@ async function submitProposal() {
   }
 
 }  
+  
+function openThemeProposalForm() {
 
+  const form =
+    document.getElementById('themeProposalForm');
+
+  if (!form) {
+    return;
+  }
+
+  renderThemeProposalGenres();
+
+  form.style.display = 'flex';
+}
+
+function renderThemeProposalGenres() {
+
+  const select =
+    document.getElementById('themeProposalGenre');
+
+  if (!select) {
+    return;
+  }
+
+  select.innerHTML =
+    '<option value="">Seleziona genere</option>' +
+    PROPOSAL_GENRES.map(function(genre) {
+
+      return `
+        <option value="${esc(genre.value)}">
+          ${esc(genre.label)}
+        </option>
+      `;
+
+    }).join('');
+}
+  
+async function submitThemeProposal() {
+
+  const titleInput =
+    document.getElementById('themeProposalTitle');
+
+  const yearInput =
+    document.getElementById('themeProposalYear');
+
+  const genreInput =
+    document.getElementById('themeProposalGenre');
+
+  const errorBox =
+    document.getElementById('themeProposalError');
+
+  const successBox =
+    document.getElementById('themeProposalSuccess');
+
+
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+
+
+  /*
+   * Deve esserci un membro autenticato.
+   */
+
+  if (!session) {
+
+    showLogin();
+
+    return;
+  }
+
+
+  /*
+   * Deve esserci un tema attivo.
+   */
+
+  if (!weeklyTheme) {
+
+    errorBox.textContent =
+      'Non c’è una settimana a tema attiva.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  if (
+    String(weeklyTheme.stato || '').toUpperCase() ===
+    'CHIUSA'
+  ) {
+
+    errorBox.textContent =
+      'La settimana a tema è già chiusa.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  const title =
+    titleInput.value.trim();
+
+  const year =
+    yearInput.value.trim();
+
+  const genere =
+    genreInput.value.trim();
+
+
+  /*
+   * Validazione
+   */
+
+  if (!title) {
+
+    errorBox.textContent =
+      'Inserisci il titolo del film.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  if (!/^\d{4}$/.test(year)) {
+
+    errorBox.textContent =
+      'L’anno deve essere formato da 4 cifre.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  if (!genere) {
+
+    errorBox.textContent =
+      'Seleziona un genere.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  setSaving(true);
+
+
+  try {
+
+    const result =
+      await api(
+        'addThemeProposal',
+        [
+          weeklyTheme.id,
+          title,
+          year,
+          genere,
+          session.memberId,
+          session.token
+        ]
+      );
+
+
+       /*
+     * Pulisce il form.
+     */
+
+    titleInput.value = '';
+    yearInput.value = '';
+    genreInput.value = '';
+
+
+    /*
+     * Ricarica il tema dal server.
+     */
+
+    weeklyThemeLoaded = false;
+
+    await loadWeeklyTheme();
+
+    const form =
+      document.getElementById('themeProposalForm');
+    
+    if (form) {
+      form.style.display = 'none';
+    }
+
+
+    successBox.textContent =
+      'Film aggiunto al tema della settimana.';
+
+    successBox.style.display =
+      'block';
+
+
+  } catch (error) {
+
+    console.error(
+      'Errore aggiunta proposta al tema:',
+      error
+    );
+
+    errorBox.textContent =
+      error && error.message
+        ? error.message
+        : 'Errore durante l’inserimento.';
+
+    errorBox.style.display =
+      'block';
+
+
+  } finally {
+
+    setSaving(false);
+
+  }
+}  
 
 /* =========================
    LOGIN
@@ -4269,13 +4959,30 @@ if (page === 'proposals') {
 
   renderProposalGenres();
 
+
+  /*
+   * TEMA DELLA SETTIMANA
+   */
+   loadWeeklyTheme();
+  
+  if (!weeklyThemeLoaded) {
+    loadWeeklyTheme();
+  } else {
+    renderWeeklyTheme();
+  }
+
+
+  /*
+   * PROPOSTE DEL CLUB
+   */
+
   if (!proposalsLoaded) {
     loadProposals();
   } else {
     renderProposals();
   }
 
-}  
+}
 
   /* =========================
      GESTIONE ADMIN
