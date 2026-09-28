@@ -2092,6 +2092,124 @@ input {
     object-fit: cover !important;
   }
 }  
+
+/* =========================================================
+   PROPOSTE
+   ========================================================= */
+
+.proposals-form-panel {
+  overflow: hidden;
+}
+
+.proposals-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px minmax(180px, 220px) auto;
+  gap: 8px;
+  padding: 17px;
+}
+
+.proposals-form input,
+.proposals-form select {
+  width: 100%;
+  min-width: 0;
+}
+
+.proposals-form select {
+  background: #1e2230;
+  color: #fff;
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.proposal-message {
+  margin: 0 17px 17px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.proposal-error {
+  background: rgba(180, 70, 70, .12);
+  border: 1px solid rgba(220, 100, 100, .35);
+  color: #f0aaaa;
+}
+
+.proposal-success {
+  background: rgba(80, 170, 120, .12);
+  border: 1px solid rgba(100, 190, 140, .35);
+  color: #9fe0ba;
+}
+
+.proposals-list {
+  padding: 17px;
+}
+
+.proposals-genre {
+  margin-bottom: 20px;
+}
+
+.proposals-genre:last-child {
+  margin-bottom: 0;
+}
+
+.proposals-genre-title {
+  font-size: 14px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #d9b36c;
+  margin-bottom: 8px;
+}
+
+.proposals-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.proposal-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 11px 13px;
+  background: #1e2230;
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+}
+
+.proposal-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.proposal-year {
+  margin-left: 6px;
+  color: #9ca3b2;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+
+  .proposals-form {
+    grid-template-columns: 1fr 100px;
+  }
+
+  .proposals-form select {
+    grid-column: 1 / -1;
+  }
+
+  .proposals-form .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .proposals-items {
+    grid-template-columns: 1fr;
+  }
+
+}
   
 </style>
 </head>
@@ -2370,6 +2488,14 @@ input {
     </button>
 
     <button
+      class="main-nav-item"
+      data-page="proposals"
+      onclick="showPage('proposals')"
+    >
+      Proposte
+    </button>
+
+    <button
       id="adminNavItem"
       class="main-nav-item"
       onclick="showPage('admin')"
@@ -2416,6 +2542,108 @@ input {
 
   </div>
 </section>
+
+<!-- =========================
+     PAGINA PROPOSTE
+     ========================= -->
+
+<section
+  id="proposalsPage"
+  style="display:none;"
+>
+
+  <!-- FORM NUOVA PROPOSTA -->
+
+  <div class="panel proposals-form-panel">
+
+    <div class="head">
+      <div>
+        <h2>Proponi un film</h2>
+
+        <div class="muted">
+          Aggiungi un film alle proposte del club.
+        </div>
+      </div>
+    </div>
+
+    <div class="proposals-form">
+
+      <input
+        id="proposalTitle"
+        type="text"
+        placeholder="Titolo del film"
+        autocomplete="off"
+      >
+
+      <input
+        id="proposalYear"
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        placeholder="Anno"
+        autocomplete="off"
+      >
+
+      <select id="proposalGenre">
+        <option value="">
+          Seleziona genere
+        </option>
+      </select>
+
+      <button
+        class="btn primary"
+        onclick="submitProposal()"
+      >
+        Proponi
+      </button>
+
+    </div>
+
+    <div
+      id="proposalError"
+      class="proposal-message proposal-error"
+      style="display:none;"
+    ></div>
+
+    <div
+      id="proposalSuccess"
+      class="proposal-message proposal-success"
+      style="display:none;"
+    ></div>
+
+  </div>
+
+
+  <!-- LISTA PROPOSTE -->
+
+  <div
+    class="panel proposals-list-panel"
+    style="margin-top:18px;"
+  >
+
+    <div class="head">
+      <div>
+        <h2>Proposte del club</h2>
+
+        <div class="muted">
+          I film proposti, organizzati per genere.
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="proposalsList"
+      class="proposals-list"
+    >
+      <div class="empty">
+        Caricamento proposte…
+      </div>
+    </div>
+
+  </div>
+
+</section>    
+    
 <div id="homePage">
 
   <div class="cards"><div class="card"><div class="muted">Film del club</div><div class="big" id="filmsN">—</div></div><div class="card"><div class="muted">Membri</div><div class="big" id="membersN">—</div></div><div class="card"><div class="muted">Progresso del club</div><div class="big" id="avg">—</div></div></div>
@@ -2713,6 +2941,403 @@ let D = null;
 let saving = false;
 let session = null;
 let adminSession = null;
+
+const PROPOSAL_GENRES = [
+  {
+    value: 'AZIONE',
+    label: 'Azione'
+  },
+  {
+    value: 'AVVENTURA',
+    label: 'Avventura'
+  },
+  {
+    value: 'FANTASY',
+    label: 'Fantasy'
+  },
+  {
+    value: 'SCI-FI',
+    label: 'Sci-Fi'
+  },
+  {
+    value: 'COMEDY',
+    label: 'Comedy'
+  },
+  {
+    value: 'ROMANCE',
+    label: 'Romance'
+  },
+  {
+    value: 'DRAMA',
+    label: 'Drama'
+  },
+  {
+    value: 'HORROR',
+    label: 'Horror'
+  },
+  {
+    value: 'THRILLER / MYSTERY',
+    label: 'Thriller / Mystery'
+  },
+  {
+    value: 'CRIME',
+    label: 'Crime'
+  },
+  {
+    value: 'ANIMAZIONE',
+    label: 'Animazione'
+  },
+  {
+    value: 'MUSICA',
+    label: 'Musicali'
+  },
+  {
+    value: 'MISTI e ALTRI GENERI',
+    label: 'Misti e altri generi'
+  }
+];
+
+let proposals = [];
+let proposalsLoaded = false;  
+
+function renderProposalGenres() {
+
+  const select =
+    document.getElementById('proposalGenre');
+
+  if (!select) {
+    return;
+  }
+
+  select.innerHTML =
+    '<option value="">Seleziona genere</option>' +
+    PROPOSAL_GENRES.map(function(genre) {
+
+      return `
+        <option value="${esc(genre.value)}">
+          ${esc(genre.label)}
+        </option>
+      `;
+
+    }).join('');
+}
+
+async function loadProposals() {
+
+  const box =
+    document.getElementById('proposalsList');
+
+  if (!box) {
+    return;
+  }
+
+  box.innerHTML =
+    '<div class="empty">Caricamento proposte…</div>';
+
+  try {
+
+    const result =
+      await api(
+        'getProposals',
+        []
+      );
+
+    proposals =
+      Array.isArray(result)
+        ? result
+        : [];
+
+    proposalsLoaded = true;
+
+    renderProposals();
+
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento proposte:',
+      error
+    );
+
+    box.innerHTML = `
+      <div class="empty">
+        Errore nel caricamento delle proposte.
+      </div>
+    `;
+
+  }
+
+}  
+
+function renderProposals() {
+
+  const box =
+    document.getElementById('proposalsList');
+
+  if (!box) {
+    return;
+  }
+
+  if (!proposals.length) {
+
+    box.innerHTML =
+      '<div class="empty">Nessuna proposta presente.</div>';
+
+    return;
+  }
+
+  const grouped = {};
+
+  proposals.forEach(function(proposal) {
+
+    const genre =
+      String(proposal.genere || '').trim();
+
+    if (!genre) {
+      return;
+    }
+
+    if (!grouped[genre]) {
+      grouped[genre] = [];
+    }
+
+    grouped[genre].push(proposal);
+
+  });
+
+
+  box.innerHTML =
+    PROPOSAL_GENRES
+      .filter(function(genre) {
+        return grouped[genre.value] &&
+               grouped[genre.value].length;
+      })
+      .map(function(genre) {
+
+        const items =
+          grouped[genre.value];
+
+        return `
+          <div class="proposals-genre">
+
+            <div class="proposals-genre-title">
+              ${esc(genre.label)}
+            </div>
+
+            <div class="proposals-items">
+
+              ${items.map(function(proposal) {
+
+                const rawTitle =
+                  String(proposal.title || '').trim();
+
+                /*
+                 * Le proposte nel foglio sono salvate
+                 * nel formato:
+                 *
+                 * Titolo (2024)
+                 */
+
+                const match =
+                  rawTitle.match(
+                    /^(.*)\s+\((\d{4})\)$/
+                  );
+
+                const title =
+                  match
+                    ? match[1]
+                    : rawTitle;
+
+                const year =
+                  match
+                    ? match[2]
+                    : '';
+
+                return `
+                  <div class="proposal-item">
+
+                    <div class="proposal-title">
+                      ${esc(title)}
+                    </div>
+
+                    ${
+                      year
+                        ? `
+                          <div class="proposal-year">
+                            (${esc(year)})
+                          </div>
+                        `
+                        : ''
+                    }
+
+                  </div>
+                `;
+
+              }).join('')}
+
+            </div>
+
+          </div>
+        `;
+
+      })
+      .join('');
+
+}
+
+async function submitProposal() {
+
+  const titleInput =
+    document.getElementById('proposalTitle');
+
+  const yearInput =
+    document.getElementById('proposalYear');
+
+  const genreInput =
+    document.getElementById('proposalGenre');
+
+  const errorBox =
+    document.getElementById('proposalError');
+
+  const successBox =
+    document.getElementById('proposalSuccess');
+
+
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+
+
+  /*
+   * Deve esserci un membro autenticato.
+   */
+
+  if (!session) {
+
+    showLogin();
+
+    return;
+  }
+
+
+  const title =
+    titleInput.value.trim();
+
+  const year =
+    yearInput.value.trim();
+
+  const genere =
+    genreInput.value.trim();
+
+
+  /*
+   * Validazione frontend
+   */
+
+  if (!title) {
+
+    errorBox.textContent =
+      'Inserisci il titolo del film.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  if (!/^\d{4}$/.test(year)) {
+
+    errorBox.textContent =
+      'L’anno deve essere formato da 4 cifre.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  if (!genere) {
+
+    errorBox.textContent =
+      'Seleziona un genere.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  setSaving(true);
+
+
+  try {
+
+    const result =
+      await api(
+        'addProposal',
+        [
+          title,
+          year,
+          genere,
+          session.token
+        ]
+      );
+
+
+    /*
+     * Aggiunge immediatamente la proposta
+     * alla lista locale.
+     */
+
+    proposals.push({
+      title: result.proposal,
+      genere: result.genere
+    });
+
+
+    /*
+     * Pulisce il form.
+     */
+
+    titleInput.value = '';
+    yearInput.value = '';
+    genreInput.value = '';
+
+
+    renderProposals();
+
+
+    successBox.textContent =
+      'Film aggiunto alle proposte.';
+
+    successBox.style.display =
+      'block';
+
+
+  } catch (error) {
+
+    console.error(
+      'Errore aggiunta proposta:',
+      error
+    );
+
+    errorBox.textContent =
+      error && error.message
+        ? error.message
+        : 'Errore durante l’inserimento.';
+
+    errorBox.style.display =
+      'block';
+
+
+  } finally {
+
+    setSaving(false);
+
+  }
+
+}  
 
 
 /* =========================
@@ -3570,6 +4195,9 @@ function showPage(page) {
   const rankingPage =
     document.getElementById('rankingPage');
 
+  const proposalsPage =
+  document.getElementById('proposalsPage');
+
   const adminPage =
     document.getElementById('adminPanel');
 
@@ -3589,6 +4217,10 @@ function showPage(page) {
     rankingPage.style.display = 'none';
   }
 
+  if (proposalsPage) {
+    proposalsPage.style.display = 'none';
+  }  
+  
   if (adminPage) {
     adminPage.style.display = 'none';
   }
@@ -3625,6 +4257,25 @@ function showPage(page) {
 
 }
 
+/* =========================
+   PROPOSTE
+   ========================= */
+
+if (page === 'proposals') {
+
+  if (proposalsPage) {
+    proposalsPage.style.display = 'block';
+  }
+
+  renderProposalGenres();
+
+  if (!proposalsLoaded) {
+    loadProposals();
+  } else {
+    renderProposals();
+  }
+
+}  
 
   /* =========================
      GESTIONE ADMIN
@@ -5684,6 +6335,7 @@ document.addEventListener("keydown", function(event) {
   }
 
 });
+
 
 
 </script>
