@@ -3211,6 +3211,284 @@ input {
   }
 
 }
+
+/* =========================================================
+   RIFINITURA GRAFICA LISTA PROPOSTE
+   ========================================================= */
+
+
+/* =========================
+   DISTACCO "TUTTI I FILM"
+   ========================= */
+
+/*
+ * "Tutti i film" deve essere percepito
+ * come elemento principale della lista.
+ */
+
+.proposals-all-button {
+  padding: 16px 18px;
+
+  border-radius: 14px;
+
+  background: rgba(217, 179, 108, .09);
+  border-color: rgba(217, 179, 108, .28);
+}
+
+.proposals-all-button:hover {
+  background: rgba(217, 179, 108, .14);
+  border-color: rgba(217, 179, 108, .40);
+}
+
+
+/*
+ * Più spazio tra "Tutti i film"
+ * e il primo genere.
+ */
+
+.proposals-genres {
+  margin-top: 16px;
+
+  gap: 5px;
+}
+
+
+/* =========================
+   RIQUADRI DEI GENERI
+   ========================= */
+
+/*
+ * I generi diventano leggermente
+ * più piccoli e meno importanti
+ * visivamente rispetto a "Tutti i film".
+ */
+
+.proposals-genre-button {
+  padding: 11px 14px;
+
+  border-radius: 10px;
+
+  background: rgba(127, 127, 127, .045);
+  border-color: rgba(127, 127, 127, .16);
+}
+
+.proposals-genre-button:hover {
+  background: rgba(127, 127, 127, .085);
+  border-color: rgba(127, 127, 127, .26);
+}
+
+.proposals-genre-button-main {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/*
+ * Contatore dei generi leggermente più piccolo.
+ */
+
+.proposals-genre-count {
+  min-width: 24px;
+  height: 24px;
+
+  padding: 0 6px;
+
+  font-size: 11px;
+}
+
+
+/* =========================
+   SPAZIATURA TRA I GENERI
+   ========================= */
+
+.proposals-genre {
+  margin: 0;
+}
+
+.proposals-genre + .proposals-genre {
+  margin-top: 2px;
+}
+
+
+/* =========================
+   LISTA FILM DEL GENERE
+   ========================= */
+
+.proposals-items {
+  margin-top: 5px;
+  margin-bottom: 3px;
+
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+
+/* =========================
+   "TUTTI I FILM" — CONTENUTO
+   ========================= */
+
+.proposals-all-container {
+  margin-top: 10px;
+}
+
+
+/*
+ * Maggiore separazione tra titolo,
+ * anno e genere nella lista completa.
+ */
+
+.proposals-all-item {
+  padding: 11px 8px;
+}
+
+.proposals-all-item .proposal-year {
+  margin-left: 10px;
+}
+
+.proposals-all-item .proposal-all-genre {
+  margin-left: 14px;
+}
+
+
+/* =========================
+   ICONE / FRECCE
+   ========================= */
+
+/*
+ * Manteniamo le frecce centrate
+ * verticalmente nei rispettivi riquadri.
+ */
+
+.proposals-all-button-icon,
+.proposals-genre-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  line-height: 1;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  /*
+   * "Tutti i film" rimane chiaramente
+   * più importante dei generi.
+   */
+
+  .proposals-all-button {
+    padding: 14px 14px;
+  }
+
+  /*
+   * Più spazio prima dei generi.
+   */
+
+  .proposals-genres {
+    margin-top: 15px;
+
+    gap: 4px;
+  }
+
+  /*
+   * Generi più compatti.
+   */
+
+  .proposals-genre-button {
+    padding: 10px 13px;
+
+    border-radius: 9px;
+  }
+
+  .proposals-genre-button-main {
+    font-size: 12px;
+  }
+
+  .proposals-genre-count {
+    min-width: 23px;
+    height: 23px;
+
+    font-size: 10px;
+  }
+
+  /*
+   * Freccia perfettamente centrata
+   * nel riquadro del genere.
+   */
+
+  .proposals-genre-arrow {
+    width: 21px;
+    height: 21px;
+
+    flex: 0 0 21px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0;
+    padding: 0;
+
+    line-height: 1;
+  }
+
+  /*
+   * Icona del filtro:
+   * dimensione del pulsante fissa e
+   * centratura assoluta dell'icona.
+   */
+
+  .proposals-filter-button {
+    width: 40px;
+    height: 38px;
+
+    min-width: 40px;
+    min-height: 38px;
+
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .proposals-filter-button span:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    line-height: 1;
+  }
+
+  /*
+   * Nella lista "Tutti i film":
+   * maggiore spazio tra anno e genere.
+   */
+
+  .proposals-all-item .proposal-year {
+    margin-left: 9px;
+  }
+
+  .proposals-all-item .proposal-all-genre {
+    margin-left: 13px;
+  }
+
+}  
   
 
   
