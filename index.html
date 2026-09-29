@@ -3240,7 +3240,7 @@ const PROPOSAL_GENRES = [
 let proposals = [];
 let proposalsLoaded = false;  
 
-let weeklyTheme = null;
+let weeklyTheme = [];
 let weeklyThemeLoaded = false;  
 
 function renderProposalGenres() {
@@ -3265,7 +3265,7 @@ function renderProposalGenres() {
     }).join('');
 }
 
-async function loadWeeklyTheme() {
+async function loadWeeklyThemes() {
 
   const titleBox =
     document.getElementById('weeklyThemeTitle');
@@ -3278,7 +3278,7 @@ async function loadWeeklyTheme() {
   }
 
   titleBox.textContent =
-    'Caricamento tema…';
+    'Temi della settimana';
 
   contentBox.innerHTML =
     '<div class="empty">Caricamento…</div>';
@@ -3287,42 +3287,44 @@ async function loadWeeklyTheme() {
 
     const result =
       await api(
-        'getWeeklyTheme',
+        'getWeeklyThemes',
         []
       );
 
     console.log(
-      'RISPOSTA getWeeklyTheme:',
+      'RISPOSTA getWeeklyThemes:',
       result
     );
 
-    weeklyTheme =
-      result || null;
+    weeklyThemes =
+      Array.isArray(result)
+        ? result
+        : [];
 
-    weeklyThemeLoaded = true;
+    weeklyThemesLoaded = true;
 
-    renderWeeklyTheme();
+    renderWeeklyThemes();
 
   } catch (error) {
 
     console.error(
-      'Errore caricamento tema della settimana:',
+      'Errore caricamento temi della settimana:',
       error
     );
 
     titleBox.textContent =
-      'Tema della settimana';
+      'Temi della settimana';
 
     contentBox.innerHTML = `
       <div class="empty">
-        Errore nel caricamento del tema.
+        Errore nel caricamento dei temi.
       </div>
     `;
 
   }
-}  
+}
 
-function renderWeeklyTheme() {
+function renderWeeklyThemes() {
 
   const titleBox =
     document.getElementById('weeklyThemeTitle');
@@ -6455,7 +6457,7 @@ function renderAdminThemeWeeks(weeks) {
    TEMI — ADMIN
    ========================= */
 
-function renderAdminThemes() {
+async function renderAdminThemes() {
 
   console.log('RENDER ADMIN THEMES CHIAMATA');
 
@@ -6469,14 +6471,23 @@ function renderAdminThemes() {
   box.innerHTML =
     '<div class="empty">Caricamento temi...</div>';
 
-  api(
-    'getThemeWeeks',
-    []
-  )
-  .then(function(themes) {
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  try {
+
+    const themes =
+      await api(
+        'getAdminThemeWeeks',
+        [
+          adminSession.token
+        ]
+      );
 
     console.log(
-      'TEMI RICEVUTI DAL BACKEND:',
+      'TEMI ADMIN RICEVUTI DAL BACKEND:',
       themes
     );
 
@@ -6492,7 +6503,9 @@ function renderAdminThemes() {
       themes.map(function(theme) {
 
         const stato =
-          String(theme.stato || '').toUpperCase();
+          String(theme.stato || '')
+            .trim()
+            .toUpperCase();
 
         let statusClass = '';
 
@@ -6504,10 +6517,81 @@ function renderAdminThemes() {
           statusClass = 'theme-status-disabled';
         }
 
+        let actionButtons = `
+          <button
+            class="btn"
+            onclick="editAdminTheme('${esc(theme.id)}')"
+          >
+            Modifica
+          </button>
+        `;
+
+
+        /* =========================
+           ATTIVA
+           ========================= */
+
+        if (stato === 'ATTIVA') {
+
+          actionButtons += `
+            <button
+              class="btn"
+              onclick="closeAdminTheme('${esc(theme.id)}')"
+            >
+              Chiudi
+            </button>
+
+            <button
+              class="danger"
+              onclick="deactivateAdminTheme('${esc(theme.id)}')"
+            >
+              Disattiva
+            </button>
+          `;
+
+        }
+
+
+        /* =========================
+           DISATTIVA
+           ========================= */
+
+        if (stato === 'DISATTIVA') {
+
+          actionButtons += `
+            <button
+              class="btn primary"
+              onclick="reactivateAdminTheme('${esc(theme.id)}')"
+            >
+              Riattiva
+            </button>
+          `;
+
+        }
+
+
+        /* =========================
+           CHIUSA
+           ========================= */
+
+        if (stato === 'CHIUSA') {
+
+          actionButtons += `
+            <button
+              class="danger"
+              onclick="deleteAdminTheme('${esc(theme.id)}')"
+            >
+              Elimina
+            </button>
+          `;
+
+        }
+
+
         return `
           <div
             class="item"
-            id="admin-theme-${theme.id}"
+            id="admin-theme-${esc(theme.id)}"
           >
 
             <div
@@ -6516,13 +6600,14 @@ function renderAdminThemes() {
                 align-items:flex-start;
                 justify-content:space-between;
                 gap:12px;
+                flex-wrap:wrap;
               "
             >
 
               <div
                 style="
                   flex:1;
-                  min-width:0;
+                  min-width:200px;
                 "
               >
 
@@ -6563,32 +6648,7 @@ function renderAdminThemes() {
                 "
               >
 
-                <button
-                  class="btn"
-                  onclick="editAdminTheme('${theme.id}')"
-                >
-                  Modifica
-                </button>
-
-                ${
-                  stato === 'ATTIVA'
-                    ? `
-                      <button
-                        class="btn"
-                        onclick="closeAdminTheme('${theme.id}')"
-                      >
-                        Chiudi
-                      </button>
-
-                      <button
-                        class="danger"
-                        onclick="deactivateAdminTheme('${theme.id}')"
-                      >
-                        Disattiva
-                      </button>
-                    `
-                    : ''
-                }
+                ${actionButtons}
 
               </div>
 
@@ -6599,8 +6659,12 @@ function renderAdminThemes() {
 
       }).join("");
 
-  })
-  .catch(function(error) {
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento temi admin:',
+      error
+    );
 
     box.innerHTML =
       '<div class="empty">Errore nel caricamento dei temi.</div>';
@@ -6610,9 +6674,8 @@ function renderAdminThemes() {
       error.message
     );
 
-  });
+  }
 }
-
 
 /* =========================
    CREA TEMA
@@ -6978,6 +7041,109 @@ async function deactivateAdminTheme(themeId) {
     setSaving(false);
   }
 }
+
+/* =========================
+   RIATTIVA TEMA
+   ========================= */
+
+async function reactivateAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Vuoi riattivare questo tema?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'reactivateThemeWeek',
+      [
+        themeId,
+        adminSession.token
+      ]
+    );
+
+    await renderAdminThemes();
+
+    alert(
+      "Tema riattivato."
+    );
+
+  } catch (error) {
+
+    alert(
+      "Errore durante la riattivazione del tema: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}  
+
+/* =========================
+   ELIMINA TEMA
+   ========================= */
+
+async function deleteAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Vuoi eliminare definitivamente questo tema?\n\n" +
+      "L'operazione non può essere annullata."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'deleteThemeWeek',
+      [
+        themeId,
+        adminSession.token
+      ]
+    );
+
+    await renderAdminThemes();
+
+    alert(
+      "Tema eliminato."
+    );
+
+  } catch (error) {
+
+    alert(
+      "Errore durante l'eliminazione del tema: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}  
   
 /* =========================
    SALVA PIN
