@@ -2309,33 +2309,77 @@ input {
 .proposal-guide-link-wrap {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .proposal-guide-link {
   appearance: none;
-  border: 0;
-  background: none;
-  padding: 4px 0;
 
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(127, 127, 127, .28);
+  border-radius: 9px;
+
+  background: rgba(127, 127, 127, .07);
+
+  color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 
-  color: var(--accent);
   cursor: pointer;
 
-  text-decoration: none;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .15s ease;
+}
+
+.proposal-guide-link::before {
+  content: "?";
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: rgba(127, 127, 127, .16);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.proposal-guide-link::after {
+  content: "›";
+
+  font-size: 17px;
+  line-height: 1;
+
+  opacity: .55;
 }
 
 .proposal-guide-link:hover {
-  text-decoration: underline;
+  background: rgba(127, 127, 127, .13);
+  border-color: rgba(127, 127, 127, .42);
+
+  transform: translateY(-1px);
 }
 
+.proposal-guide-link:active {
+  transform: translateY(0);
+}
 
-/* =========================
-   MODAL GUIDA
-   ========================= */
+#proposalGuideModal {
+  background: rgba(0, 0, 0, .72);
+}  
 
 .proposal-guide-box {
   position: relative;
@@ -2346,17 +2390,13 @@ input {
   overflow: hidden;
 
   background: var(--panel);
+
+  border: 1px solid rgba(255, 255, 255, .10);
   border-radius: 18px;
 
-  box-shadow: 0 20px 60px rgba(0,0,0,.30);
-}
-
-.proposal-guide-content {
-  padding: 28px 30px 30px;
-
-  max-height: min(780px, calc(100vh - 40px));
-  overflow-y: auto;
-}
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, .45);
+}  
 
 .proposal-guide-title {
   padding-right: 36px;
@@ -2364,79 +2404,59 @@ input {
   font-size: 22px;
   font-weight: 800;
   line-height: 1.25;
-}
+
+  letter-spacing: -.2px;
+}  
 
 .proposal-guide-subtitle {
-  margin-top: 7px;
+  margin-top: 8px;
 
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-}
+}  
 
 .proposal-guide-section {
   margin-top: 24px;
-}
+  padding-top: 20px;
 
-.proposal-guide-section-title,
-.proposal-guide-choice-title {
-  margin-bottom: 12px;
-
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.proposal-guide-list {
-  margin: 0;
-  padding-left: 21px;
-}
-
-.proposal-guide-list li {
-  margin-bottom: 15px;
-
-  line-height: 1.6;
-}
-
-.proposal-guide-list li:last-child {
-  margin-bottom: 0;
-}
-
-.proposal-guide-choice {
-  margin-top: 26px;
-  padding: 17px 18px;
-
-  border-radius: 12px;
-  background: rgba(127,127,127,.08);
-}
-
-.proposal-guide-choice p {
-  margin: 0;
-
-  line-height: 1.6;
-}
+  border-top: 1px solid rgba(127, 127, 127, .18);
+}  
 
 
-/* MOBILE */
+/* =========================
+   MOBILE
+   ========================= */
 
 @media (max-width: 600px) {
 
   .proposal-guide-link-wrap {
-    justify-content: center;
+    justify-content: flex-end;
+    margin-bottom: 13px;
   }
 
-  .proposal-guide-content {
-    padding: 24px 20px 24px;
+  .proposal-guide-link {
+    gap: 6px;
+
+    padding: 6px 9px;
+
+    font-size: 11px;
+    font-weight: 600;
   }
 
-  .proposal-guide-title {
-    font-size: 20px;
+  .proposal-guide-link::before {
+    width: 18px;
+    height: 18px;
+
+    font-size: 11px;
   }
 
-  .proposal-guide-list li {
-    margin-bottom: 14px;
+  .proposal-guide-link::after {
+    font-size: 15px;
   }
 
-}  
+}
+
   
 </style>
 </head>
