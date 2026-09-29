@@ -6463,6 +6463,11 @@ function renderAdminThemes() {
   )
   .then(function(themes) {
 
+    console.log(
+      'TEMI RICEVUTI DAL BACKEND:',
+      themes
+    );
+
     if (!themes || !themes.length) {
 
       box.innerHTML =
