@@ -6265,6 +6265,183 @@ async function deleteAdminFilm(filmId) {
 }
 
 /* =========================
+   TEMI DELLA SETTIMANA — ADMIN
+   ========================= */
+
+async function loadAdminThemeWeeks() {
+
+  const box =
+    document.getElementById('themeAdminList');
+
+  if (!box) {
+    return;
+  }
+
+  box.innerHTML =
+    '<div class="empty">Caricamento temi…</div>';
+
+  try {
+
+    const result =
+      await api(
+        'getThemeWeeks',
+        []
+      );
+
+    renderAdminThemeWeeks(
+      Array.isArray(result)
+        ? result
+        : []
+    );
+
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento temi:',
+      error
+    );
+
+    box.innerHTML = `
+      <div class="empty">
+        Errore nel caricamento dei temi.
+      </div>
+    `;
+
+  }
+}
+
+
+function renderAdminThemeWeeks(weeks) {
+
+  const box =
+    document.getElementById('themeAdminList');
+
+  if (!box) {
+    return;
+  }
+
+  if (!weeks || !weeks.length) {
+
+    box.innerHTML =
+      '<div class="empty">Nessun tema creato.</div>';
+
+    return;
+  }
+
+  box.innerHTML =
+    weeks.map(function(theme) {
+
+      const stato =
+        String(theme.stato || '')
+          .trim()
+          .toUpperCase();
+
+      let statoLabel = stato;
+
+      if (stato === 'ATTIVA') {
+        statoLabel = 'ATTIVA';
+      } else if (stato === 'CHIUSA') {
+        statoLabel = 'CHIUSA';
+      } else if (stato === 'DISATTIVA') {
+        statoLabel = 'DISATTIVA';
+      }
+
+      return `
+        <div
+          class="item"
+          id="admin-theme-${esc(theme.id)}"
+        >
+
+          <div
+            style="
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              flex-wrap:wrap;
+            "
+          >
+
+            <div
+              style="
+                flex:1;
+                min-width:200px;
+              "
+            >
+
+              <div
+                style="
+                  font-weight:700;
+                  margin-bottom:4px;
+                "
+              >
+                ${esc(theme.nome)}
+              </div>
+
+              <div class="muted">
+                ${esc(theme.dataInizio)}
+                →
+                ${esc(theme.dataFine)}
+              </div>
+
+              <div
+                class="muted"
+                style="
+                  margin-top:4px;
+                  font-size:12px;
+                "
+              >
+                Stato: ${esc(statoLabel)}
+              </div>
+
+            </div>
+
+            <div
+              style="
+                display:flex;
+                gap:6px;
+                flex-wrap:wrap;
+              "
+            >
+
+              <button
+                class="btn"
+                onclick="editAdminTheme('${esc(theme.id)}')"
+              >
+                Modifica
+              </button>
+
+              ${
+                stato === 'ATTIVA'
+                  ? `
+                    <button
+                      class="btn"
+                      onclick="closeAdminTheme('${esc(theme.id)}')"
+                    >
+                      Chiudi
+                    </button>
+
+                    <button
+                      class="danger"
+                      onclick="deactivateAdminTheme('${esc(theme.id)}')"
+                    >
+                      Disattiva
+                    </button>
+                  `
+                  : ''
+              }
+
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join('');
+}  
+
+/* =========================
    TEMI — ADMIN
    ========================= */
 
