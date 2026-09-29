@@ -2702,6 +2702,289 @@ input {
 
 }  
 
+/* =========================
+   PROPOSTE DEL CLUB
+   ========================= */
+
+.proposals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+/* =========================
+   TUTTI I FILM
+   ========================= */
+
+.proposals-all-button {
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 15px 17px;
+
+  border: 1px solid rgba(127, 127, 127, .22);
+  border-radius: 13px;
+
+  background: rgba(127, 127, 127, .08);
+
+  color: inherit;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .12s ease;
+}
+
+.proposals-all-button:hover {
+  background: rgba(127, 127, 127, .13);
+}
+
+.proposals-all-button:active {
+  transform: scale(.99);
+}
+
+.proposals-all-button-main {
+  flex: 1;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.proposals-all-button-count,
+.proposals-genre-count {
+
+  min-width: 27px;
+  height: 27px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 7px;
+
+  box-sizing: border-box;
+
+  border-radius: 999px;
+
+  background: rgba(127, 127, 127, .15);
+
+  color: var(--muted);
+
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.proposals-all-button-icon,
+.proposals-genre-arrow {
+
+  font-size: 23px;
+  line-height: 1;
+
+  color: var(--muted);
+
+  transition:
+    transform .18s ease;
+}
+
+.proposals-all-button.is-open
+.proposals-all-button-icon,
+.proposals-genre.is-open
+.proposals-genre-arrow {
+
+  transform: rotate(90deg);
+}
+
+
+/* =========================
+   LISTA TUTTI I FILM
+   ========================= */
+
+.proposals-all-container {
+
+  margin-top: 10px;
+
+  padding: 14px;
+
+  border-radius: 13px;
+
+  background: rgba(127, 127, 127, .055);
+
+  border: 1px solid rgba(127, 127, 127, .15);
+}
+
+.proposals-all-list {
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.proposals-all-item {
+
+  padding: 11px 8px;
+}
+
+.proposal-all-genre {
+
+  margin-top: 3px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+
+/* =========================
+   GENERI
+   ========================= */
+
+.proposals-genres {
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+
+  margin-top: 3px;
+}
+
+.proposals-genre {
+
+  width: 100%;
+}
+
+
+/* Pulsante del genere */
+
+.proposals-genre-button {
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(127, 127, 127, .20);
+  border-radius: 12px;
+
+  background: rgba(127, 127, 127, .055);
+
+  color: inherit;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+}
+
+.proposals-genre-button:hover {
+  background: rgba(127, 127, 127, .10);
+}
+
+.proposals-genre-button-main {
+
+  flex: 1;
+
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.proposals-genre-arrow {
+
+  transition:
+    transform .18s ease;
+}
+
+
+/* =========================
+   FILM DEL GENERE
+   ========================= */
+
+.proposals-items {
+
+  margin: 7px 5px 4px;
+
+  padding: 7px 11px;
+
+  border-left: 2px solid rgba(127, 127, 127, .18);
+
+  background: rgba(127, 127, 127, .035);
+
+  border-radius: 0 9px 9px 0;
+}
+
+.proposals-items .proposal-item {
+
+  padding: 10px 5px;
+
+  border-bottom: 1px solid rgba(127, 127, 127, .10);
+}
+
+.proposals-items .proposal-item:last-child {
+  border-bottom: 0;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  .proposals-list {
+    gap: 9px;
+  }
+
+  .proposals-all-button {
+    padding: 13px 14px;
+  }
+
+  .proposals-all-button-main {
+    font-size: 14px;
+  }
+
+  .proposals-genre-button {
+    padding: 13px 14px;
+  }
+
+  .proposals-genre-button-main {
+    font-size: 13px;
+  }
+
+  .proposals-all-container {
+    padding: 10px;
+  }
+
+  .proposals-items {
+    margin-left: 4px;
+    margin-right: 4px;
+
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+}  
+
   
 </style>
 </head>
@@ -3690,7 +3973,7 @@ const PROPOSAL_GENRES = [
   },
   {
     value: 'MUSICA',
-    label: 'Musicali'
+    label: 'Musica'
   },
   {
     value: 'MISTI e ALTRI GENERI',
@@ -4096,76 +4379,311 @@ function renderProposals() {
   });
 
 
-  box.innerHTML =
-    PROPOSAL_GENRES
-      .filter(function(genre) {
-        return grouped[genre.value] &&
-               grouped[genre.value].length;
-      })
-      .map(function(genre) {
+  /*
+   * Costruisce una singola voce film.
+   */
+  function renderProposalItem(proposal) {
 
-        const items =
-          grouped[genre.value];
+    const rawTitle =
+      String(proposal.title || '').trim();
+
+    const match =
+      rawTitle.match(/^(.*)\s+\((\d{4})\)$/);
+
+    const title =
+      match
+        ? match[1]
+        : rawTitle;
+
+    const year =
+      match
+        ? match[2]
+        : '';
+
+    return `
+      <div class="proposal-item">
+
+        <div class="proposal-title">
+          ${esc(title)}
+        </div>
+
+        ${
+          year
+            ? `
+              <div class="proposal-year">
+                (${esc(year)})
+              </div>
+            `
+            : ''
+        }
+
+      </div>
+    `;
+
+  }
+
+
+  /*
+   * Pulsante "Tutti i film".
+   */
+  let html = `
+    <button
+      type="button"
+      class="proposals-all-button"
+      onclick="toggleAllProposals()"
+      aria-expanded="false"
+    >
+      <span class="proposals-all-button-main">
+        Tutti i film
+      </span>
+
+      <span class="proposals-all-button-count">
+        ${proposals.length}
+      </span>
+
+      <span
+        class="proposals-all-button-icon"
+        aria-hidden="true"
+      >
+        ›
+      </span>
+    </button>
+
+    <div
+      id="allProposalsContainer"
+      class="proposals-all-container"
+      style="display:none;"
+    >
+    </div>
+
+    <div class="proposals-genres">
+  `;
+
+
+  /*
+   * Generi nell'ordine definito da PROPOSAL_GENRES.
+   */
+  PROPOSAL_GENRES
+    .filter(function(genre) {
+
+      return (
+        grouped[genre.value] &&
+        grouped[genre.value].length
+      );
+
+    })
+    .forEach(function(genre) {
+
+      const items =
+        grouped[genre.value];
+
+      html += `
+        <div
+          class="proposals-genre"
+          data-genre="${esc(genre.value)}"
+        >
+
+          <button
+            type="button"
+            class="proposals-genre-button"
+            onclick="toggleProposalGenre(this)"
+            aria-expanded="false"
+          >
+
+            <span class="proposals-genre-button-main">
+              ${esc(genre.label)}
+            </span>
+
+            <span class="proposals-genre-count">
+              ${items.length}
+            </span>
+
+            <span
+              class="proposals-genre-arrow"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+
+          </button>
+
+          <div
+            class="proposals-items"
+            style="display:none;"
+          >
+
+            ${items
+              .map(renderProposalItem)
+              .join('')}
+
+          </div>
+
+        </div>
+      `;
+
+    });
+
+
+  html += `
+    </div>
+  `;
+
+
+  box.innerHTML = html;
+
+}
+
+function toggleProposalGenre(button) {
+
+  if (!button) {
+    return;
+  }
+
+  const genreBox =
+    button.closest('.proposals-genre');
+
+  if (!genreBox) {
+    return;
+  }
+
+  const items =
+    genreBox.querySelector('.proposals-items');
+
+  if (!items) {
+    return;
+  }
+
+  const isOpen =
+    items.style.display !== 'none';
+
+  /*
+   * Chiude/apre soltanto questo genere.
+   */
+  items.style.display =
+    isOpen
+      ? 'none'
+      : 'block';
+
+  button.setAttribute(
+    'aria-expanded',
+    String(!isOpen)
+  );
+
+  genreBox.classList.toggle(
+    'is-open',
+    !isOpen
+  );
+}
+
+
+function toggleAllProposals() {
+
+  const container =
+    document.getElementById(
+      'allProposalsContainer'
+    );
+
+  const button =
+    document.querySelector(
+      '.proposals-all-button'
+    );
+
+  if (!container || !button) {
+    return;
+  }
+
+  const isOpen =
+    container.style.display !== 'none';
+
+  if (isOpen) {
+
+    container.style.display =
+      'none';
+
+    button.setAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+    button.classList.remove('is-open');
+
+    return;
+  }
+
+
+  /*
+   * Per ora costruiamo la lista completa.
+   * La ricerca e i filtri verranno aggiunti
+   * nel passaggio successivo.
+   */
+  const allItems =
+    proposals
+      .map(function(proposal) {
+
+        const rawTitle =
+          String(
+            proposal.title || ''
+          ).trim();
+
+        const match =
+          rawTitle.match(
+            /^(.*)\s+\((\d{4})\)$/
+          );
+
+        const title =
+          match
+            ? match[1]
+            : rawTitle;
+
+        const year =
+          match
+            ? match[2]
+            : '';
+
+        const genre =
+          String(
+            proposal.genere || ''
+          ).trim();
+
+        const genreInfo =
+          PROPOSAL_GENRES.find(
+            function(item) {
+              return item.value === genre;
+            }
+          );
+
+        const genreLabel =
+          genreInfo
+            ? genreInfo.label
+            : genre;
+
 
         return `
-          <div class="proposals-genre">
+          <div class="proposal-item proposals-all-item">
 
-            <div class="proposals-genre-title">
-              ${esc(genre.label)}
+            <div class="proposal-title">
+              ${esc(title)}
             </div>
 
-            <div class="proposals-items">
-
-              ${items.map(function(proposal) {
-
-                const rawTitle =
-                  String(proposal.title || '').trim();
-
-                /*
-                 * Le proposte nel foglio sono salvate
-                 * nel formato:
-                 *
-                 * Titolo (2024)
-                 */
-
-                const match =
-                  rawTitle.match(
-                    /^(.*)\s+\((\d{4})\)$/
-                  );
-
-                const title =
-                  match
-                    ? match[1]
-                    : rawTitle;
-
-                const year =
-                  match
-                    ? match[2]
-                    : '';
-
-                return `
-                  <div class="proposal-item">
-
-                    <div class="proposal-title">
-                      ${esc(title)}
-                    </div>
-
-                    ${
-                      year
-                        ? `
-                          <div class="proposal-year">
-                            (${esc(year)})
-                          </div>
-                        `
-                        : ''
-                    }
-
+            ${
+              year
+                ? `
+                  <div class="proposal-year">
+                    (${esc(year)})
                   </div>
-                `;
+                `
+                : ''
+            }
 
-              }).join('')}
-
-            </div>
+            ${
+              genreLabel
+                ? `
+                  <div class="proposal-all-genre">
+                    ${esc(genreLabel)}
+                  </div>
+                `
+                : ''
+            }
 
           </div>
         `;
@@ -4173,8 +4691,26 @@ function renderProposals() {
       })
       .join('');
 
-}
 
+  container.innerHTML = `
+    <div class="proposals-all-list">
+      ${allItems}
+    </div>
+  `;
+
+
+  container.style.display =
+    'block';
+
+  button.setAttribute(
+    'aria-expanded',
+    'true'
+  );
+
+  button.classList.add('is-open');
+
+}  
+  
 async function submitProposal() {
 
   const titleInput =
