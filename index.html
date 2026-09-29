@@ -2212,7 +2212,7 @@ input {
 }
 
 /* =========================
-   TEMA DELLA SETTIMANA
+   DELLA SETTIMANA
    ========================= */
 
 .weekly-theme-panel {
@@ -2277,7 +2277,7 @@ input {
 }
 
 /* =========================
-   TEMA CHIUSO
+   CHIUSO
    ========================= */
 
 .weekly-theme-closed {
@@ -2298,6 +2298,142 @@ input {
 
   .weekly-theme-proposal {
     align-items: flex-start;
+  }
+
+}  
+
+/* =========================
+   GUIDA PROPOSTE
+   ========================= */
+
+.proposal-guide-link-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.proposal-guide-link {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 4px 0;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  color: var(--accent);
+  cursor: pointer;
+
+  text-decoration: none;
+}
+
+.proposal-guide-link:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================
+   MODAL GUIDA
+   ========================= */
+
+.proposal-guide-box {
+  position: relative;
+
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(780px, calc(100vh - 40px));
+
+  overflow: hidden;
+
+  background: var(--panel);
+  border-radius: 18px;
+
+  box-shadow: 0 20px 60px rgba(0,0,0,.30);
+}
+
+.proposal-guide-content {
+  padding: 28px 30px 30px;
+
+  max-height: min(780px, calc(100vh - 40px));
+  overflow-y: auto;
+}
+
+.proposal-guide-title {
+  padding-right: 36px;
+
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.proposal-guide-subtitle {
+  margin-top: 7px;
+
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.proposal-guide-section {
+  margin-top: 24px;
+}
+
+.proposal-guide-section-title,
+.proposal-guide-choice-title {
+  margin-bottom: 12px;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.proposal-guide-list {
+  margin: 0;
+  padding-left: 21px;
+}
+
+.proposal-guide-list li {
+  margin-bottom: 15px;
+
+  line-height: 1.6;
+}
+
+.proposal-guide-list li:last-child {
+  margin-bottom: 0;
+}
+
+.proposal-guide-choice {
+  margin-top: 26px;
+  padding: 17px 18px;
+
+  border-radius: 12px;
+  background: rgba(127,127,127,.08);
+}
+
+.proposal-guide-choice p {
+  margin: 0;
+
+  line-height: 1.6;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .proposal-guide-link-wrap {
+    justify-content: center;
+  }
+
+  .proposal-guide-content {
+    padding: 24px 20px 24px;
+  }
+
+  .proposal-guide-title {
+    font-size: 20px;
+  }
+
+  .proposal-guide-list li {
+    margin-bottom: 14px;
   }
 
 }  
@@ -2643,6 +2779,16 @@ input {
   style="display:none;"
 >
 
+  <div class="proposal-guide-link-wrap">
+    <button
+      type="button"
+      class="proposal-guide-link"
+      onclick="openProposalGuide()"
+    >
+      ? Come proporre correttamente un film
+    </button>
+  </div>
+
  <!-- =========================
      TEMI DELLA SETTIMANA
      ========================= -->
@@ -2653,11 +2799,11 @@ input {
 
     <div>
       <h2 id="weeklyThemeTitle">
-        Temi della settimana
+        Settimana a tema
       </h2>
 
       <div class="muted">
-        Proponi un film per uno dei temi attivi.
+        Proponi un film per la settimana a tema.
       </div>
     </div>
 
@@ -2670,13 +2816,13 @@ input {
   >
 
     <div class="empty">
-      Caricamento temi…
+      Caricamento…
     </div>
 
   </div>
 
 
-  <!-- FORM PROPOSTA TEMA -->
+  <!-- FORM PROPOSTA -->
 
   <div
     id="themeProposalForm"
@@ -3135,10 +3281,10 @@ input {
     class="head"
     style="margin-top:32px;"
   >
-    <h2>Temi della settimana</h2>
+    <h2>Settimana a tema</h2>
   </div>
 
-  <!-- CREA TEMA -->
+  <!-- CREA -->
 
   <div class="film-admin-form">
 
@@ -3324,7 +3470,7 @@ async function loadWeeklyThemes() {
   }
 
   titleBox.textContent =
-    'Temi della settimana';
+    'Settimana a tema';
 
   contentBox.innerHTML =
     '<div class="empty">Caricamento…</div>';
@@ -3354,16 +3500,16 @@ async function loadWeeklyThemes() {
   } catch (error) {
 
     console.error(
-      'Errore caricamento temi della settimana:',
+      'Errore caricamento settimana a tema:',
       error
     );
 
     titleBox.textContent =
-      'Temi della settimana';
+      'Settimana a tema';
 
     contentBox.innerHTML = `
       <div class="empty">
-        Errore nel caricamento dei temi.
+        Errore nel caricamento della settimana a tema.
       </div>
     `;
 
@@ -3383,10 +3529,10 @@ function renderWeeklyThemes() {
   }
 
   titleBox.textContent =
-    'Temi della settimana';
+    'Settimana a tema';
 
   /*
-   * Nessun tema attivo
+   * Nessun attivo
    */
   if (
     !Array.isArray(weeklyThemes) ||
@@ -3583,7 +3729,7 @@ function renderWeeklyThemes() {
           <div class="weekly-theme-proposals">
 
             <div class="weekly-theme-proposals-title">
-              Film proposti per questo tema
+              Film proposti per questa settimana a tema
             </div>
 
             ${proposalsHtml}
@@ -4111,7 +4257,7 @@ async function submitThemeProposal() {
   if (!theme) {
 
     errorBox.textContent =
-      'Tema della settimana non trovato.';
+      'Settimana a tema non trovata.';
 
     errorBox.style.display =
       'block';
@@ -4251,7 +4397,7 @@ async function submitThemeProposal() {
     if (successBox) {
 
       successBox.textContent =
-        'Film aggiunto al tema "' +
+        'Film aggiunto alla settimana a tema "' +
         result.theme +
         '".';
 
@@ -6483,7 +6629,7 @@ async function loadAdminThemeWeeks() {
   }
 
   box.innerHTML =
-    '<div class="empty">Caricamento temi…</div>';
+    '<div class="empty">Caricamento settimana a tema…</div>';
 
   try {
 
@@ -6507,13 +6653,13 @@ async function loadAdminThemeWeeks() {
   } catch (error) {
 
     console.error(
-      'Errore caricamento temi:',
+      'Errore caricamento settimana a tema:',
       error
     );
 
     box.innerHTML = `
       <div class="empty">
-        Errore nel caricamento dei temi.
+        Errore nel caricamento della settimana a tema.
       </div>
     `;
 
@@ -6667,7 +6813,7 @@ async function renderAdminThemes() {
   }
 
   box.innerHTML =
-    '<div class="empty">Caricamento temi...</div>';
+    '<div class="empty">Caricamento settimana a tema...</div>';
 
   if (!adminSession) {
     showLogin();
@@ -6865,10 +7011,10 @@ async function renderAdminThemes() {
     );
 
     box.innerHTML =
-      '<div class="empty">Errore nel caricamento dei temi.</div>';
+      '<div class="empty">Errore nel caricamento della settimana a tema.</div>';
 
     alert(
-      "Errore nel caricamento dei temi: " +
+      "Errore nel caricamento della settimana a tema: " +
       error.message
     );
 
@@ -8163,15 +8309,69 @@ function closeFilmRatingsModal(event) {
 
 document.addEventListener("keydown", function(event) {
 
-  if (event.key === "Escape") {
-    document
-      .getElementById("filmModal")
-      .classList.remove("open");
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  const filmModal =
+    document.getElementById("filmModal");
+
+  const ratingsModal =
+    document.getElementById("filmRatingsModal");
+
+  const guideModal =
+    document.getElementById("proposalGuideModal");
+
+  if (filmModal) {
+    filmModal.classList.remove("open");
+  }
+
+  if (ratingsModal) {
+    ratingsModal.classList.remove("open");
+  }
+
+  if (guideModal) {
+    guideModal.classList.remove("open");
   }
 
 });
 
+/* =========================
+   MODAL GUIDA PROPOSTE
+   ========================= */
 
+function openProposalGuide() {
+
+  const modal =
+    document.getElementById("proposalGuideModal");
+
+  if (!modal) {
+    return;
+  }
+
+  modal.classList.add("open");
+}
+
+
+function closeProposalGuide(event) {
+
+  if (
+    event &&
+    event.target &&
+    event.target.id !== "proposalGuideModal"
+  ) {
+    return;
+  }
+
+  const modal =
+    document.getElementById("proposalGuideModal");
+
+  if (!modal) {
+    return;
+  }
+
+  modal.classList.remove("open");
+}
 
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
@@ -8294,6 +8494,115 @@ document.addEventListener("keydown", function(event) {
 
   </div>
 </div>
+
+<!-- =========================
+     MODAL GUIDA PROPOSTE
+     ========================= -->
+
+<div
+  id="proposalGuideModal"
+  class="film-modal proposal-guide-modal"
+  onclick="closeProposalGuide(event)"
+>
+  <div class="proposal-guide-box">
+
+    <button
+      type="button"
+      class="film-modal-close"
+      onclick="closeProposalGuide()"
+      aria-label="Chiudi"
+    >
+      ×
+    </button>
+
+    <div class="proposal-guide-content">
+
+      <div class="proposal-guide-title">
+        Come proporre correttamente un film
+      </div>
+
+      <div class="proposal-guide-subtitle">
+        Alcune indicazioni per mantenere ordinata e utile la lista delle proposte.
+      </div>
+
+      <div class="proposal-guide-section">
+
+        <div class="proposal-guide-section-title">
+          Indicazioni
+        </div>
+
+        <ul class="proposal-guide-list">
+
+          <li>
+            Scegli film che non sono ancora stati visti dalla maggior parte
+            dei membri (ancora meglio se non sono stati visti da nessuno).
+            In alternativa, puoi anche proporre un film che hai guardato
+            solo tu e che vuoi far conoscere agli altri.
+          </li>
+
+          <li>
+            Inserisci le proposte nelle corrette sezioni dei generi; se sei
+            incerto/a sul genere del film, chiedi consiglio sul gruppo oppure
+            proponilo nella sezione
+            <strong>FILM MISTI e ALTRI GENERI</strong>.
+            Nel caso in cui un film appartenga a più generi ma sia
+            prevalentemente riconducibile a uno, è preferibile inserirlo
+            in quel genere piuttosto che nella categoria mista.
+          </li>
+
+          <li>
+            Per evitare confusioni, includi, oltre al titolo, anche
+            l'<strong>anno di uscita</strong> del film.
+            <br>
+            <em>Esempio: Inception (2010)</em>
+          </li>
+
+          <li>
+            Sono <strong>vietati i film con una valutazione inferiore a
+            2.5 stelle su Letterboxd</strong>.
+            Se però volessimo, per divertimento, potremmo organizzare una
+            settimana a tema dedicata appositamente a film
+            "brutti" e/o "trash".
+          </li>
+
+          <li>
+            In ogni caso, si consiglia di non proporre migliaia di film
+            nello stesso momento, anche perché la lista di film crescerà
+            progressivamente sempre di più.
+          </li>
+
+          <li>
+            Preferibilmente vi chiedo di scrivere il titolo in inglese e
+            come mostrato sul Letterboxd (per facilità basta andare nella
+            pagina del film, tenere premuto sul titolo e copiarlo), visto
+            che il sistema dovrebbe leggere i duplicati anche se le
+            maiuscole e minuscole sono diverse, ma non li riconosce nel
+            caso in cui siano scritti in lingue diverse.
+          </li>
+
+        </ul>
+
+      </div>
+
+      <div class="proposal-guide-choice">
+
+        <div class="proposal-guide-choice-title">
+          Come viene scelto il film
+        </div>
+
+        <p>
+          La scelta del film avverrà tramite un'estrazione di
+          <strong>3 film</strong> in maniera casuale, alla quale seguirà
+          una votazione dei membri per decidere il film da guardare
+          e discutere.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>    
     
 </body>
 </html>
