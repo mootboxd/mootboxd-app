@@ -3240,9 +3240,12 @@ const PROPOSAL_GENRES = [
 let proposals = [];
 let proposalsLoaded = false;  
 
-let weeklyTheme = [];
-let weeklyThemeLoaded = false;  
+let weeklyTheme = null;
+let weeklyThemeLoaded = false;
 
+let weeklyThemes = [];
+let weeklyThemesLoaded = false;
+  
 function renderProposalGenres() {
 
   const select =
@@ -3297,13 +3300,26 @@ async function loadWeeklyThemes() {
     );
 
     weeklyThemes =
-      Array.isArray(result)
-        ? result
-        : [];
+  Array.isArray(result)
+    ? result
+    : [];
 
-    weeklyThemesLoaded = true;
+/*
+ * L'interfaccia Proposte attuale
+ * lavora con un solo tema attivo.
+ *
+ * Prendiamo quindi il primo tema
+ * restituito dal backend.
+ */
+weeklyTheme =
+  weeklyThemes.length
+    ? weeklyThemes[0]
+    : null;
 
-    renderWeeklyThemes();
+weeklyThemesLoaded = true;
+weeklyThemeLoaded = true;
+
+renderWeeklyThemes();
 
   } catch (error) {
 
@@ -4043,10 +4059,11 @@ async function submitThemeProposal() {
      * Ricarica il tema dal server.
      */
 
+    weeklyThemesLoaded = false;
     weeklyThemeLoaded = false;
 
-    await loadWeeklyTheme();
-
+  await loadWeeklyThemes();
+    
     const form =
       document.getElementById('themeProposalForm');
     
