@@ -2985,6 +2985,234 @@ input {
 
 }  
 
+/* =========================
+   RICERCA E FILTRI
+   ========================= */
+
+.proposals-all-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 10px;
+}
+
+
+.proposals-search-wrap {
+  position: relative;
+
+  flex: 1;
+  min-width: 0;
+}
+
+
+.proposals-search-icon {
+  position: absolute;
+
+  left: 11px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  pointer-events: none;
+}
+
+
+.proposals-search {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 10px 12px 10px 33px;
+
+  border: 1px solid rgba(127, 127, 127, .22);
+  border-radius: 9px;
+
+  background: #1e2230;
+  color: var(--text);
+
+  font: inherit;
+  font-size: 13px;
+
+  outline: none;
+}
+
+
+.proposals-search:focus {
+  border-color: rgba(217, 179, 108, .55);
+}
+
+
+.proposals-filter-button {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(127, 127, 127, .22);
+  border-radius: 9px;
+
+  background: rgba(127, 127, 127, .08);
+
+  color: inherit;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+}
+
+
+.proposals-filter-button:hover,
+.proposals-filter-button.is-open {
+  background: rgba(127, 127, 127, .14);
+  border-color: rgba(127, 127, 127, .35);
+}
+
+
+.proposals-filters {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-bottom: 11px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(127, 127, 127, .15);
+  border-radius: 10px;
+
+  background: rgba(127, 127, 127, .045);
+}
+
+
+.proposals-filter-field {
+  min-width: 0;
+}
+
+
+.proposals-filter-field label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+.proposals-filter-field select,
+.proposals-filter-field input {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 8px 9px;
+
+  border: 1px solid rgba(127, 127, 127, .20);
+  border-radius: 8px;
+
+  background: #1e2230;
+  color: var(--text);
+
+  font: inherit;
+  font-size: 12px;
+}
+
+
+.proposals-all-summary {
+  margin: 3px 2px 8px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+
+.proposals-all-empty {
+  padding: 25px 12px;
+
+  color: var(--muted);
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+
+@media (max-width: 700px) {
+
+  .proposals-filters {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .proposals-all-toolbar {
+    gap: 6px;
+  }
+
+  .proposals-search {
+    font-size: 12px;
+  }
+
+  .proposals-filter-button {
+    width: 40px;
+    padding: 0;
+
+    font-size: 0;
+  }
+
+  .proposals-filter-button span:first-child {
+    font-size: 17px;
+  }
+
+  .proposals-filters {
+    grid-template-columns: 1fr 1fr;
+
+    padding: 10px;
+
+    gap: 7px;
+  }
+
+  .proposals-filter-field label {
+    font-size: 10px;
+  }
+
+  .proposals-filter-field select,
+  .proposals-filter-field input {
+    font-size: 11px;
+  }
+
+}
+  
+
   
 </style>
 </head>
@@ -4624,14 +4852,10 @@ function toggleProposalGenre(button) {
 function toggleAllProposals() {
 
   const container =
-    document.getElementById(
-      'allProposalsContainer'
-    );
+    document.getElementById('allProposalsContainer');
 
   const button =
-    document.querySelector(
-      '.proposals-all-button'
-    );
+    document.querySelector('.proposals-all-button');
 
   if (!container || !button) {
     return;
@@ -4642,8 +4866,7 @@ function toggleAllProposals() {
 
   if (isOpen) {
 
-    container.style.display =
-      'none';
+    container.style.display = 'none';
 
     button.setAttribute(
       'aria-expanded',
@@ -4655,97 +4878,232 @@ function toggleAllProposals() {
     return;
   }
 
+  /*
+   * Recuperiamo esclusivamente le proposte valide.
+   */
+  const validItems =
+    getValidProposals();
 
   /*
-   * Per ora costruiamo la lista completa.
-   * La ricerca e i filtri verranno aggiunti
-   * nel passaggio successivo.
+   * Costruisce l'interfaccia della sezione
+   * "Tutti i film".
    */
-  const allItems =
-    getValidProposals()
-      .map(function(proposal) {
-
-        const rawTitle =
-          String(
-            proposal.title || ''
-          ).trim();
-
-        const match =
-          rawTitle.match(
-            /^(.*)\s+\((\d{4})\)$/
-          );
-
-        const title =
-          match
-            ? match[1]
-            : rawTitle;
-
-        const year =
-          match
-            ? match[2]
-            : '';
-
-        const genre =
-          String(
-            proposal.genere || ''
-          ).trim();
-
-        const genreInfo =
-          PROPOSAL_GENRES.find(
-            function(item) {
-              return item.value === genre;
-            }
-          );
-
-        const genreLabel =
-          genreInfo
-            ? genreInfo.label
-            : genre;
-
-
-        return `
-          <div class="proposal-item proposals-all-item">
-
-            <div class="proposal-title">
-              ${esc(title)}
-            </div>
-
-            ${
-              year
-                ? `
-                  <div class="proposal-year">
-                    (${esc(year)})
-                  </div>
-                `
-                : ''
-            }
-
-            ${
-              genreLabel
-                ? `
-                  <div class="proposal-all-genre">
-                    ${esc(genreLabel)}
-                  </div>
-                `
-                : ''
-            }
-
-          </div>
-        `;
-
-      })
-      .join('');
-
-
   container.innerHTML = `
-    <div class="proposals-all-list">
-      ${allItems}
+
+    <div class="proposals-all-toolbar">
+
+      <div class="proposals-search-wrap">
+
+        <span
+          class="proposals-search-icon"
+          aria-hidden="true"
+        >
+          🔍
+        </span>
+
+        <input
+          type="search"
+          id="proposalsAllSearch"
+          class="proposals-search"
+          placeholder="Cerca un film..."
+          autocomplete="off"
+        >
+
+      </div>
+
+
+      <button
+        type="button"
+        class="proposals-filter-button"
+        onclick="toggleProposalFilters()"
+        aria-expanded="false"
+        aria-label="Apri filtri"
+      >
+        <span aria-hidden="true">☷</span>
+        <span>Filtri</span>
+      </button>
+
     </div>
+
+
+    <div
+      id="proposalsFilters"
+      class="proposals-filters"
+      style="display:none;"
+    >
+
+      <div class="proposals-filter-field">
+
+        <label for="proposalsFilterGenre">
+          Genere
+        </label>
+
+        <select id="proposalsFilterGenre">
+
+          <option value="">
+            Tutti i generi
+          </option>
+
+          ${PROPOSAL_GENRES.map(function(genre) {
+
+            return `
+              <option value="${esc(genre.value)}">
+                ${esc(genre.label)}
+              </option>
+            `;
+
+          }).join('')}
+
+        </select>
+
+      </div>
+
+
+      <div class="proposals-filter-field">
+
+        <label for="proposalsFilterYear">
+          Anno
+        </label>
+
+        <input
+          id="proposalsFilterYear"
+          type="number"
+          inputmode="numeric"
+          placeholder="Es. 1999"
+          min="1880"
+          max="2100"
+        >
+
+      </div>
+
+
+      <div class="proposals-filter-field">
+
+        <label for="proposalsFilterDecade">
+          Decennio
+        </label>
+
+        <select id="proposalsFilterDecade">
+
+          <option value="">
+            Tutti i decenni
+          </option>
+
+          ${buildProposalDecadeOptions(validItems)}
+
+        </select>
+
+      </div>
+
+
+      <div class="proposals-filter-field">
+
+        <label for="proposalsFilterSort">
+          Ordina
+        </label>
+
+        <select id="proposalsFilterSort">
+
+          <option value="alpha">
+            Alfabetico
+          </option>
+
+          <option value="oldest">
+            Dal più vecchio
+          </option>
+
+          <option value="newest">
+            Dal più recente
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="proposals-all-summary">
+
+      <span id="proposalsAllCount">
+        ${validItems.length} film
+      </span>
+
+    </div>
+
+
+    <div
+      id="proposalsAllResults"
+      class="proposals-all-list"
+    ></div>
+
   `;
 
 
-  container.style.display =
-    'block';
+  /*
+   * Colleghiamo gli eventi dopo aver creato
+   * gli elementi HTML.
+   */
+
+  const searchInput =
+    document.getElementById('proposalsAllSearch');
+
+  const genreFilter =
+    document.getElementById('proposalsFilterGenre');
+
+  const yearFilter =
+    document.getElementById('proposalsFilterYear');
+
+  const decadeFilter =
+    document.getElementById('proposalsFilterDecade');
+
+  const sortFilter =
+    document.getElementById('proposalsFilterSort');
+
+
+  if (searchInput) {
+    searchInput.addEventListener(
+      'input',
+      renderAllProposalResults
+    );
+  }
+
+  if (genreFilter) {
+    genreFilter.addEventListener(
+      'change',
+      renderAllProposalResults
+    );
+  }
+
+  if (yearFilter) {
+    yearFilter.addEventListener(
+      'input',
+      renderAllProposalResults
+    );
+  }
+
+  if (decadeFilter) {
+    decadeFilter.addEventListener(
+      'change',
+      renderAllProposalResults
+    );
+  }
+
+  if (sortFilter) {
+    sortFilter.addEventListener(
+      'change',
+      renderAllProposalResults
+    );
+  }
+
+
+  /*
+   * Mostra subito tutti i film.
+   */
+  renderAllProposalResults();
+
+
+  container.style.display = 'block';
 
   button.setAttribute(
     'aria-expanded',
@@ -4754,7 +5112,402 @@ function toggleAllProposals() {
 
   button.classList.add('is-open');
 
-}  
+}
+
+function buildProposalDecadeOptions(items) {
+
+  const decades = {};
+
+  items.forEach(function(proposal) {
+
+    const rawTitle =
+      String(proposal.title || '').trim();
+
+    const match =
+      rawTitle.match(/^(.*)\s+\((\d{4})\)$/);
+
+    if (!match) {
+      return;
+    }
+
+    const year =
+      Number(match[2]);
+
+    if (!Number.isFinite(year)) {
+      return;
+    }
+
+    const decade =
+      Math.floor(year / 10) * 10;
+
+    decades[decade] = true;
+
+  });
+
+
+  return Object.keys(decades)
+    .map(Number)
+    .sort(function(a, b) {
+      return b - a;
+    })
+    .map(function(decade) {
+
+      return `
+        <option value="${decade}">
+          ${decade}s
+        </option>
+      `;
+
+    })
+    .join('');
+
+}
+
+
+function getProposalData(proposal) {
+
+  const rawTitle =
+    String(proposal.title || '').trim();
+
+  const match =
+    rawTitle.match(/^(.*)\s+\((\d{4})\)$/);
+
+  const title =
+    match
+      ? match[1]
+      : rawTitle;
+
+  const year =
+    match
+      ? Number(match[2])
+      : null;
+
+  const genre =
+    String(
+      proposal.genere || ''
+    ).trim();
+
+
+  return {
+    proposal: proposal,
+    title: title,
+    year: year,
+    genre: genre
+  };
+
+}
+
+
+function renderAllProposalResults() {
+
+  const results =
+    document.getElementById(
+      'proposalsAllResults'
+    );
+
+  const count =
+    document.getElementById(
+      'proposalsAllCount'
+    );
+
+  if (!results || !count) {
+    return;
+  }
+
+
+  const searchInput =
+    document.getElementById(
+      'proposalsAllSearch'
+    );
+
+  const genreFilter =
+    document.getElementById(
+      'proposalsFilterGenre'
+    );
+
+  const yearFilter =
+    document.getElementById(
+      'proposalsFilterYear'
+    );
+
+  const decadeFilter =
+    document.getElementById(
+      'proposalsFilterDecade'
+    );
+
+  const sortFilter =
+    document.getElementById(
+      'proposalsFilterSort'
+    );
+
+
+  const search =
+    searchInput
+      ? searchInput.value
+          .trim()
+          .toLowerCase()
+      : '';
+
+
+  const selectedGenre =
+    genreFilter
+      ? genreFilter.value
+      : '';
+
+
+  const selectedYear =
+    yearFilter
+      ? yearFilter.value.trim()
+      : '';
+
+
+  const selectedDecade =
+    decadeFilter
+      ? decadeFilter.value
+      : '';
+
+
+  const sort =
+    sortFilter
+      ? sortFilter.value
+      : 'alpha';
+
+
+  let items =
+    getValidProposals()
+      .map(getProposalData);
+
+
+  /*
+   * Ricerca per titolo.
+   */
+  if (search) {
+
+    items =
+      items.filter(function(item) {
+
+        return item.title
+          .toLowerCase()
+          .includes(search);
+
+      });
+
+  }
+
+
+  /*
+   * Filtro genere.
+   */
+  if (selectedGenre) {
+
+    items =
+      items.filter(function(item) {
+
+        return item.genre === selectedGenre;
+
+      });
+
+  }
+
+
+  /*
+   * Filtro anno.
+   */
+  if (selectedYear) {
+
+    const year =
+      Number(selectedYear);
+
+    if (Number.isFinite(year)) {
+
+      items =
+        items.filter(function(item) {
+
+          return item.year === year;
+
+        });
+
+    }
+
+  }
+
+
+  /*
+   * Filtro decennio.
+   */
+  if (selectedDecade) {
+
+    const decade =
+      Number(selectedDecade);
+
+    items =
+      items.filter(function(item) {
+
+        return (
+          item.year != null &&
+          Math.floor(item.year / 10) * 10 === decade
+        );
+
+      });
+
+  }
+
+
+  /*
+   * Ordinamento.
+   */
+  items.sort(function(a, b) {
+
+    if (sort === 'oldest') {
+
+      if (a.year == null) return 1;
+      if (b.year == null) return -1;
+
+      return a.year - b.year;
+
+    }
+
+
+    if (sort === 'newest') {
+
+      if (a.year == null) return 1;
+      if (b.year == null) return -1;
+
+      return b.year - a.year;
+
+    }
+
+
+    return a.title.localeCompare(
+      b.title,
+      'it',
+      {
+        sensitivity: 'base'
+      }
+    );
+
+  });
+
+
+  /*
+   * Aggiorna il conteggio.
+   */
+  count.textContent =
+    items.length === 1
+      ? '1 film'
+      : items.length + ' film';
+
+
+  /*
+   * Nessun risultato.
+   */
+  if (!items.length) {
+
+    results.innerHTML = `
+      <div class="proposals-all-empty">
+        Nessun film corrisponde ai criteri selezionati.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  /*
+   * Lista risultati.
+   */
+  results.innerHTML =
+    items.map(function(item) {
+
+      const genreInfo =
+        PROPOSAL_GENRES.find(
+          function(genre) {
+            return genre.value === item.genre;
+          }
+        );
+
+      const genreLabel =
+        genreInfo
+          ? genreInfo.label
+          : item.genre;
+
+
+      return `
+        <div class="proposal-item proposals-all-item">
+
+          <div class="proposal-title">
+            ${esc(item.title)}
+          </div>
+
+          ${
+            item.year != null
+              ? `
+                <div class="proposal-year">
+                  (${item.year})
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            genreLabel
+              ? `
+                <div class="proposal-all-genre">
+                  ${esc(genreLabel)}
+                </div>
+              `
+              : ''
+          }
+
+        </div>
+      `;
+
+    }).join('');
+
+}
+
+
+function toggleProposalFilters() {
+
+  const filters =
+    document.getElementById(
+      'proposalsFilters'
+    );
+
+  const button =
+    document.querySelector(
+      '.proposals-filter-button'
+    );
+
+  if (!filters || !button) {
+    return;
+  }
+
+
+  const isOpen =
+    filters.style.display !== 'none';
+
+
+  filters.style.display =
+    isOpen
+      ? 'none'
+      : 'grid';
+
+
+  button.setAttribute(
+    'aria-expanded',
+    String(!isOpen)
+  );
+
+
+  button.classList.toggle(
+    'is-open',
+    !isOpen
+  );
+
+}
+  
+
   
 async function submitProposal() {
 
