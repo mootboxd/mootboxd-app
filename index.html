@@ -3489,7 +3489,85 @@ input {
   }
 
 }  
-  
+
+/* =========================================================
+   LISTE PROPOSTE SCORRIBILI
+   ========================================================= */
+
+
+/* =========================
+   TUTTI I FILM
+   ========================= */
+
+/*
+ * Il contenitore rimane compatto,
+ * mentre la lista interna scorre.
+ */
+
+.proposals-all-container {
+  max-height: 420px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+}
+
+
+/* =========================
+   FILM DEI SINGOLI GENERI
+   ========================= */
+
+/*
+ * Quando viene aperto un genere,
+ * i film scorrono all'interno del
+ * proprio riquadro invece di allungare
+ * tutta la pagina.
+ */
+
+.proposals-items {
+  max-height: 300px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  /*
+   * Su telefono limitiamo maggiormente
+   * l'altezza per evitare che una lista
+   * occupi quasi tutta la schermata.
+   */
+
+  .proposals-all-container {
+    max-height: 360px;
+  }
+
+  .proposals-items {
+    max-height: 260px;
+  }
+
+}  
 
   
 </style>
