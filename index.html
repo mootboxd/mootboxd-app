@@ -4860,6 +4860,11 @@ function renderProposalGenres() {
 
 async function loadWeeklyThemes() {
 
+  if (weeklyThemesLoaded) {
+    renderWeeklyThemes();
+    return;
+  }
+
   const titleBox =
     document.getElementById('weeklyThemeTitle');
 
@@ -5245,6 +5250,11 @@ function toggleWeeklyThemeProposals(button) {
 }  
   
 async function loadProposals() {
+
+  if (proposalsLoaded) {
+    renderProposals();
+    return;
+  }
 
   const box =
     document.getElementById('proposalsList');
@@ -6707,12 +6717,33 @@ async function submitThemeProposal() {
 
 
     /*
-     * Ricarica tutti i temi.
+     * Aggiorna localmente il tema appena modificato,
+     * senza effettuare una nuova chiamata API.
      */
+    
+    const updatedTheme =
+      weeklyThemes.find(function(item) {
+    
+        return (
+          String(item.id) ===
+          String(selectedThemeId)
+        );
+    
+      });
+    
+    if (updatedTheme) {
+    
+      if (!Array.isArray(updatedTheme.proposte)) {
+        updatedTheme.proposte = [];
+      }
+    
+      updatedTheme.proposte.push({
+        title: result.proposal,
+        genere: result.genere
+      });
 
-    weeklyThemesLoaded = false;
-
-    await loadWeeklyThemes();
+  renderWeeklyThemes();
+}
 
 
     /*
