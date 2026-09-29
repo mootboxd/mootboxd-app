@@ -3083,6 +3083,54 @@ input {
     id="filmAdminList"
   ></div>
 
+    <!-- =========================
+       TEMI DELLA SETTIMANA
+       ========================= -->
+
+  <div
+    class="head"
+    style="margin-top:32px;"
+  >
+    <h2>Temi della settimana</h2>
+  </div>
+
+  <!-- CREA TEMA -->
+
+  <div class="film-admin-form">
+
+    <input
+      id="themeName"
+      placeholder="Nome del tema"
+    >
+
+    <input
+      id="themeStart"
+      type="date"
+      title="Data inizio"
+    >
+
+    <input
+      id="themeEnd"
+      type="date"
+      title="Data fine"
+    >
+
+    <button
+      class="btn primary film-admin-submit"
+      onclick="createAdminTheme()"
+    >
+      Crea tema
+    </button>
+
+  </div>
+
+  <!-- ELENCO TEMI -->
+
+  <div
+    class="list"
+    id="themeAdminList"
+  ></div>
+
 </section>
 <script>
   const API_URL =
@@ -6216,6 +6264,527 @@ async function deleteAdminFilm(filmId) {
   }
 }
 
+/* =========================
+   TEMI — ADMIN
+   ========================= */
+
+function renderAdminThemes() {
+
+  const box =
+    document.getElementById("themeAdminList");
+
+  if (!box) {
+    return;
+  }
+
+  box.innerHTML =
+    '<div class="empty">Caricamento temi...</div>';
+
+  api(
+    'getThemeWeeks',
+    []
+  )
+  .then(function(themes) {
+
+    if (!themes || !themes.length) {
+
+      box.innerHTML =
+        '<div class="empty">Nessun tema della settimana.</div>';
+
+      return;
+    }
+
+    box.innerHTML =
+      themes.map(function(theme) {
+
+        const stato =
+          String(theme.stato || '').toUpperCase();
+
+        let statusClass = '';
+
+        if (stato === 'ATTIVA') {
+          statusClass = 'theme-status-active';
+        } else if (stato === 'CHIUSA') {
+          statusClass = 'theme-status-closed';
+        } else if (stato === 'DISATTIVA') {
+          statusClass = 'theme-status-disabled';
+        }
+
+        return `
+          <div
+            class="item"
+            id="admin-theme-${theme.id}"
+          >
+
+            <div
+              style="
+                display:flex;
+                align-items:flex-start;
+                justify-content:space-between;
+                gap:12px;
+              "
+            >
+
+              <div
+                style="
+                  flex:1;
+                  min-width:0;
+                "
+              >
+
+                <div
+                  style="
+                    font-weight:700;
+                    margin-bottom:5px;
+                  "
+                >
+                  ${esc(theme.nome)}
+                </div>
+
+                <div class="muted">
+                  ${esc(theme.dataInizio)}
+                  →
+                  ${esc(theme.dataFine)}
+                </div>
+
+                <div
+                  class="${statusClass}"
+                  style="
+                    margin-top:6px;
+                    font-size:13px;
+                    font-weight:700;
+                  "
+                >
+                  ${esc(stato)}
+                </div>
+
+              </div>
+
+              <div
+                style="
+                  display:flex;
+                  gap:6px;
+                  flex-wrap:wrap;
+                  justify-content:flex-end;
+                "
+              >
+
+                <button
+                  class="btn"
+                  onclick="editAdminTheme('${theme.id}')"
+                >
+                  Modifica
+                </button>
+
+                ${
+                  stato === 'ATTIVA'
+                    ? `
+                      <button
+                        class="btn"
+                        onclick="closeAdminTheme('${theme.id}')"
+                      >
+                        Chiudi
+                      </button>
+
+                      <button
+                        class="danger"
+                        onclick="deactivateAdminTheme('${theme.id}')"
+                      >
+                        Disattiva
+                      </button>
+                    `
+                    : ''
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+  })
+  .catch(function(error) {
+
+    box.innerHTML =
+      '<div class="empty">Errore nel caricamento dei temi.</div>';
+
+    alert(
+      "Errore nel caricamento dei temi: " +
+      error.message
+    );
+
+  });
+}
+
+
+/* =========================
+   CREA TEMA
+   ========================= */
+
+async function createAdminTheme() {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const nameInput =
+    document.getElementById("themeName");
+
+  const startInput =
+    document.getElementById("themeStart");
+
+  const endInput =
+    document.getElementById("themeEnd");
+
+  const nome =
+    nameInput.value.trim();
+
+  const dataInizio =
+    startInput.value.trim();
+
+  const dataFine =
+    endInput.value.trim();
+
+  if (!nome) {
+    alert("Inserisci il nome del tema.");
+    return;
+  }
+
+  if (!dataInizio || !dataFine) {
+    alert("Inserisci data di inizio e data di fine.");
+    return;
+  }
+
+  if (dataFine < dataInizio) {
+    alert(
+      "La data di fine non può essere precedente alla data di inizio."
+    );
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'createThemeWeek',
+      [
+        nome,
+        dataInizio,
+        dataFine,
+        adminSession.token
+      ]
+    );
+
+    nameInput.value = "";
+    startInput.value = "";
+    endInput.value = "";
+
+    renderAdminThemes();
+
+    alert("Tema creato.");
+
+  } catch (error) {
+
+    alert(
+      "Errore durante la creazione del tema: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}
+
+
+/* =========================
+   MODIFICA TEMA
+   ========================= */
+
+async function editAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const box =
+    document.getElementById(
+      "admin-theme-" + themeId
+    );
+
+  if (!box) {
+    return;
+  }
+
+  try {
+
+    const themes =
+      await api(
+        'getThemeWeeks',
+        []
+      );
+
+    const theme =
+      themes.find(function(item) {
+        return String(item.id) === String(themeId);
+      });
+
+    if (!theme) {
+      alert("Tema non trovato.");
+      return;
+    }
+
+    box.innerHTML = `
+      <div
+        style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:8px;
+        "
+      >
+
+        <input
+          id="edit-theme-name-${themeId}"
+          value="${esc(theme.nome || "")}"
+          placeholder="Nome tema"
+        >
+
+        <div></div>
+
+        <input
+          id="edit-theme-start-${themeId}"
+          type="date"
+          value="${esc(theme.dataInizio || "")}"
+        >
+
+        <input
+          id="edit-theme-end-${themeId}"
+          type="date"
+          value="${esc(theme.dataFine || "")}"
+        >
+
+        <div
+          style="
+            grid-column:1 / -1;
+            display:flex;
+            gap:6px;
+          "
+        >
+
+          <button
+            class="btn primary"
+            onclick="saveAdminTheme('${themeId}')"
+          >
+            Salva
+          </button>
+
+          <button
+            class="btn"
+            onclick="renderAdminThemes()"
+          >
+            Annulla
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  } catch (error) {
+
+    alert(
+      "Errore: " +
+      error.message
+    );
+
+  }
+}
+
+
+/* =========================
+   SALVA MODIFICA TEMA
+   ========================= */
+
+async function saveAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const nome =
+    document.getElementById(
+      "edit-theme-name-" + themeId
+    ).value.trim();
+
+  const dataInizio =
+    document.getElementById(
+      "edit-theme-start-" + themeId
+    ).value.trim();
+
+  const dataFine =
+    document.getElementById(
+      "edit-theme-end-" + themeId
+    ).value.trim();
+
+  if (!nome) {
+    alert("Il nome del tema è obbligatorio.");
+    return;
+  }
+
+  if (!dataInizio || !dataFine) {
+    alert("Inserisci entrambe le date.");
+    return;
+  }
+
+  if (dataFine < dataInizio) {
+    alert(
+      "La data di fine non può essere precedente alla data di inizio."
+    );
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'updateThemeWeek',
+      [
+        themeId,
+        nome,
+        dataInizio,
+        dataFine,
+        adminSession.token
+      ]
+    );
+
+    renderAdminThemes();
+
+  } catch (error) {
+
+    alert(
+      "Errore durante la modifica: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}
+
+
+/* =========================
+   CHIUDI TEMA
+   ========================= */
+
+async function closeAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Vuoi chiudere questo tema?\n\n" +
+      "Le proposte del tema verranno trasferite " +
+      "nel foglio delle proposte per genere."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    const result =
+      await api(
+        'closeThemeWeek',
+        [
+          themeId,
+          adminSession.token
+        ]
+      );
+
+    renderAdminThemes();
+
+    alert(
+      "Tema chiuso.\n\n" +
+      "Proposte trasferite: " +
+      result.trasferiti
+    );
+
+  } catch (error) {
+
+    alert(
+      "Errore durante la chiusura del tema: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}
+
+
+/* =========================
+   DISATTIVA TEMA
+   ========================= */
+
+async function deactivateAdminTheme(themeId) {
+
+  if (!adminSession) {
+    showLogin();
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Vuoi disattivare questo tema?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'deactivateThemeWeek',
+      [
+        themeId,
+        adminSession.token
+      ]
+    );
+
+    renderAdminThemes();
+
+  } catch (error) {
+
+    alert(
+      "Errore durante la disattivazione: " +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}
+  
 /* =========================
    SALVA PIN
    ========================= */
