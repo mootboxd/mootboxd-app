@@ -2644,7 +2644,7 @@ input {
 >
 
  <!-- =========================
-     TEMA DELLA SETTIMANA
+     TEMI DELLA SETTIMANA
      ========================= -->
 
 <div class="panel weekly-theme-panel">
@@ -2653,72 +2653,116 @@ input {
 
     <div>
       <h2 id="weeklyThemeTitle">
-        Settimana a tema
+        Temi della settimana
       </h2>
 
       <div class="muted">
-        Proponi un film per la settimana a tema.
+        Proponi un film per uno dei temi attivi.
       </div>
     </div>
 
-    <button
-      id="themeProposalButton"
-      class="btn primary"
-      type="button"
-      onclick="openThemeProposalForm()"
-      style="display:none;"
-    >
-      Proponi per il tema
-    </button>
-
   </div>
+
 
   <div
     id="weeklyThemeContent"
     class="weekly-theme-content"
   >
+
     <div class="empty">
-      Caricamento tema…
+      Caricamento temi…
     </div>
+
   </div>
 
+
+  <!-- FORM PROPOSTA TEMA -->
+
   <div
-  id="themeProposalForm"
-  class="proposals-form"
-  style="display:none; margin-top:18px;"
->
-
-  <input
-    id="themeProposalTitle"
-    type="text"
-    placeholder="Titolo del film"
-    autocomplete="off"
+    id="themeProposalForm"
+    class="proposals-form"
+    style="display:none; margin-top:18px;"
   >
 
-  <input
-    id="themeProposalYear"
-    type="text"
-    inputmode="numeric"
-    maxlength="4"
-    placeholder="Anno"
-    autocomplete="off"
-  >
+    <div
+      id="selectedThemeLabel"
+      class="muted"
+      style="
+        grid-column:1 / -1;
+        margin-bottom:4px;
+      "
+    ></div>
 
-  <select id="themeProposalGenre">
-    <option value="">
-      Seleziona genere
-    </option>
-  </select>
+    <input
+      id="themeProposalTitle"
+      type="text"
+      placeholder="Titolo del film"
+      autocomplete="off"
+    >
 
-  <button
-    class="btn primary"
-    type="button"
-    onclick="submitThemeProposal()"
-  >
-    Invia proposta
-  </button>
+    <input
+      id="themeProposalYear"
+      type="text"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="Anno"
+      autocomplete="off"
+    >
 
-</div>
+    <select id="themeProposalGenre">
+      <option value="">
+        Seleziona genere
+      </option>
+    </select>
+
+    <div
+      style="
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        grid-column:1 / -1;
+      "
+    >
+
+      <button
+        type="button"
+        class="btn primary"
+        onclick="submitThemeProposal()"
+      >
+        Invia proposta
+      </button>
+
+      <button
+        type="button"
+        class="btn"
+        onclick="closeThemeProposalForm()"
+      >
+        Annulla
+      </button>
+
+    </div>
+
+
+    <div
+      id="themeProposalError"
+      class="proposal-message proposal-error"
+      style="
+        display:none;
+        grid-column:1 / -1;
+      "
+    ></div>
+
+
+    <div
+      id="themeProposalSuccess"
+      class="proposal-message proposal-success"
+      style="
+        display:none;
+        grid-column:1 / -1;
+      "
+    ></div>
+
+  </div>
   
 </div>
   
@@ -3240,11 +3284,10 @@ const PROPOSAL_GENRES = [
 let proposals = [];
 let proposalsLoaded = false;  
 
-let weeklyTheme = null;
-let weeklyThemeLoaded = false;
-
 let weeklyThemes = [];
 let weeklyThemesLoaded = false;
+
+let selectedThemeId = null;
   
 function renderProposalGenres() {
 
@@ -3300,26 +3343,13 @@ async function loadWeeklyThemes() {
     );
 
     weeklyThemes =
-  Array.isArray(result)
-    ? result
-    : [];
+      Array.isArray(result)
+        ? result
+        : [];
 
-/*
- * L'interfaccia Proposte attuale
- * lavora con un solo tema attivo.
- *
- * Prendiamo quindi il primo tema
- * restituito dal backend.
- */
-weeklyTheme =
-  weeklyThemes.length
-    ? weeklyThemes[0]
-    : null;
+    weeklyThemesLoaded = true;
 
-weeklyThemesLoaded = true;
-weeklyThemeLoaded = true;
-
-renderWeeklyThemes();
+    renderWeeklyThemes();
 
   } catch (error) {
 
@@ -3348,217 +3378,224 @@ function renderWeeklyThemes() {
   const contentBox =
     document.getElementById('weeklyThemeContent');
 
-  const themeButton =
-    document.getElementById('themeProposalButton');
-
   if (!titleBox || !contentBox) {
     return;
   }
 
+  titleBox.textContent =
+    'Temi della settimana';
 
   /*
    * Nessun tema attivo
    */
-
-  if (!weeklyTheme) {
-
-    titleBox.textContent =
-      'Nessun tema attivo';
-
-    contentBox.innerHTML = `
-      <div class="weekly-theme-empty">
-        Al momento non c'è una settimana a tema.
-      </div>
-    `;
-
-    if (themeButton) {
-      themeButton.style.display = 'none';
-    }
-
-    return;
-  }
-
-
-  /*
-   * Nome del tema
-   */
-
-  titleBox.textContent =
-    weeklyTheme.nome || 'Tema della settimana';
-
-
-  /*
-   * Tema chiuso
-   */
-
   if (
-    String(weeklyTheme.stato || '').toUpperCase() ===
-    'CHIUSA'
+    !Array.isArray(weeklyThemes) ||
+    !weeklyThemes.length
   ) {
 
     contentBox.innerHTML = `
-      <div class="weekly-theme-closed">
-        Questa settimana a tema è conclusa.
+      <div class="weekly-theme-empty">
+        Al momento non ci sono settimane a tema attive.
       </div>
     `;
-
-    if (themeButton) {
-      themeButton.style.display = 'none';
-    }
 
     return;
   }
 
 
   /*
-   * Tema aperto:
-   * mostra il pulsante per proporre un film.
+   * Un blocco separato per ogni tema.
    */
+  contentBox.innerHTML =
+    weeklyThemes.map(function(theme) {
 
-  if (themeButton) {
-    themeButton.style.display = 'inline-flex';
-  }
+      const themeId =
+        String(theme.id || '');
 
+      const themeName =
+        String(theme.nome || 'Tema della settimana');
 
-  /*
-   * Descrizione
-   */
+      const dataInizio =
+        String(theme.dataInizio || '');
 
-  const description =
-    weeklyTheme.descrizione ||
-    weeklyTheme.description ||
-    '';
+      const dataFine =
+        String(theme.dataFine || '');
 
+      const description =
+        theme.descrizione ||
+        theme.description ||
+        '';
 
-  /*
-   * Proposte del tema
-   */
-
-  const themeProposals =
-    Array.isArray(weeklyTheme.proposte)
-      ? weeklyTheme.proposte
-      : [];
-
-
-  let html = '';
+      const themeProposals =
+        Array.isArray(theme.proposte)
+          ? theme.proposte
+          : [];
 
 
-  if (description) {
+      /*
+       * Proposte del tema
+       */
+      let proposalsHtml = '';
 
-    html += `
-      <div class="weekly-theme-description">
-        ${esc(description)}
-      </div>
-    `;
+      if (!themeProposals.length) {
 
-  }
-
-
-  html += `
-    <div class="weekly-theme-proposals">
-
-      <div class="weekly-theme-proposals-title">
-        Film proposti per questo tema
-      </div>
-  `;
-
-
-  if (!themeProposals.length) {
-
-    html += `
-      <div class="weekly-theme-empty">
-        Nessun film ancora proposto.
-      </div>
-    `;
-
-  } else {
-
-    html +=
-    themeProposals.map(function(proposal) {
-  
-      const rawTitle =
-        String(proposal.title || '').trim();
-  
-      const match =
-        rawTitle.match(
-          /^(.*)\s+\((\d{4})\)$/
-        );
-  
-      const title =
-        match
-          ? match[1]
-          : rawTitle;
-  
-      const year =
-        match
-          ? match[2]
-          : '';
-  
-      const genre =
-        String(
-          proposal.genere ||
-          proposal.genre ||
-          ''
-        ).trim();
-  
-      const genreInfo =
-        PROPOSAL_GENRES.find(function(item) {
-          return item.value === genre;
-        });
-  
-      const genreLabel =
-        genreInfo
-          ? genreInfo.label
-          : genre;
-  
-      return `
-        <div class="weekly-theme-proposal">
-  
-          <div class="weekly-theme-proposal-info">
-  
-            <div class="weekly-theme-proposal-title">
-              ${esc(title)}
-            </div>
-  
-            ${
-              year
-                ? `
-                  <div class="weekly-theme-proposal-year">
-                    (${esc(year)})
-                  </div>
-                `
-                : ''
-            }
-  
-            ${
-              genreLabel
-                ? `
-                  <div class="weekly-theme-proposal-genre">
-                    ${esc(genreLabel)}
-                  </div>
-                `
-                : ''
-            }
-  
+        proposalsHtml = `
+          <div class="weekly-theme-empty">
+            Nessun film ancora proposto.
           </div>
-  
+        `;
+
+      } else {
+
+        proposalsHtml =
+          themeProposals.map(function(proposal) {
+
+            const rawTitle =
+              String(
+                proposal.title || ''
+              ).trim();
+
+            const match =
+              rawTitle.match(
+                /^(.*)\s+\((\d{4})\)$/
+              );
+
+            const title =
+              match
+                ? match[1]
+                : rawTitle;
+
+            const year =
+              match
+                ? match[2]
+                : '';
+
+            const genre =
+              String(
+                proposal.genere ||
+                proposal.genre ||
+                ''
+              ).trim();
+
+            const genreInfo =
+              PROPOSAL_GENRES.find(function(item) {
+
+                return (
+                  item.value === genre
+                );
+
+              });
+
+            const genreLabel =
+              genreInfo
+                ? genreInfo.label
+                : genre;
+
+            return `
+              <div class="weekly-theme-proposal">
+
+                <div class="weekly-theme-proposal-info">
+
+                  <div class="weekly-theme-proposal-title">
+                    ${esc(title)}
+                  </div>
+
+                  ${
+                    year
+                      ? `
+                        <div class="weekly-theme-proposal-year">
+                          (${esc(year)})
+                        </div>
+                      `
+                      : ''
+                  }
+
+                  ${
+                    genreLabel
+                      ? `
+                        <div class="weekly-theme-proposal-genre">
+                          ${esc(genreLabel)}
+                        </div>
+                      `
+                      : ''
+                  }
+
+                </div>
+
+              </div>
+            `;
+
+          }).join('');
+
+      }
+
+
+      return `
+        <div
+          class="weekly-theme-card"
+          data-theme-id="${esc(themeId)}"
+        >
+
+          <div class="weekly-theme-card-header">
+
+            <div>
+
+              <div class="weekly-theme-card-title">
+                ${esc(themeName)}
+              </div>
+
+              ${
+                dataInizio || dataFine
+                  ? `
+                    <div class="weekly-theme-card-dates">
+                      ${esc(dataInizio)}
+                      →
+                      ${esc(dataFine)}
+                    </div>
+                  `
+                  : ''
+              }
+
+            </div>
+
+            <button
+              type="button"
+              class="btn primary"
+              onclick="openThemeProposalForm('${esc(themeId)}')"
+            >
+              Proponi per questo tema
+            </button>
+
+          </div>
+
+
+          ${
+            description
+              ? `
+                <div class="weekly-theme-description">
+                  ${esc(description)}
+                </div>
+              `
+              : ''
+          }
+
+
+          <div class="weekly-theme-proposals">
+
+            <div class="weekly-theme-proposals-title">
+              Film proposti per questo tema
+            </div>
+
+            ${proposalsHtml}
+
+          </div>
+
         </div>
       `;
-  
+
     }).join('');
-
-  }
-
-
-  html += `
-    </div>
-  `;
-
-
-  contentBox.innerHTML =
-    html;
 }
-
+  
 async function loadProposals() {
 
   const box =
@@ -3876,19 +3913,98 @@ async function submitProposal() {
 
 }  
   
-function openThemeProposalForm() {
+function openThemeProposalForm(themeId) {
 
   const form =
-    document.getElementById('themeProposalForm');
+    document.getElementById(
+      'themeProposalForm'
+    );
 
   if (!form) {
     return;
   }
 
+  const theme =
+    weeklyThemes.find(function(item) {
+
+      return (
+        String(item.id) ===
+        String(themeId)
+      );
+
+    });
+
+  if (!theme) {
+    alert('Tema non trovato.');
+    return;
+  }
+
+  selectedThemeId =
+    String(theme.id);
+
+
   renderThemeProposalGenres();
 
-  form.style.display = 'flex';
+
+  const label =
+    document.getElementById(
+      'selectedThemeLabel'
+    );
+
+  if (label) {
+
+    label.textContent =
+      'Stai proponendo per: ' +
+      theme.nome;
+
+  }
+
+
+  const errorBox =
+    document.getElementById(
+      'themeProposalError'
+    );
+
+  const successBox =
+    document.getElementById(
+      'themeProposalSuccess'
+    );
+
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  if (successBox) {
+    successBox.style.display = 'none';
+    successBox.textContent = '';
+  }
+
+
+  form.style.display =
+    'grid';
+
+
+  form.scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest'
+  });
+
 }
+
+function closeThemeProposalForm() {
+
+  const form =
+    document.getElementById(
+      'themeProposalForm'
+    );
+
+  if (form) {
+    form.style.display = 'none';
+  }
+
+  selectedThemeId = null;
+}  
 
 function renderThemeProposalGenres() {
 
@@ -3915,45 +4031,60 @@ function renderThemeProposalGenres() {
 async function submitThemeProposal() {
 
   const titleInput =
-    document.getElementById('themeProposalTitle');
+    document.getElementById(
+      'themeProposalTitle'
+    );
 
   const yearInput =
-    document.getElementById('themeProposalYear');
+    document.getElementById(
+      'themeProposalYear'
+    );
 
   const genreInput =
-    document.getElementById('themeProposalGenre');
+    document.getElementById(
+      'themeProposalGenre'
+    );
 
   const errorBox =
-    document.getElementById('themeProposalError');
+    document.getElementById(
+      'themeProposalError'
+    );
 
   const successBox =
-    document.getElementById('themeProposalSuccess');
+    document.getElementById(
+      'themeProposalSuccess'
+    );
 
 
-  errorBox.style.display = 'none';
-  successBox.style.display = 'none';
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  if (successBox) {
+    successBox.style.display = 'none';
+    successBox.textContent = '';
+  }
 
 
   /*
-   * Deve esserci un membro autenticato.
+   * Login
    */
 
   if (!session) {
-
     showLogin();
-
     return;
   }
 
 
   /*
-   * Deve esserci un tema attivo.
+   * Tema selezionato
    */
 
-  if (!weeklyTheme) {
+  if (!selectedThemeId) {
 
     errorBox.textContent =
-      'Non c’è una settimana a tema attiva.';
+      'Seleziona prima il tema per cui vuoi proporre il film.';
 
     errorBox.style.display =
       'block';
@@ -3962,13 +4093,46 @@ async function submitThemeProposal() {
   }
 
 
+  /*
+   * Recupera il tema corrente
+   */
+
+  const theme =
+    weeklyThemes.find(function(item) {
+
+      return (
+        String(item.id) ===
+        String(selectedThemeId)
+      );
+
+    });
+
+
+  if (!theme) {
+
+    errorBox.textContent =
+      'Tema della settimana non trovato.';
+
+    errorBox.style.display =
+      'block';
+
+    return;
+  }
+
+
+  /*
+   * Il backend restituisce solo
+   * temi attivi, ma controlliamo
+   * comunque lo stato.
+   */
+
   if (
-    String(weeklyTheme.stato || '').toUpperCase() ===
-    'CHIUSA'
+    String(theme.stato || '').toUpperCase() !==
+    'ATTIVA'
   ) {
 
     errorBox.textContent =
-      'La settimana a tema è già chiusa.';
+      'Questo tema non è più attivo.';
 
     errorBox.style.display =
       'block';
@@ -4036,17 +4200,16 @@ async function submitThemeProposal() {
       await api(
         'addThemeProposal',
         [
-          weeklyTheme.id,
           title,
           year,
           genere,
-          session.memberId,
+          selectedThemeId,
           session.token
         ]
       );
 
 
-       /*
+    /*
      * Pulisce il form.
      */
 
@@ -4056,28 +4219,46 @@ async function submitThemeProposal() {
 
 
     /*
-     * Ricarica il tema dal server.
+     * Chiude il form.
      */
 
-    weeklyThemesLoaded = false;
-    weeklyThemeLoaded = false;
-
-  await loadWeeklyThemes();
-    
     const form =
-      document.getElementById('themeProposalForm');
-    
+      document.getElementById(
+        'themeProposalForm'
+      );
+
     if (form) {
       form.style.display = 'none';
     }
 
 
-    successBox.textContent =
-      'Film aggiunto al tema della settimana.';
+    selectedThemeId = null;
 
-    successBox.style.display =
-      'block';
 
+    /*
+     * Ricarica tutti i temi.
+     */
+
+    weeklyThemesLoaded = false;
+
+    await loadWeeklyThemes();
+
+
+    /*
+     * Messaggio di successo.
+     */
+
+    if (successBox) {
+
+      successBox.textContent =
+        'Film aggiunto al tema "' +
+        result.theme +
+        '".';
+
+      successBox.style.display =
+        'block';
+
+    }
 
   } catch (error) {
 
@@ -4085,6 +4266,7 @@ async function submitThemeProposal() {
       'Errore aggiunta proposta al tema:',
       error
     );
+
 
     errorBox.textContent =
       error && error.message
@@ -4100,8 +4282,9 @@ async function submitThemeProposal() {
     setSaving(false);
 
   }
-}  
 
+}
+  
 /* =========================
    LOGIN
    ========================= */
