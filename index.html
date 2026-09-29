@@ -2311,6 +2311,7 @@ input {
   inset: 0;
 
   display: none;
+
   align-items: center;
   justify-content: center;
 
@@ -2320,11 +2321,13 @@ input {
   padding: 20px;
   box-sizing: border-box;
 
-  background: rgba(0, 0, 0, .78);
+  /* Overlay scuro */
+  background: rgba(0, 0, 0, 0.82);
 
+  /* Il modal gestisce il proprio scroll */
   overflow: hidden;
 
-  z-index: 9999;
+  z-index: 99999;
 }
 
 #proposalGuideModal.open {
@@ -2333,38 +2336,36 @@ input {
 
 
 /* =========================
-   BOX GUIDA
+   BOX DELLA GUIDA
    ========================= */
 
-.proposal-guide-box {
+#proposalGuideModal .proposal-guide-box {
   position: relative;
 
   width: min(720px, 100%);
-
-  /*
-   * Non occupa tutta l'altezza dello schermo.
-   * Sul desktop resta compatto.
-   */
-  max-height: min(680px, calc(100vh - 40px));
+  max-height: calc(100vh - 40px);
 
   box-sizing: border-box;
 
-  /*
-   * Sfondo pieno e opaco.
-   */
-  background: var(--panel);
+  /* SFONDO PIENO */
+  background: var(--panel, #ffffff);
 
-  border: 1px solid rgba(127, 127, 127, .25);
+  color: var(--text, #111111);
+
+  border: 1px solid rgba(127, 127, 127, 0.25);
   border-radius: 18px;
 
   box-shadow:
-    0 24px 70px rgba(0, 0, 0, .50);
+    0 24px 70px rgba(0, 0, 0, 0.60);
+
+  overflow: hidden;
 
   /*
-   * Il box stesso non deve far scorrere
-   * la pagina sottostante.
+   * Evita che le regole di .film-modal
+   * modifichino il comportamento del box.
    */
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -2372,31 +2373,22 @@ input {
    CONTENUTO SCORRIBILE
    ========================= */
 
-.proposal-guide-content {
-  box-sizing: border-box;
-
+#proposalGuideModal .proposal-guide-content {
   width: 100%;
+  max-height: calc(100vh - 40px);
 
-  max-height: min(680px, calc(100vh - 40px));
+  box-sizing: border-box;
 
   padding: 28px 30px 30px;
 
-  /*
-   * SOLO questo elemento scorre.
-   */
   overflow-y: auto;
   overflow-x: hidden;
 
-  /*
-   * Migliora lo scroll su dispositivi touch.
-   */
   -webkit-overflow-scrolling: touch;
 
-  /*
-   * Evita che lo scroll passi alla pagina sottostante
-   * quando si raggiunge il fondo.
-   */
   overscroll-behavior: contain;
+
+  scrollbar-width: thin;
 }
 
 
@@ -2404,7 +2396,7 @@ input {
    TITOLO
    ========================= */
 
-.proposal-guide-title {
+#proposalGuideModal .proposal-guide-title {
   padding-right: 36px;
 
   font-size: 22px;
@@ -2412,34 +2404,26 @@ input {
   line-height: 1.25;
 }
 
-.proposal-guide-subtitle {
-  margin-top: 8px;
-
-  color: var(--muted);
-
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 
 /* =========================
    SEZIONE INDICAZIONI
    ========================= */
 
-.proposal-guide-section {
+#proposalGuideModal .proposal-guide-section {
   margin-top: 24px;
   padding-top: 20px;
 
-  border-top: 1px solid rgba(127, 127, 127, .18);
+  border-top: 1px solid rgba(127, 127, 127, 0.18);
 }
 
-.proposal-guide-section-title {
+#proposalGuideModal .proposal-guide-section-title {
   margin-bottom: 12px;
 
   font-size: 15px;
   font-weight: 800;
 
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
@@ -2448,18 +2432,18 @@ input {
    ELENCO
    ========================= */
 
-.proposal-guide-list {
+#proposalGuideModal .proposal-guide-list {
   margin: 0;
   padding-left: 21px;
 }
 
-.proposal-guide-list li {
+#proposalGuideModal .proposal-guide-list li {
   margin-bottom: 15px;
 
   line-height: 1.6;
 }
 
-.proposal-guide-list li:last-child {
+#proposalGuideModal .proposal-guide-list li:last-child {
   margin-bottom: 0;
 }
 
@@ -2468,31 +2452,53 @@ input {
    SCELTA DEL FILM
    ========================= */
 
-.proposal-guide-choice {
+#proposalGuideModal .proposal-guide-choice {
   margin-top: 26px;
   padding: 17px 18px;
 
   border-radius: 12px;
 
-  background: rgba(127, 127, 127, .08);
+  background: rgba(127, 127, 127, 0.08);
 
-  border: 1px solid rgba(127, 127, 127, .12);
+  border: 1px solid rgba(127, 127, 127, 0.15);
 }
 
-.proposal-guide-choice-title {
+#proposalGuideModal .proposal-guide-choice-title {
   margin-bottom: 10px;
 
   font-size: 15px;
   font-weight: 800;
 
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
-.proposal-guide-choice p {
+#proposalGuideModal .proposal-guide-choice p {
   margin: 0;
 
   line-height: 1.6;
+}
+
+
+/* =========================
+   PULSANTE CHIUDI
+   ========================= */
+
+/*
+ * Lo rendiamo indipendente dal resto del modal.
+ * Se .film-modal-close ha già un buon aspetto,
+ * manteniamo le sue proprietà ma ne assicuriamo
+ * il posizionamento sopra la guida.
+ */
+
+#proposalGuideModal .film-modal-close {
+  position: absolute;
+
+  top: 12px;
+  right: 14px;
+
+  z-index: 10;
 }
 
 
@@ -2506,75 +2512,69 @@ input {
     padding: 12px;
   }
 
-  .proposal-guide-box {
+  #proposalGuideModal .proposal-guide-box {
     width: 100%;
 
-    /*
-     * Sul telefono il modal può occupare
-     * quasi tutto lo schermo, ma non tutto.
-     */
     max-height: calc(100vh - 24px);
 
     border-radius: 15px;
   }
 
-  .proposal-guide-content {
+  #proposalGuideModal .proposal-guide-content {
     max-height: calc(100vh - 24px);
 
     padding: 23px 19px 24px;
 
-    /*
-     * Scroll verticale esclusivamente
-     * dentro la guida.
-     */
     overflow-y: auto;
+    overflow-x: hidden;
+
     overscroll-behavior: contain;
+
     -webkit-overflow-scrolling: touch;
   }
 
-  .proposal-guide-title {
+  #proposalGuideModal .proposal-guide-title {
     padding-right: 30px;
 
     font-size: 19px;
   }
 
-  .proposal-guide-subtitle {
-    font-size: 12px;
-  }
-
-  .proposal-guide-section {
+  #proposalGuideModal .proposal-guide-section {
     margin-top: 20px;
     padding-top: 17px;
   }
 
-  .proposal-guide-section-title,
-  .proposal-guide-choice-title {
+  #proposalGuideModal .proposal-guide-section-title,
+  #proposalGuideModal .proposal-guide-choice-title {
     font-size: 14px;
   }
 
-  .proposal-guide-list {
+  #proposalGuideModal .proposal-guide-list {
     padding-left: 19px;
   }
 
-  .proposal-guide-list li {
+  #proposalGuideModal .proposal-guide-list li {
     margin-bottom: 13px;
 
     font-size: 13px;
     line-height: 1.55;
   }
 
-  .proposal-guide-choice {
+  #proposalGuideModal .proposal-guide-choice {
     margin-top: 21px;
     padding: 15px;
   }
 
-  .proposal-guide-choice p {
+  #proposalGuideModal .proposal-guide-choice p {
     font-size: 13px;
     line-height: 1.55;
   }
 
+  #proposalGuideModal .film-modal-close {
+    top: 9px;
+    right: 10px;
+  }
 }
-
 
   
 </style>
@@ -8645,7 +8645,7 @@ function closeProposalGuide(event) {
 
 <div
   id="proposalGuideModal"
-  class="film-modal proposal-guide-modal"
+  class="proposal-guide-modal"
   onclick="closeProposalGuide(event)"
 >
   <div class="proposal-guide-box">
