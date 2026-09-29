@@ -4342,6 +4342,48 @@ async function loadProposals() {
 
 }  
 
+function getValidProposals() {
+
+  return proposals.filter(function(proposal) {
+
+    if (!proposal) {
+      return false;
+    }
+
+    const genre =
+      String(
+        proposal.genere || ''
+      ).trim();
+
+    /*
+     * Una proposta è valida solo se il suo genere
+     * corrisponde a uno dei generi gestiti dal sito.
+     */
+    const validGenre =
+      PROPOSAL_GENRES.some(function(item) {
+
+        return item.value === genre;
+
+      });
+
+    if (!validGenre) {
+      return false;
+    }
+
+    /*
+     * Deve avere anche un titolo.
+     */
+    const title =
+      String(
+        proposal.title || ''
+      ).trim();
+
+    return Boolean(title);
+
+  });
+
+}  
+
 function renderProposals() {
 
   const box =
@@ -4351,7 +4393,10 @@ function renderProposals() {
     return;
   }
 
-  if (!proposals.length) {
+  const validProposals =
+  getValidProposals();
+
+if (!validProposals.length) {
 
     box.innerHTML =
       '<div class="empty">Nessuna proposta presente.</div>';
@@ -4361,7 +4406,7 @@ function renderProposals() {
 
   const grouped = {};
 
-  proposals.forEach(function(proposal) {
+  validProposals.forEach(function(proposal) {
 
     const genre =
       String(proposal.genere || '').trim();
@@ -4438,7 +4483,7 @@ function renderProposals() {
       </span>
 
       <span class="proposals-all-button-count">
-        ${proposals.length}
+        ${validproposals.length}
       </span>
 
       <span
@@ -4617,7 +4662,7 @@ function toggleAllProposals() {
    * nel passaggio successivo.
    */
   const allItems =
-    proposals
+    getValidProposals()
       .map(function(proposal) {
 
         const rawTitle =
