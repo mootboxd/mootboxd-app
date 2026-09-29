@@ -2303,6 +2303,270 @@ input {
 }  
 
 /* =========================
+   SETTIMANE A TEMA
+   ========================= */
+
+.weekly-theme-content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+
+/*
+ * Ogni tema è una vera e propria card separata.
+ */
+.weekly-theme-card {
+  padding: 26px 28px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.12);
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+
+/*
+ * Testata del tema
+ */
+.weekly-theme-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+
+.weekly-theme-card-main {
+  min-width: 0;
+}
+
+
+.weekly-theme-card-title {
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+
+.weekly-theme-card-dates {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+
+.weekly-theme-card-dates strong {
+  color: inherit;
+  font-weight: 750;
+}
+
+
+/*
+ * Descrizione
+ */
+.weekly-theme-description {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.045);
+
+  line-height: 1.6;
+}
+
+
+/*
+ * Sezione film proposti
+ */
+.weekly-theme-proposals {
+  margin-top: 2px;
+}
+
+
+/*
+ * Ora è un vero pulsante.
+ */
+.weekly-theme-proposals-toggle {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.035);
+  color: inherit;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .7px;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+}
+
+
+.weekly-theme-proposals-toggle:hover {
+  background: rgba(255,255,255,.075);
+  border-color: rgba(255,255,255,.18);
+}
+
+
+.weekly-theme-proposals-toggle > span:first-child {
+  flex: 1;
+}
+
+
+.weekly-theme-proposals-count {
+  min-width: 26px;
+  height: 26px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.10);
+
+  font-size: 11px;
+}
+
+
+.weekly-theme-proposals-arrow {
+  font-size: 22px;
+  line-height: 1;
+
+  transition: transform .18s ease;
+}
+
+
+.weekly-theme-proposals-toggle.is-open
+.weekly-theme-proposals-arrow {
+  transform: rotate(90deg);
+}
+
+
+/*
+ * Lista nascosta di default
+ */
+.weekly-theme-proposals-list {
+  margin-top: 12px;
+
+  padding: 4px 0 0;
+
+  animation: weeklyThemeProposalsOpen .18s ease;
+}
+
+
+@keyframes weeklyThemeProposalsOpen {
+
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+
+/*
+ * Singolo film
+ */
+.weekly-theme-proposal {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+
+.weekly-theme-proposal:last-child {
+  border-bottom: 0;
+}
+
+
+.weekly-theme-proposal-info {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+
+.weekly-theme-proposal-title {
+  font-weight: 750;
+}
+
+
+.weekly-theme-proposal-year {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+
+.weekly-theme-proposal-genre {
+  margin-left: auto;
+
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+
+/*
+ * Pulsante proposta
+ */
+.weekly-theme-propose-button {
+  flex-shrink: 0;
+}
+
+
+/*
+ * Responsive
+ */
+@media (max-width: 700px) {
+
+  .weekly-theme-card {
+    padding: 22px 20px;
+  }
+
+  .weekly-theme-card-header {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .weekly-theme-propose-button {
+    width: 100%;
+  }
+
+  .weekly-theme-proposal-genre {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 3px;
+  }
+
+}  
+
+/* =========================
    MODAL GUIDA PROPOSTE
    ========================= */
 
@@ -4670,7 +4934,7 @@ function renderWeeklyThemes() {
     'Settimana a tema';
 
   /*
-   * Nessun attivo
+   * Nessun tema attivo
    */
   if (
     !Array.isArray(weeklyThemes) ||
@@ -4691,19 +4955,25 @@ function renderWeeklyThemes() {
    * Un blocco separato per ogni tema.
    */
   contentBox.innerHTML =
-    weeklyThemes.map(function(theme) {
+    weeklyThemes.map(function(theme, index) {
 
       const themeId =
         String(theme.id || '');
 
       const themeName =
-        String(theme.nome || 'Tema della settimana');
+        String(
+          theme.nome ||
+          'Tema della settimana'
+        );
 
-      const dataInizio =
-        String(theme.dataInizio || '');
-
+      /*
+       * Mostriamo solamente la data di chiusura.
+       */
       const dataFine =
-        String(theme.dataFine || '');
+        String(
+          theme.dataFine ||
+          ''
+        );
 
       const description =
         theme.descrizione ||
@@ -4714,6 +4984,19 @@ function renderWeeklyThemes() {
         Array.isArray(theme.proposte)
           ? theme.proposte
           : [];
+
+
+      /*
+       * ID univoco per la sezione richiudibile.
+       */
+      const proposalsId =
+        'themeProposals_' +
+        index +
+        '_' +
+        themeId.replace(
+          /[^a-zA-Z0-9_-]/g,
+          ''
+        );
 
 
       /*
@@ -4814,6 +5097,9 @@ function renderWeeklyThemes() {
       }
 
 
+      /*
+       * Card completa del tema
+       */
       return `
         <div
           class="weekly-theme-card"
@@ -4822,19 +5108,18 @@ function renderWeeklyThemes() {
 
           <div class="weekly-theme-card-header">
 
-            <div>
+            <div class="weekly-theme-card-main">
 
               <div class="weekly-theme-card-title">
                 ${esc(themeName)}
               </div>
 
               ${
-                dataInizio || dataFine
+                dataFine
                   ? `
                     <div class="weekly-theme-card-dates">
-                      ${esc(dataInizio)}
-                      →
-                      ${esc(dataFine)}
+                      Chiusura modulo:
+                      <strong>${esc(dataFine)}</strong>
                     </div>
                   `
                   : ''
@@ -4842,9 +5127,10 @@ function renderWeeklyThemes() {
 
             </div>
 
+
             <button
               type="button"
-              class="btn primary"
+              class="btn primary weekly-theme-propose-button"
               onclick="openThemeProposalForm('${esc(themeId)}')"
             >
               Proponi per questo tema
@@ -4866,11 +5152,39 @@ function renderWeeklyThemes() {
 
           <div class="weekly-theme-proposals">
 
-            <div class="weekly-theme-proposals-title">
-              Film proposti per questa settimana a tema
-            </div>
+            <button
+              type="button"
+              class="weekly-theme-proposals-toggle"
+              onclick="toggleWeeklyThemeProposals(this)"
+              aria-expanded="false"
+              aria-controls="${esc(proposalsId)}"
+            >
 
-            ${proposalsHtml}
+              <span>
+                FILM PROPOSTI PER QUESTO TEMA
+              </span>
+
+              <span class="weekly-theme-proposals-count">
+                ${themeProposals.length}
+              </span>
+
+              <span
+                class="weekly-theme-proposals-arrow"
+                aria-hidden="true"
+              >
+                ›
+              </span>
+
+            </button>
+
+
+            <div
+              id="${esc(proposalsId)}"
+              class="weekly-theme-proposals-list"
+              style="display:none;"
+            >
+              ${proposalsHtml}
+            </div>
 
           </div>
 
@@ -4879,6 +5193,38 @@ function renderWeeklyThemes() {
 
     }).join('');
 }
+
+function toggleWeeklyThemeProposals(button) {
+
+  if (!button) {
+    return;
+  }
+
+  const proposalsBox =
+    button.nextElementSibling;
+
+  if (!proposalsBox) {
+    return;
+  }
+
+  const isOpen =
+    proposalsBox.style.display !== 'none';
+
+  proposalsBox.style.display =
+    isOpen
+      ? 'none'
+      : 'block';
+
+  button.setAttribute(
+    'aria-expanded',
+    String(!isOpen)
+  );
+
+  button.classList.toggle(
+    'is-open',
+    !isOpen
+  );
+}  
   
 async function loadProposals() {
 
