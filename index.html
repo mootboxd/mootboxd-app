@@ -5016,15 +5016,13 @@ if (page === 'proposals') {
 
 
   /*
-   * TEMA DELLA SETTIMANA
-   */
-   loadWeeklyTheme();
-  
-  if (!weeklyThemeLoaded) {
-    loadWeeklyTheme();
-  } else {
-    renderWeeklyTheme();
-  }
+ * TEMI DELLA SETTIMANA
+ */
+if (!weeklyThemesLoaded) {
+  loadWeeklyThemes();
+} else {
+  renderWeeklyThemes();
+}
 
 
   /*
