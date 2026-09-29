@@ -2347,7 +2347,7 @@ input {
 
 
 .weekly-theme-card-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 850;
   line-height: 1.2;
 }
@@ -2611,10 +2611,9 @@ input {
 
   box-sizing: border-box;
 
-  /* SFONDO PIENO */
-  background: var(--panel, #ffffff);
+  background: #151821;
 
-  color: var(--text, #111111);
+  color: #ffffff;
 
   border: 1px solid rgba(127, 127, 127, 0.25);
   border-radius: 18px;
@@ -4918,6 +4917,28 @@ async function loadWeeklyThemes() {
   }
 }
 
+function formatThemeDate(value) {
+
+  if (!value) {
+    return '';
+  }
+
+  const match =
+    String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) {
+    return String(value);
+  }
+
+  return (
+    match[3] +
+    '-' +
+    match[2] +
+    '-' +
+    match[1]
+  );
+}  
+
 function renderWeeklyThemes() {
 
   const titleBox =
@@ -4970,10 +4991,7 @@ function renderWeeklyThemes() {
        * Mostriamo solamente la data di chiusura.
        */
       const dataFine =
-        String(
-          theme.dataFine ||
-          ''
-        );
+        formatThemeDate(theme.dataFine);
 
       const description =
         theme.descrizione ||
