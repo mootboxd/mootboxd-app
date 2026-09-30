@@ -3836,6 +3836,156 @@ input {
 
 }  
 
+/* =========================================================
+   MODAL PROGRESSO MEMBRO
+   ========================================================= */
+
+.member-progress-modal-box {
+  position: relative;
+  width: min(900px, calc(100% - 32px));
+  max-height: min(850px, calc(100vh - 40px));
+  overflow-y: auto;
+  background: #151821;
+  border: 1px solid #2a2f3d;
+  border-radius: 16px;
+  padding: 30px;
+  box-sizing: border-box;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+}
+
+.member-progress-modal-content {
+  padding-top: 8px;
+}
+
+.member-progress-modal-title {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+  padding-right: 40px;
+}
+
+.member-progress-modal-subtitle {
+  margin-top: 6px;
+  color: #9ca3b2;
+  font-size: 14px;
+}
+
+.member-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.member-progress-card {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.member-progress-poster-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1e2230;
+}
+
+.member-progress-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+.member-progress-card:hover .member-progress-poster {
+  transform: scale(1.025);
+  opacity: .9;
+}
+
+.member-progress-no-poster {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  color: #6f7685;
+  font-size: 12px;
+  text-align: center;
+}
+
+.member-progress-film-title {
+  margin-top: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.member-progress-film-year {
+  margin-top: 3px;
+  color: #9ca3b2;
+  font-size: 12px;
+}
+
+.member-progress-empty {
+  margin-top: 25px;
+  padding: 35px 20px;
+  border: 1px solid #2a2f3d;
+  border-radius: 10px;
+  background: #1e2230;
+  color: #9ca3b2;
+  text-align: center;
+}
+
+
+/* Nome membro cliccabile */
+
+.member-name-clickable {
+  cursor: pointer;
+  transition: opacity .15s ease;
+}
+
+.member-name-clickable:hover {
+  opacity: .75;
+}
+
+
+@media screen and (max-width: 600px) {
+
+  .member-progress-modal-box {
+    width: calc(100% - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+
+  .member-progress-modal-title {
+    font-size: 22px;
+  }
+
+  .member-progress-modal-subtitle {
+    font-size: 13px;
+  }
+
+  .member-progress-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 8px;
+    margin-top: 20px;
+  }
+
+  .member-progress-film-title {
+    font-size: 12px;
+  }
+
+  .member-progress-film-year {
+    font-size: 10px;
+  }
+
+}  
+
   
 </style>
 </head>
@@ -4485,6 +4635,62 @@ input {
     </div>
   </div>
 </div>
+
+<!-- =========================
+     MODAL FILM MANCANTI MEMBRO
+     ========================= -->
+
+<div
+  id="memberMissingModal"
+  class="modal-overlay"
+  style="display:none;"
+  onclick="closeMemberMissingModal(event)"
+>
+
+  <div
+    class="modal-box member-missing-modal"
+    onclick="event.stopPropagation()"
+  >
+
+    <div class="modal-header">
+
+      <div>
+
+        <div
+          id="memberMissingModalTitle"
+          class="modal-title"
+        >
+          Film mancanti
+        </div>
+
+        <div
+          id="memberMissingModalSubtitle"
+          class="muted"
+          style="margin-top:4px;"
+        >
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        class="modal-close"
+        onclick="closeMemberMissingModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div
+      id="memberMissingModalContent"
+      class="member-missing-grid"
+    >
+    </div>
+
+  </div>
+
+</div>  
 
   <div class="panel missing-panel" style="margin-bottom:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -8198,7 +8404,10 @@ function render() {
 
               <div>
 
-                <div class="name">
+                <div
+                  class="name member-progress-name"
+                  onclick="openMemberMissingModal('${member.id}')"
+                >
                   ${esc(member.name)}
                 </div>
 
@@ -8372,6 +8581,205 @@ return `
       }).join("");
   }
 }
+
+/* =========================
+   MODAL FILM MANCANTI MEMBRO
+   ========================= */
+
+function openMemberMissingModal(memberId) {
+
+  const member =
+    D.members.find(function(member) {
+      return String(member.id) === String(memberId);
+    });
+
+  if (!member) {
+    return;
+  }
+
+
+  /*
+   * =========================
+   * TROVA FILM MANCANTI
+   * =========================
+   */
+
+  const missingFilms =
+    D.films.filter(function(film) {
+
+      return !D.watched[
+        member.id + "|" + film.id
+      ];
+
+    });
+
+
+  /*
+   * =========================
+   * ELEMENTI MODAL
+   * =========================
+   */
+
+  const modal =
+    document.getElementById(
+      "memberMissingModal"
+    );
+
+  const title =
+    document.getElementById(
+      "memberMissingModalTitle"
+    );
+
+  const subtitle =
+    document.getElementById(
+      "memberMissingModalSubtitle"
+    );
+
+  const content =
+    document.getElementById(
+      "memberMissingModalContent"
+    );
+
+  if (!modal || !title || !subtitle || !content) {
+    return;
+  }
+
+
+  /*
+   * =========================
+   * TESTATA
+   * =========================
+   */
+
+  title.textContent =
+    "Film mancanti di " + member.name;
+
+  subtitle.textContent =
+    missingFilms.length === 0
+      ? "Ha visto tutti i film del club."
+      : missingFilms.length +
+        " film ancora da vedere";
+
+
+  /*
+   * =========================
+   * NESSUN FILM MANCANTE
+   * =========================
+   */
+
+  if (missingFilms.length === 0) {
+
+    content.innerHTML =
+      '<div class="empty member-missing-empty">' +
+      'Nessun film da recuperare.' +
+      '</div>';
+
+  } else {
+
+
+    /*
+     * =========================
+     * GRIGLIA POSTER
+     * =========================
+     */
+
+    content.innerHTML =
+      missingFilms.map(function(film) {
+
+        return `
+
+          <div
+            class="member-missing-card"
+            onclick="openFilmModal('${film.id}')"
+          >
+
+            ${
+              film.poster
+                ? `
+                  <img
+                    src="${esc(film.poster)}"
+                    class="member-missing-poster"
+                    alt="${esc(film.title)}"
+                    loading="lazy"
+                    decoding="async"
+                    onerror="this.style.display='none';"
+                  >
+                `
+                : `
+                  <div class="member-missing-no-poster">
+                    Nessun poster
+                  </div>
+                `
+            }
+
+            <div class="member-missing-title">
+              ${esc(film.title)}
+            </div>
+
+            ${
+              film.year
+                ? `
+                  <div class="member-missing-year">
+                    ${esc(film.year)}
+                  </div>
+                `
+                : ''
+            }
+
+          </div>
+
+        `;
+
+      }).join("");
+
+  }
+
+
+  /*
+   * =========================
+   * APRE MODAL
+   * =========================
+   */
+
+  modal.style.display = "flex";
+
+  document.body.classList.add(
+    "modal-open"
+  );
+
+}
+
+
+function closeMemberMissingModal(event) {
+
+  /*
+   * Se il click arriva sull'overlay,
+   * chiudi il modal.
+   */
+
+  if (
+    event &&
+    event.target !== event.currentTarget
+  ) {
+    return;
+  }
+
+  const modal =
+    document.getElementById(
+      "memberMissingModal"
+    );
+
+  if (!modal) {
+    return;
+  }
+
+  modal.style.display = "none";
+
+  document.body.classList.remove(
+    "modal-open"
+  );
+
+}  
 
 /* =========================
    AGGIUNGI MEMBRO
