@@ -4888,29 +4888,224 @@ input {
 
     <div class="head">
 
-      <div>
+  <div>
 
-        <h2>Film del club</h2>
+    <h2>Film del club</h2>
 
-        <div class="muted film-club-hint">
-          Clicca sul poster per vedere<br>
-          le informazioni del film
-        </div>
-
-      </div>
-
-      <span class="muted film-club-action-hint">
-        Clicca la tua iniziale<br>
-        per segnare un film come<br>
-        visto / non visto
-      </span>
-
+    <div class="muted film-club-hint">
+      Clicca sul poster per vedere<br>
+      le informazioni del film
     </div>
 
-    <div
-      class="films"
-      id="films"
-    ></div>
+  </div>
+
+  <span class="muted film-club-action-hint">
+    Clicca la tua iniziale<br>
+    per segnare un film come<br>
+    visto / non visto
+  </span>
+
+</div>
+
+
+<!-- =========================
+     RICERCA + FILTRI FILM
+     ========================= -->
+
+<div class="club-films-toolbar">
+
+  <div class="club-films-search-wrap">
+
+    <span
+      class="club-films-search-icon"
+      aria-hidden="true"
+    >
+      🔍
+    </span>
+
+    <input
+      type="search"
+      id="clubFilmsSearch"
+      class="club-films-search"
+      placeholder="Cerca un film..."
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <button
+    type="button"
+    class="club-films-filter-button"
+    onclick="toggleClubFilmFilters()"
+    aria-expanded="false"
+    aria-label="Apri filtri"
+  >
+    <span aria-hidden="true">☷</span>
+    <span>Filtri</span>
+  </button>
+
+</div>
+
+
+<div
+  id="clubFilmsFilters"
+  class="club-films-filters"
+  style="display:none;"
+>
+
+
+  <!-- STATO VISIONE -->
+
+  <div class="club-films-filter-field">
+
+    <label for="clubFilmsFilterWatched">
+      Visione
+    </label>
+
+    <select id="clubFilmsFilterWatched">
+
+      <option value="">
+        Tutti
+      </option>
+
+      <option value="mine">
+        Visti da me
+      </option>
+
+      <option value="missing">
+        Non visti da me
+      </option>
+
+      <option value="all">
+        Visti da tutti
+      </option>
+
+      <option value="none">
+        Non visti da nessuno
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- GENERE -->
+
+  <div class="club-films-filter-field">
+
+    <label for="clubFilmsFilterGenre">
+      Genere
+    </label>
+
+    <select id="clubFilmsFilterGenre">
+
+      <option value="">
+        Tutti i generi
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- ANNO -->
+
+  <div class="club-films-filter-field">
+
+    <label for="clubFilmsFilterYear">
+      Anno
+    </label>
+
+    <input
+      id="clubFilmsFilterYear"
+      type="number"
+      inputmode="numeric"
+      placeholder="Es. 1999"
+      min="1880"
+      max="2100"
+    >
+
+  </div>
+
+
+  <!-- DECENNIO -->
+
+  <div class="club-films-filter-field">
+
+    <label for="clubFilmsFilterDecade">
+      Decennio
+    </label>
+
+    <select id="clubFilmsFilterDecade">
+
+      <option value="">
+        Tutti i decenni
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- ORDINA -->
+
+  <div class="club-films-filter-field">
+
+    <label for="clubFilmsFilterSort">
+      Ordina
+    </label>
+
+    <select id="clubFilmsFilterSort">
+
+      <option value="default">
+        Ordine originale
+      </option>
+
+      <option value="discussion-newest">
+        Discussione più recente
+      </option>
+
+      <option value="discussion-oldest">
+        Discussione meno recente
+      </option>
+
+      <option value="alpha">
+        Titolo A–Z
+      </option>
+
+      <option value="alpha-desc">
+        Titolo Z–A
+      </option>
+
+      <option value="year-newest">
+        Anno più recente
+      </option>
+
+      <option value="year-oldest">
+        Anno più vecchio
+      </option>
+
+    </select>
+
+  </div>
+
+</div>
+
+
+<div class="club-films-summary">
+
+  <span id="clubFilmsCount">
+    —
+  </span>
+
+</div>
+
+
+<div
+  class="films"
+  id="films"
+></div>
 
   </section>
 
