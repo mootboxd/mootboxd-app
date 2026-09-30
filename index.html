@@ -8772,10 +8772,39 @@ function render() {
    FILM
    ========================= */
 
-renderClubFilms();
+const filmsContainer =
+  document.getElementById("films");
+
+if (!filmsContainer) {
+  return;
+}
+
+
+/*
+ * =========================
+ * CONTENITORE RISULTATI
+ * =========================
+ */
+
+if (!document.getElementById("clubFilmsResults")) {
+
+  filmsContainer.innerHTML = `
+    <div id="clubFilmsResults"></div>
+  `;
 
 }
 
+
+/*
+ * =========================
+ * DISEGNA I FILM
+ * =========================
+ */
+
+renderClubFilms();
+
+}
+  
 /* =========================
    FILTRI FILM DEL CLUB
    ========================= */
