@@ -4860,6 +4860,11 @@ function renderProposalGenres() {
 
 async function loadWeeklyThemes() {
 
+  if (weeklyThemesLoaded) {
+    renderWeeklyThemes();
+    return;
+  }
+
   const titleBox =
     document.getElementById('weeklyThemeTitle');
 
@@ -4870,29 +4875,12 @@ async function loadWeeklyThemes() {
     return;
   }
 
-  /*
-   * Se i dati sono già stati caricati,
-   * li mostriamo immediatamente senza
-   * effettuare una nuova chiamata API.
-   */
-  if (weeklyThemesLoaded) {
-    renderWeeklyThemes();
-    return;
-  }
-
-  /*
-   * Mostra subito lo stato di caricamento.
-   */
   titleBox.textContent =
     'Settimana a tema';
 
   contentBox.innerHTML =
     '<div class="empty">Caricamento…</div>';
 
-  /*
-   * La richiesta API parte immediatamente.
-   * Non facciamo altro lavoro prima della fetch.
-   */
   try {
 
     const result =
@@ -4901,6 +4889,11 @@ async function loadWeeklyThemes() {
         []
       );
 
+    console.log(
+      'RISPOSTA getWeeklyThemes:',
+      result
+    );
+
     weeklyThemes =
       Array.isArray(result)
         ? result
@@ -4908,10 +4901,6 @@ async function loadWeeklyThemes() {
 
     weeklyThemesLoaded = true;
 
-    /*
-     * Appena arriva la risposta,
-     * renderizziamo immediatamente il contenuto.
-     */
     renderWeeklyThemes();
 
   } catch (error) {
@@ -5262,6 +5251,11 @@ function toggleWeeklyThemeProposals(button) {
   
 async function loadProposals() {
 
+  if (proposalsLoaded) {
+    renderProposals();
+    return;
+  }
+
   const box =
     document.getElementById('proposalsList');
 
@@ -5269,18 +5263,6 @@ async function loadProposals() {
     return;
   }
 
-  /*
-   * Se le proposte sono già state caricate,
-   * mostriamo direttamente i dati locali.
-   */
-  if (proposalsLoaded) {
-    renderProposals();
-    return;
-  }
-
-  /*
-   * Feedback immediato.
-   */
   box.innerHTML =
     '<div class="empty">Caricamento…</div>';
 
@@ -5299,9 +5281,6 @@ async function loadProposals() {
 
     proposalsLoaded = true;
 
-    /*
-     * Rendering immediato appena arriva la risposta.
-     */
     renderProposals();
 
   } catch (error) {
@@ -5319,7 +5298,7 @@ async function loadProposals() {
 
   }
 
-}
+}  
 
 function getValidProposals() {
 
@@ -6346,46 +6325,30 @@ async function submitProposal() {
 
   setSaving(true);
 
-/*
- * Feedback immediato all'utente.
- * Il server sta già per ricevere la richiesta,
- * ma il membro non rimane senza risposta visiva.
- */
-successBox.textContent =
-  'Proposta in invio…';
 
-successBox.style.display =
-  'block';
+  try {
 
-try {
+    const result =
+      await api(
+        'addProposal',
+        [
+          title,
+          year,
+          genere,
+          session.token
+        ]
+      );
 
-  const result =
-    await api(
-      'addProposal',
-      [
-        title,
-        year,
-        genere,
-        session.token
-      ]
-    );
 
-  /*
-   * Il server ha confermato la registrazione.
-   * A questo punto aggiorniamo la lista locale.
-   */
-  proposals.push({
-    title: result.proposal,
-    genere: result.genere
-  });
+    /*
+     * Aggiunge immediatamente la proposta
+     * alla lista locale.
+     */
 
-  renderProposals();
-
-  /*
-   * Conferma definitiva.
-   */
-  successBox.textContent =
-    'Film aggiunto alle proposte.';
+    proposals.push({
+      title: result.proposal,
+      genere: result.genere
+    });
 
 
     /*
@@ -6737,60 +6700,50 @@ async function submitThemeProposal() {
 
 
     /*
- * Salviamo l'ID prima di azzerare selectedThemeId.
- */
-const submittedThemeId =
-  selectedThemeId;
+     * Chiude il form.
+     */
+
+    const form =
+      document.getElementById(
+        'themeProposalForm'
+      );
+
+    if (form) {
+      form.style.display = 'none';
+    }
 
 
-/*
- * Chiude il form.
- */
-
-const form =
-  document.getElementById(
-    'themeProposalForm'
-  );
-
-if (form) {
-  form.style.display = 'none';
-}
+    selectedThemeId = null;
 
 
-/*
- * Aggiorna localmente il tema appena modificato,
- * senza effettuare una nuova chiamata API.
- */
-
-const updatedTheme =
-  weeklyThemes.find(function(item) {
-
-    return (
-      String(item.id) ===
-      String(submittedThemeId)
-    );
-
-  });
-
-if (updatedTheme) {
-
-  if (!Array.isArray(updatedTheme.proposte)) {
-    updatedTheme.proposte = [];
-  }
-
-  updatedTheme.proposte.push({
-    title: result.proposal,
-    genere: result.genere
-  });
+    /*
+     * Aggiorna localmente il tema appena modificato,
+     * senza effettuare una nuova chiamata API.
+     */
+    
+    const updatedTheme =
+      weeklyThemes.find(function(item) {
+    
+        return (
+          String(item.id) ===
+          String(selectedThemeId)
+        );
+    
+      });
+    
+    if (updatedTheme) {
+    
+      if (!Array.isArray(updatedTheme.proposte)) {
+        updatedTheme.proposte = [];
+      }
+    
+      updatedTheme.proposte.push({
+        title: result.proposal,
+        genere: result.genere
+      });
 
   renderWeeklyThemes();
 }
-
-
-/*
- * Ora possiamo azzerare il tema selezionato.
- */
-selectedThemeId = null;
 
 
     /*
