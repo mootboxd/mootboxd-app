@@ -5003,6 +5003,39 @@ input {
       <option value="">
         Tutti i generi
       </option>
+    
+      ${[
+        ...new Set(
+          D.films
+            .map(function(film) {
+              return String(
+                film.genere || ""
+              ).trim();
+            })
+            .filter(function(genre) {
+              return genre !== "";
+            })
+        )
+      ]
+        .sort(function(a, b) {
+          return a.localeCompare(
+            b,
+            "it",
+            {
+              sensitivity: "base"
+            }
+          );
+        })
+        .map(function(genre) {
+    
+          return `
+            <option value="${esc(genre)}">
+              ${esc(genre)}
+            </option>
+          `;
+    
+        })
+        .join("")}
 
     </select>
 
@@ -5042,7 +5075,37 @@ input {
       <option value="">
         Tutti i decenni
       </option>
-
+    
+      ${[
+        ...new Set(
+          D.films
+            .map(function(film) {
+              const year =
+                Number(film.year);
+    
+              return Number.isFinite(year)
+                ? Math.floor(year / 10) * 10
+                : null;
+            })
+            .filter(function(decade) {
+              return decade !== null;
+            })
+        )
+      ]
+        .sort(function(a, b) {
+          return b - a;
+        })
+        .map(function(decade) {
+    
+          return `
+            <option value="${decade}">
+              ${decade}s
+            </option>
+          `;
+    
+        })
+        .join("")}
+    
     </select>
 
   </div>
@@ -5084,6 +5147,14 @@ input {
 
       <option value="year-oldest">
         Anno più vecchio
+      </option>
+
+      <option value="watched-most">
+        Film più visto
+      </option>
+    
+      <option value="watched-least">
+        Film meno visto
       </option>
 
     </select>
@@ -9327,6 +9398,75 @@ function renderClubFilms() {
     });
 
   }
+
+  else if (sort === "watched-most") {
+
+  films.sort(function(a, b) {
+
+    const watchedA =
+      D.members.filter(function(member) {
+
+        return Boolean(
+          D.watched[
+            member.id + "|" + a.id
+          ]
+        );
+
+      }).length;
+
+
+    const watchedB =
+      D.members.filter(function(member) {
+
+        return Boolean(
+          D.watched[
+            member.id + "|" + b.id
+          ]
+        );
+
+      }).length;
+
+
+    return watchedB - watchedA;
+
+  });
+
+}
+
+
+else if (sort === "watched-least") {
+
+  films.sort(function(a, b) {
+
+    const watchedA =
+      D.members.filter(function(member) {
+
+        return Boolean(
+          D.watched[
+            member.id + "|" + a.id
+          ]
+        );
+
+      }).length;
+
+
+    const watchedB =
+      D.members.filter(function(member) {
+
+        return Boolean(
+          D.watched[
+            member.id + "|" + b.id
+          ]
+        );
+
+      }).length;
+
+
+    return watchedA - watchedB;
+
+  });
+
+}
 
 
   /*
