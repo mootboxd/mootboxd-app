@@ -8817,11 +8817,8 @@ if (genreFilter) {
           )
             .split(",")
             .map(function(genre) {
-              return genre.trim().toLowerCase();
+              return genre.trim();
             })
-            .includes(
-              selectedGenre.toLowerCase()
-            );
             .filter(Boolean);
 
         })
@@ -8854,7 +8851,6 @@ if (genreFilter) {
     }).join("");
 
 }
-
 
 /* =========================
    DECENNI
