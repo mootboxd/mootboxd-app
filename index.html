@@ -8952,89 +8952,77 @@ function getClubFilmDiscussionDate(film) {
 function renderClubFilms() {
 
   const results =
-    document.getElementById(
-      "clubFilmsResults"
-    );
+    document.getElementById("clubFilmsResults");
 
   const count =
-    document.getElementById(
-      "clubFilmsCount"
-    );
-
+    document.getElementById("clubFilmsCount");
 
   if (!results || !count) {
     return;
   }
 
 
+  /* =========================
+     ELEMENTI FILTRI
+     ========================= */
+
   const searchInput =
-    document.getElementById(
-      "clubFilmsSearch"
-    );
+    document.getElementById("clubFilmsSearch");
+
+  const watchedFilter =
+    document.getElementById("clubFilmsFilterWatched");
 
   const genreFilter =
-    document.getElementById(
-      "clubFilmsGenre"
-    );
+    document.getElementById("clubFilmsFilterGenre");
 
   const yearFilter =
-    document.getElementById(
-      "clubFilmsYear"
-    );
+    document.getElementById("clubFilmsFilterYear");
 
   const decadeFilter =
-    document.getElementById(
-      "clubFilmsDecade"
-    );
-
-  const statusFilter =
-    document.getElementById(
-      "clubFilmsStatus"
-    );
+    document.getElementById("clubFilmsFilterDecade");
 
   const sortFilter =
-    document.getElementById(
-      "clubFilmsSort"
-    );
+    document.getElementById("clubFilmsFilterSort");
 
+
+  /* =========================
+     VALORI
+     ========================= */
 
   const search =
     searchInput
-      ? searchInput.value
-          .trim()
-          .toLowerCase()
+      ? searchInput.value.trim().toLowerCase()
       : "";
 
+  const selectedWatched =
+    watchedFilter
+      ? watchedFilter.value
+      : "";
 
   const selectedGenre =
     genreFilter
       ? genreFilter.value
       : "";
 
-
   const selectedYear =
     yearFilter
       ? yearFilter.value.trim()
       : "";
-
 
   const selectedDecade =
     decadeFilter
       ? decadeFilter.value
       : "";
 
-
-  const selectedStatus =
-    statusFilter
-      ? statusFilter.value
-      : "";
-
-
   const sort =
-  sortFilter && sortFilter.value
-    ? sortFilter.value
-    : "discussion-oldest";
+    sortFilter && sortFilter.value
+      ? sortFilter.value
+      : "default";
 
+
+  /* =========================
+     COPIA FILM
+     ========================= */
 
   let films =
     Array.isArray(D.films)
@@ -9042,11 +9030,9 @@ function renderClubFilms() {
       : [];
 
 
-  /*
-   * =========================
-   * RICERCA
-   * =========================
-   */
+  /* =========================
+     RICERCA
+     ========================= */
 
   if (search) {
 
@@ -9064,11 +9050,9 @@ function renderClubFilms() {
   }
 
 
-  /*
-   * =========================
-   * GENERE
-   * =========================
-   */
+  /* =========================
+     GENERE
+     ========================= */
 
   if (selectedGenre) {
 
@@ -9084,11 +9068,9 @@ function renderClubFilms() {
   }
 
 
-  /*
-   * =========================
-   * ANNO
-   * =========================
-   */
+  /* =========================
+     ANNO
+     ========================= */
 
   if (selectedYear) {
 
@@ -9111,11 +9093,9 @@ function renderClubFilms() {
   }
 
 
-  /*
-   * =========================
-   * DECENNIO
-   * =========================
-   */
+  /* =========================
+     DECENNIO
+     ========================= */
 
   if (selectedDecade) {
 
@@ -9138,19 +9118,32 @@ function renderClubFilms() {
   }
 
 
-  /*
-   * =========================
-   * VISTI / NON VISTI
-   *
-   * Qui "visto" significa:
-   * visto da almeno un membro.
-   * =========================
-   */
+  /* =========================
+     FILTRO VISIONE
+     ========================= */
 
-  if (selectedStatus) {
+  if (selectedWatched) {
 
     films =
       films.filter(function(film) {
+
+        const watchedByMe =
+          session &&
+          D.watched[
+            session.memberId + "|" + film.id
+          ];
+
+        const watchedByAll =
+          D.members.length > 0 &&
+          D.members.every(function(member) {
+
+            return Boolean(
+              D.watched[
+                member.id + "|" + film.id
+              ]
+            );
+
+          });
 
         const watchedBySomeone =
           D.members.some(function(member) {
@@ -9163,67 +9156,44 @@ function renderClubFilms() {
 
           });
 
+        const watchedByNobody =
+          !watchedBySomeone;
 
-        return selectedStatus === "watched"
-          ? watchedBySomeone
-          : !watchedBySomeone;
+
+        if (selectedWatched === "mine") {
+          return Boolean(watchedByMe);
+        }
+
+
+        if (selectedWatched === "missing") {
+          return !watchedByMe;
+        }
+
+
+        if (selectedWatched === "all") {
+          return watchedByAll;
+        }
+
+
+        if (selectedWatched === "none") {
+          return watchedByNobody;
+        }
+
+
+        return true;
 
       });
 
   }
 
 
-  /*
-   * =========================
-   * ORDINAMENTO
-   * =========================
-   */
+  /* =========================
+     ORDINAMENTO
+     ========================= */
 
-  films.sort(function(a, b) {
+  if (sort === "discussion-newest") {
 
-    if (sort === "year-newest") {
-
-      const yearA =
-        Number(a.year);
-
-      const yearB =
-        Number(b.year);
-
-      if (!Number.isFinite(yearA)) {
-        return 1;
-      }
-
-      if (!Number.isFinite(yearB)) {
-        return -1;
-      }
-
-      return yearB - yearA;
-
-    }
-
-
-    if (sort === "year-oldest") {
-
-      const yearA =
-        Number(a.year);
-
-      const yearB =
-        Number(b.year);
-
-      if (!Number.isFinite(yearA)) {
-        return 1;
-      }
-
-      if (!Number.isFinite(yearB)) {
-        return -1;
-      }
-
-      return yearA - yearB;
-
-    }
-
-
-    if (sort === "discussion-newest") {
+    films.sort(function(a, b) {
 
       const dateA =
         getClubFilmDiscussionDate(a);
@@ -9241,10 +9211,14 @@ function renderClubFilms() {
 
       return dateB - dateA;
 
-    }
+    });
+
+  }
 
 
-    if (sort === "discussion-oldest") {
+  else if (sort === "discussion-oldest") {
+
+    films.sort(function(a, b) {
 
       const dateA =
         getClubFilmDiscussionDate(a);
@@ -9262,31 +9236,111 @@ function renderClubFilms() {
 
       return dateA - dateB;
 
-    }
+    });
+
+  }
 
 
-    /*
-     * Alfabetico
-     */
+  else if (sort === "alpha") {
 
-    return String(
-      a.title || ""
-    ).localeCompare(
-      String(b.title || ""),
-      "it",
-      {
-        sensitivity: "base"
+    films.sort(function(a, b) {
+
+      return String(
+        a.title || ""
+      ).localeCompare(
+        String(b.title || ""),
+        "it",
+        {
+          sensitivity: "base"
+        }
+      );
+
+    });
+
+  }
+
+
+  else if (sort === "alpha-desc") {
+
+    films.sort(function(a, b) {
+
+      return String(
+        b.title || ""
+      ).localeCompare(
+        String(a.title || ""),
+        "it",
+        {
+          sensitivity: "base"
+        }
+      );
+
+    });
+
+  }
+
+
+  else if (sort === "year-newest") {
+
+    films.sort(function(a, b) {
+
+      const yearA =
+        Number(a.year);
+
+      const yearB =
+        Number(b.year);
+
+      if (!Number.isFinite(yearA)) {
+        return 1;
       }
-    );
 
-  });
+      if (!Number.isFinite(yearB)) {
+        return -1;
+      }
+
+      return yearB - yearA;
+
+    });
+
+  }
+
+
+  else if (sort === "year-oldest") {
+
+    films.sort(function(a, b) {
+
+      const yearA =
+        Number(a.year);
+
+      const yearB =
+        Number(b.year);
+
+      if (!Number.isFinite(yearA)) {
+        return 1;
+      }
+
+      if (!Number.isFinite(yearB)) {
+        return -1;
+      }
+
+      return yearA - yearB;
+
+    });
+
+  }
 
 
   /*
-   * =========================
-   * CONTEGGIO
-   * =========================
+   * "default" NON ORDINA.
+   *
+   * Mantiene esattamente l'ordine
+   * con cui i film arrivano da D.films,
+   * cioè quello del Google Sheet.
    */
+
+
+  /* =========================
+     CONTEGGIO
+     ========================= */
 
   count.textContent =
     films.length === 1
@@ -9294,30 +9348,27 @@ function renderClubFilms() {
       : films.length + " film";
 
 
-  /*
-   * =========================
-   * NESSUN RISULTATO
-   * =========================
-   */
+  /* =========================
+     NESSUN RISULTATO
+     ========================= */
 
   if (!films.length) {
 
-    results.innerHTML = `
-      <div class="empty">
-        Nessun film corrisponde ai criteri selezionati.
-      </div>
-    `;
+    results.innerHTML =
+      `
+        <div class="empty">
+          Nessun film corrisponde ai criteri selezionati.
+        </div>
+      `;
 
     return;
 
   }
 
 
-  /*
-   * =========================
-   * COSTRUZIONE LISTA
-   * =========================
-   */
+  /* =========================
+     COSTRUZIONE LISTA
+     ========================= */
 
   results.innerHTML =
     films.map(function(film) {
@@ -9336,9 +9387,9 @@ function renderClubFilms() {
             session.memberId === member.id;
 
 
-          /*
-           * LA TUA SIGLA
-           */
+          /* =========================
+             LA TUA SIGLA
+             ========================= */
 
           if (isMe) {
 
@@ -9358,9 +9409,9 @@ function renderClubFilms() {
           }
 
 
-          /*
-           * SIGLE DEGLI ALTRI — ADMIN
-           */
+          /* =========================
+             ADMIN
+             ========================= */
 
           if (adminSession) {
 
@@ -9380,9 +9431,9 @@ function renderClubFilms() {
           }
 
 
-          /*
-           * MEMBRI NORMALI
-           */
+          /* =========================
+             ALTRI MEMBRI
+             ========================= */
 
           return `
             <button
@@ -9415,7 +9466,7 @@ function renderClubFilms() {
                     loading="lazy"
                     decoding="async"
                     alt="${esc(film.title)}"
-                    onclick="openFilmModal('${film.id}')"
+                    onclick="event.stopPropagation(); openFilmModal('${film.id}')"
                     onerror="this.style.display='none';"
                   >
                 `
@@ -9446,7 +9497,89 @@ function renderClubFilms() {
 
     }).join("");
 
-}  
+}
+
+/*
+ * =========================
+ * EVENTI FILTRI FILM
+ * =========================
+ */
+
+const clubFilmsSearch =
+  document.getElementById("clubFilmsSearch");
+
+const clubFilmsFilterWatched =
+  document.getElementById("clubFilmsFilterWatched");
+
+const clubFilmsFilterGenre =
+  document.getElementById("clubFilmsFilterGenre");
+
+const clubFilmsFilterYear =
+  document.getElementById("clubFilmsFilterYear");
+
+const clubFilmsFilterDecade =
+  document.getElementById("clubFilmsFilterDecade");
+
+const clubFilmsFilterSort =
+  document.getElementById("clubFilmsFilterSort");
+
+
+if (clubFilmsSearch) {
+  clubFilmsSearch.addEventListener(
+    "input",
+    renderClubFilms
+  );
+}
+
+
+if (clubFilmsFilterWatched) {
+  clubFilmsFilterWatched.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+
+if (clubFilmsFilterGenre) {
+  clubFilmsFilterGenre.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+
+if (clubFilmsFilterYear) {
+  clubFilmsFilterYear.addEventListener(
+    "input",
+    renderClubFilms
+  );
+}
+
+
+if (clubFilmsFilterDecade) {
+  clubFilmsFilterDecade.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+
+if (clubFilmsFilterSort) {
+  clubFilmsFilterSort.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+
+/*
+ * =========================
+ * DISEGNA I FILM
+ * =========================
+ */
+
+renderClubFilms();  
+
   
 /* =========================
    MODAL FILM MANCANTI MEMBRO
