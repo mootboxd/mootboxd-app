@@ -5335,11 +5335,11 @@ input {
       </option>
 
       <option value="year-newest">
-        Anno più recente
+        Anno di uscita più recente
       </option>
 
       <option value="year-oldest">
-        Anno più vecchio
+        Anno di uscita più vecchio
       </option>
 
       <option value="watched-most">
@@ -6533,26 +6533,22 @@ function toggleAllProposals() {
           Ordina
         </label>
 
-        <select id="clubFilmsSort">
+        <select id="proposalsFilterSort">
 
-          <option value="discussion-oldest">
-            Discussione: più vecchia
-          </option>
-        
-          <option value="discussion-newest">
-            Discussione: più recente
-          </option>
-        
           <option value="alpha">
-            Alfabetico
+            Titolo A–Z
+          </option>
+        
+          <option value="alpha-desc">
+            Titolo Z–A
           </option>
         
           <option value="year-newest">
-            Anno: più recente
+            Anno di uscita più recente
           </option>
         
           <option value="year-oldest">
-            Anno: più vecchio
+            Anno di uscita più vecchio
           </option>
         
         </select>
@@ -6892,22 +6888,47 @@ function renderAllProposalResults() {
   }
 
 
-  /*
+    /*
    * Ordinamento.
    */
   items.sort(function(a, b) {
 
-    if (sort === 'oldest') {
+    /*
+     * Titolo A-Z
+     */
+    if (sort === 'alpha') {
 
-      if (a.year == null) return 1;
-      if (b.year == null) return -1;
-
-      return a.year - b.year;
+      return a.title.localeCompare(
+        b.title,
+        'it',
+        {
+          sensitivity: 'base'
+        }
+      );
 
     }
 
 
-    if (sort === 'newest') {
+    /*
+     * Titolo Z-A
+     */
+    if (sort === 'alpha-desc') {
+
+      return b.title.localeCompare(
+        a.title,
+        'it',
+        {
+          sensitivity: 'base'
+        }
+      );
+
+    }
+
+
+    /*
+     * Anno più recente
+     */
+    if (sort === 'year-newest') {
 
       if (a.year == null) return 1;
       if (b.year == null) return -1;
@@ -6917,13 +6938,20 @@ function renderAllProposalResults() {
     }
 
 
-    return a.title.localeCompare(
-      b.title,
-      'it',
-      {
-        sensitivity: 'base'
-      }
-    );
+    /*
+     * Anno più vecchio
+     */
+    if (sort === 'year-oldest') {
+
+      if (a.year == null) return 1;
+      if (b.year == null) return -1;
+
+      return a.year - b.year;
+
+    }
+
+
+    return 0;
 
   });
 
