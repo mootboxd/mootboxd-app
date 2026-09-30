@@ -8795,6 +8795,122 @@ if (!filmsContainer) {
   return;
 }
 
+/* =========================
+   POPOLA FILTRI FILM CLUB
+   ========================= */
+
+/* =========================
+   GENERI
+   ========================= */
+
+if (genreFilter) {
+
+  const genres = [
+    ...new Set(
+
+      D.films
+
+        .flatMap(function(film) {
+
+          return String(
+            film.genere || ""
+          )
+            .split(",")
+            .map(function(genre) {
+              return genre.trim().toLowerCase();
+            })
+            .includes(
+              selectedGenre.toLowerCase()
+            );
+            .filter(Boolean);
+
+        })
+
+    )
+  ].sort(function(a, b) {
+
+    return a.localeCompare(
+      b,
+      "it",
+      {
+        sensitivity: "base"
+      }
+    );
+
+  });
+
+
+  genreFilter.innerHTML =
+    '<option value="">Tutti i generi</option>' +
+
+    genres.map(function(genre) {
+
+      return `
+        <option value="${esc(genre)}">
+          ${esc(genre)}
+        </option>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   DECENNI
+   ========================= */
+
+if (decadeFilter) {
+
+  const decades = [
+    ...new Set(
+
+      D.films
+
+        .map(function(film) {
+
+          const year =
+            Number(
+              String(film.year || "").trim()
+            );
+
+          if (!Number.isFinite(year)) {
+            return null;
+          }
+
+          return Math.floor(year / 10) * 10;
+
+        })
+
+        .filter(function(decade) {
+
+          return decade !== null;
+
+        })
+
+    )
+  ].sort(function(a, b) {
+
+    return b - a;
+
+  });
+
+
+  decadeFilter.innerHTML =
+    '<option value="">Tutti i decenni</option>' +
+
+    decades.map(function(decade) {
+
+      return `
+        <option value="${decade}">
+          ${decade}s
+        </option>
+      `;
+
+    }).join("");
+
+}  
+
 
 /*
  * =========================
