@@ -5003,43 +5003,6 @@ input {
       <option value="">
         Tutti i generi
       </option>
-      
-      ${[
-        ...new Set(
-          D.films
-            .flatMap(function(film) {
-      
-              return String(film.genere || "")
-                .split(",")
-                .map(function(genre) {
-                  return genre.trim();
-                })
-                .filter(Boolean);
-      
-            })
-        )
-      ]
-        .sort(function(a, b) {
-      
-          return a.localeCompare(
-            b,
-            "it",
-            {
-              sensitivity: "base"
-            }
-          );
-      
-        })
-        .map(function(genre) {
-      
-          return `
-            <option value="${esc(genre)}">
-              ${esc(genre)}
-            </option>
-          `;
-      
-        })
-        .join("")}
 
     </select>
 
@@ -5079,42 +5042,6 @@ input {
       <option value="">
         Tutti i decenni
       </option>
-      
-      ${[
-        ...new Set(
-          D.films
-            .map(function(film) {
-      
-              const year =
-                Number(
-                  String(film.year || "").trim()
-                );
-      
-              if (!Number.isFinite(year)) {
-                return null;
-              }
-      
-              return Math.floor(year / 10) * 10;
-      
-            })
-            .filter(function(decade) {
-              return decade !== null;
-            })
-        )
-      ]
-        .sort(function(a, b) {
-          return b - a;
-        })
-        .map(function(decade) {
-      
-          return `
-            <option value="${decade}">
-              ${decade}s
-            </option>
-          `;
-      
-        })
-        .join("")}
           
     </select>
 
@@ -9065,6 +8992,116 @@ function renderClubFilms() {
   const sortFilter =
     document.getElementById("clubFilmsFilterSort");
 
+  
+  /* =========================
+   POPOLA FILTRO GENERI
+   ========================= */
+
+const genreFilter =
+  document.getElementById("clubFilmsFilterGenre");
+
+if (genreFilter) {
+
+  const genres = [
+    ...new Set(
+
+      D.films
+        .flatMap(function(film) {
+
+          return String(film.genere || "")
+            .split(",")
+            .map(function(genre) {
+              return genre.trim();
+            })
+            .filter(Boolean);
+
+        })
+
+    )
+  ].sort(function(a, b) {
+
+    return a.localeCompare(
+      b,
+      "it",
+      {
+        sensitivity: "base"
+      }
+    );
+
+  });
+
+
+  genreFilter.innerHTML =
+    '<option value="">Tutti i generi</option>' +
+
+    genres.map(function(genre) {
+
+      return `
+        <option value="${esc(genre)}">
+          ${esc(genre)}
+        </option>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   POPOLA FILTRO DECENNI
+   ========================= */
+
+const decadeFilter =
+  document.getElementById("clubFilmsFilterDecade");
+
+if (decadeFilter) {
+
+  const decades = [
+    ...new Set(
+
+      D.films
+        .map(function(film) {
+
+          const year =
+            Number(
+              String(film.year || "").trim()
+            );
+
+          if (!Number.isFinite(year)) {
+            return null;
+          }
+
+          return Math.floor(year / 10) * 10;
+
+        })
+        .filter(function(decade) {
+
+          return decade !== null;
+
+        })
+
+    )
+  ].sort(function(a, b) {
+
+    return b - a;
+
+  });
+
+
+  decadeFilter.innerHTML =
+    '<option value="">Tutti i decenni</option>' +
+
+    decades.map(function(decade) {
+
+      return `
+        <option value="${decade}">
+          ${decade}s
+        </option>
+      `;
+
+    }).join("");
+
+}
 
   /* =========================
      VALORI
