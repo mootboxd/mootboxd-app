@@ -2309,7 +2309,7 @@ input {
 .weekly-theme-content {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
 }
 
 
@@ -2317,7 +2317,7 @@ input {
  * Ogni tema è una vera e propria card separata.
  */
 .weekly-theme-card {
-  margin-top: 16px;
+  margin-top: 0;
   padding: 26px 28px;
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,.10);
@@ -2330,6 +2330,9 @@ input {
   gap: 22px;
 }
 
+.weekly-theme-card:first-child {
+  margin-top: 16px;
+}  
 
 /*
  * Testata del tema
