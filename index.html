@@ -8994,11 +8994,8 @@ function renderClubFilms() {
 
   
   /* =========================
-   POPOLA FILTRO GENERI
+   POPOLA GENERI
    ========================= */
-
-const genreFilter =
-  document.getElementById("clubFilmsFilterGenre");
 
 if (genreFilter) {
 
@@ -9048,11 +9045,8 @@ if (genreFilter) {
 
 
 /* =========================
-   POPOLA FILTRO DECENNI
+   POPOLA DECENNI
    ========================= */
-
-const decadeFilter =
-  document.getElementById("clubFilmsFilterDecade");
 
 if (decadeFilter) {
 
@@ -9075,9 +9069,7 @@ if (decadeFilter) {
 
         })
         .filter(function(decade) {
-
           return decade !== null;
-
         })
 
     )
@@ -9102,7 +9094,7 @@ if (decadeFilter) {
     }).join("");
 
 }
-
+  
   /* =========================
      VALORI
      ========================= */
