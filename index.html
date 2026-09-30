@@ -5003,21 +5003,24 @@ input {
       <option value="">
         Tutti i generi
       </option>
-    
+      
       ${[
         ...new Set(
           D.films
-            .map(function(film) {
-              return String(
-                film.genere || ""
-              ).trim();
-            })
-            .filter(function(genre) {
-              return genre !== "";
+            .flatMap(function(film) {
+      
+              return String(film.genere || "")
+                .split(",")
+                .map(function(genre) {
+                  return genre.trim();
+                })
+                .filter(Boolean);
+      
             })
         )
       ]
         .sort(function(a, b) {
+      
           return a.localeCompare(
             b,
             "it",
@@ -5025,15 +5028,16 @@ input {
               sensitivity: "base"
             }
           );
+      
         })
         .map(function(genre) {
-    
+      
           return `
             <option value="${esc(genre)}">
               ${esc(genre)}
             </option>
           `;
-    
+      
         })
         .join("")}
 
@@ -5075,17 +5079,23 @@ input {
       <option value="">
         Tutti i decenni
       </option>
-    
+      
       ${[
         ...new Set(
           D.films
             .map(function(film) {
+      
               const year =
-                Number(film.year);
-    
-              return Number.isFinite(year)
-                ? Math.floor(year / 10) * 10
-                : null;
+                Number(
+                  String(film.year || "").trim()
+                );
+      
+              if (!Number.isFinite(year)) {
+                return null;
+              }
+      
+              return Math.floor(year / 10) * 10;
+      
             })
             .filter(function(decade) {
               return decade !== null;
@@ -5096,16 +5106,16 @@ input {
           return b - a;
         })
         .map(function(decade) {
-    
+      
           return `
             <option value="${decade}">
               ${decade}s
             </option>
           `;
-    
+      
         })
         .join("")}
-    
+          
     </select>
 
   </div>
@@ -9127,17 +9137,24 @@ function renderClubFilms() {
 
   if (selectedGenre) {
 
-    films =
-      films.filter(function(film) {
+  films =
+    films.filter(function(film) {
 
-        return String(
-          film.genere || ""
-        ).trim() === selectedGenre;
+      const genres =
+        String(film.genere || "")
+          .split(",")
+          .map(function(genre) {
+            return genre.trim().toLowerCase();
+          })
+          .filter(Boolean);
 
-      });
+      return genres.includes(
+        selectedGenre.trim().toLowerCase()
+      );
 
-  }
+    });
 
+}
 
   /* =========================
      ANNO
