@@ -4118,6 +4118,261 @@ input {
   }
 
 }
+
+/* =========================
+   FILM DEL CLUB
+   RICERCA + FILTRI
+   ========================= */
+
+.club-films-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 10px;
+}
+
+
+/* =========================
+   RICERCA
+   ========================= */
+
+.club-films-search-wrap {
+  position: relative;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.club-films-search-icon {
+  position: absolute;
+
+  left: 11px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  pointer-events: none;
+}
+
+.club-films-search {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 10px 12px 10px 33px;
+
+  border: 1px solid rgba(127, 127, 127, .22);
+  border-radius: 9px;
+
+  background: #1e2230;
+  color: var(--text);
+
+  font: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  transition:
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.club-films-search:focus {
+  border-color: rgba(217, 179, 108, .55);
+}
+
+
+/* =========================
+   PULSANTE FILTRI
+   ========================= */
+
+.club-films-filter-button {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(127, 127, 127, .22);
+  border-radius: 9px;
+
+  background: rgba(127, 127, 127, .08);
+
+  color: inherit;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+}
+
+.club-films-filter-button:hover,
+.club-films-filter-button.is-open {
+  background: rgba(127, 127, 127, .14);
+  border-color: rgba(127, 127, 127, .35);
+}
+
+
+/* =========================
+   PANNELLO FILTRI
+   ========================= */
+
+.club-films-filters {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-bottom: 11px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(127, 127, 127, .15);
+  border-radius: 10px;
+
+  background: rgba(127, 127, 127, .045);
+}
+
+
+/* =========================
+   SINGOLO FILTRO
+   ========================= */
+
+.club-films-filter-field {
+  min-width: 0;
+}
+
+.club-films-filter-field label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.club-films-filter-field select,
+.club-films-filter-field input {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 8px 9px;
+
+  border: 1px solid rgba(127, 127, 127, .20);
+  border-radius: 8px;
+
+  background: #1e2230;
+  color: var(--text);
+
+  font: inherit;
+  font-size: 12px;
+
+  outline: none;
+
+  transition:
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.club-films-filter-field select:focus,
+.club-films-filter-field input:focus {
+  border-color: rgba(217, 179, 108, .55);
+}
+
+
+/* =========================
+   CONTATORE
+   ========================= */
+
+.club-films-summary {
+  margin: 3px 2px 8px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+
+/* =========================
+   TABLET
+   ========================= */
+
+@media (max-width: 900px) {
+
+  .club-films-filters {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  .club-films-toolbar {
+    gap: 6px;
+  }
+
+  .club-films-search {
+    font-size: 12px;
+  }
+
+  .club-films-filter-button {
+    width: 40px;
+
+    padding: 0;
+
+    font-size: 0;
+  }
+
+  .club-films-filter-button span:first-child {
+    font-size: 17px;
+  }
+
+  .club-films-filters {
+    grid-template-columns: 1fr 1fr;
+
+    padding: 10px;
+
+    gap: 7px;
+  }
+
+  .club-films-filter-field label {
+    font-size: 10px;
+  }
+
+  .club-films-filter-field select,
+  .club-films-filter-field input {
+    font-size: 11px;
+  }
+
+}  
   
 </style>
 </head>
