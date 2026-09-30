@@ -8769,146 +8769,973 @@ function render() {
   
 
   /* =========================
-     FILM
-     ========================= */
-
-  const filmsContainer =
-    document.getElementById("films");
-
-
-  if (!filmsCount) {
-
-    filmsContainer.innerHTML =
-      '<div class="empty">Nessun film.</div>';
-
-  } else {
-
-    filmsContainer.innerHTML =
-      D.films.map(function(film) {
-
-        const buttons =
-          D.members.map(function(member) {
-
-            const key =
-              member.id + "|" + film.id;
-
-            const isWatched =
-              D.watched[key];
-
-            const isMe =
-              session &&
-              session.memberId === member.id;
-
-
-            /* =========================
-               LA TUA SIGLA
-               ========================= */
-
-            if (isMe) {
-
-              return `
-                <button
-                  class="check ${isWatched ? "on" : ""}"
-                  title="Segna come ${isWatched ? "non visto" : "visto"}"
-                  onclick="toggleMyFilm('${film.id}')">
-
-                  ${esc(
-                    member.sigla ||
-                    (member.name || "?")[0].toUpperCase()
-                  )}
-
-                </button>
-              `;
-
-            }
-
-
-            /* =========================
-   SIGLE DEGLI ALTRI
+   FILM
    ========================= */
 
-if (adminSession) {
+const filmsContainer =
+  document.getElementById("films");
 
-  return `
+
+if (!filmsContainer) {
+  return;
+}
+
+
+/*
+ * =========================
+ * TOOLBAR RICERCA + FILTRI
+ * =========================
+ */
+
+filmsContainer.innerHTML = `
+
+  <div class="club-films-toolbar">
+
+    <div class="club-films-search-wrap">
+
+      <span
+        class="club-films-search-icon"
+        aria-hidden="true"
+      >
+        🔍
+      </span>
+
+      <input
+        type="search"
+        id="clubFilmsSearch"
+        class="club-films-search"
+        placeholder="Cerca un film..."
+        autocomplete="off"
+      >
+
+    </div>
+
+
     <button
-      class="check ${isWatched ? "on" : ""}"
-      title="${esc(member.name)} — clicca per modificare"
-      onclick="toggleAdminFilm('${member.id}', '${film.id}')">
-
-      ${esc(
-        member.sigla ||
-        (member.name || "?")[0].toUpperCase()
-      )}
-
+      type="button"
+      class="club-films-filter-button"
+      onclick="toggleClubFilmFilters()"
+      aria-expanded="false"
+    >
+      <span aria-hidden="true">☷</span>
+      <span>Filtri</span>
     </button>
-  `;
+
+  </div>
+
+
+  <div
+    id="clubFilmsFilters"
+    class="club-films-filters"
+    style="display:none;"
+  >
+
+    <div class="club-films-filter-field">
+
+      <label for="clubFilmsGenre">
+        Genere
+      </label>
+
+      <select id="clubFilmsGenre">
+
+        <option value="">
+          Tutti i generi
+        </option>
+
+        ${[
+          ...new Set(
+            D.films
+              .map(function(film) {
+                return String(film.genere || '').trim();
+              })
+              .filter(Boolean)
+          )
+        ]
+          .sort(function(a, b) {
+            return a.localeCompare(
+              b,
+              'it',
+              { sensitivity: 'base' }
+            );
+          })
+          .map(function(genre) {
+
+            return `
+              <option value="${esc(genre)}">
+                ${esc(genre)}
+              </option>
+            `;
+
+          })
+          .join('')}
+
+      </select>
+
+    </div>
+
+
+    <div class="club-films-filter-field">
+
+      <label for="clubFilmsYear">
+        Anno
+      </label>
+
+      <input
+        id="clubFilmsYear"
+        type="number"
+        inputmode="numeric"
+        placeholder="Es. 1999"
+        min="1880"
+        max="2100"
+      >
+
+    </div>
+
+
+    <div class="club-films-filter-field">
+
+      <label for="clubFilmsDecade">
+        Decennio
+      </label>
+
+      <select id="clubFilmsDecade">
+
+        <option value="">
+          Tutti i decenni
+        </option>
+
+        ${[
+          ...new Set(
+            D.films
+              .map(function(film) {
+                return Number(film.year);
+              })
+              .filter(function(year) {
+                return Number.isFinite(year);
+              })
+              .map(function(year) {
+                return Math.floor(year / 10) * 10;
+              })
+          )
+        ]
+          .sort(function(a, b) {
+            return b - a;
+          })
+          .map(function(decade) {
+
+            return `
+              <option value="${decade}">
+                ${decade}s
+              </option>
+            `;
+
+          })
+          .join('')}
+
+      </select>
+
+    </div>
+
+
+    <div class="club-films-filter-field">
+
+      <label for="clubFilmsStatus">
+        Stato
+      </label>
+
+      <select id="clubFilmsStatus">
+
+        <option value="">
+          Tutti
+        </option>
+
+        <option value="watched">
+          Visti
+        </option>
+
+        <option value="unwatched">
+          Non visti
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="club-films-filter-field">
+
+      <label for="clubFilmsSort">
+        Ordina
+      </label>
+
+      <select id="clubFilmsSort">
+
+        <option value="alpha">
+          Alfabetico
+        </option>
+
+        <option value="year-newest">
+          Anno: più recente
+        </option>
+
+        <option value="year-oldest">
+          Anno: più vecchio
+        </option>
+
+        <option value="discussion-newest">
+          Discussione: più recente
+        </option>
+
+        <option value="discussion-oldest">
+          Discussione: più vecchia
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+  <div class="club-films-summary">
+
+    <span id="clubFilmsCount">
+      ${filmsCount} film
+    </span>
+
+  </div>
+
+
+  <div id="clubFilmsResults"></div>
+
+`;
+
+
+/*
+ * =========================
+ * EVENTI FILTRI
+ * =========================
+ */
+
+const searchInput =
+  document.getElementById(
+    "clubFilmsSearch"
+  );
+
+const genreFilter =
+  document.getElementById(
+    "clubFilmsGenre"
+  );
+
+const yearFilter =
+  document.getElementById(
+    "clubFilmsYear"
+  );
+
+const decadeFilter =
+  document.getElementById(
+    "clubFilmsDecade"
+  );
+
+const statusFilter =
+  document.getElementById(
+    "clubFilmsStatus"
+  );
+
+const sortFilter =
+  document.getElementById(
+    "clubFilmsSort"
+  );
+
+
+if (searchInput) {
+  searchInput.addEventListener(
+    "input",
+    renderClubFilms
+  );
+}
+
+if (genreFilter) {
+  genreFilter.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+if (yearFilter) {
+  yearFilter.addEventListener(
+    "input",
+    renderClubFilms
+  );
+}
+
+if (decadeFilter) {
+  decadeFilter.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+if (statusFilter) {
+  statusFilter.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+if (sortFilter) {
+  sortFilter.addEventListener(
+    "change",
+    renderClubFilms
+  );
+}
+
+
+/*
+ * =========================
+ * DISEGNA I FILM
+ * =========================
+ */
+
+renderClubFilms();
 
 }
 
-/* Per i membri normali: solo informazione */
+/* =========================
+   FILTRI FILM DEL CLUB
+   ========================= */
 
-return `
-  <button
-    class="check ${isWatched ? "on" : ""}"
-    title="${esc(member.name)}"
-    disabled
-    style="cursor:default;opacity:.75;">
+function toggleClubFilmFilters() {
 
-    ${esc(
-      member.sigla ||
-      (member.name || "?")[0].toUpperCase()
-    )}
+  const filters =
+    document.getElementById(
+      "clubFilmsFilters"
+    );
 
-  </button>
-`;
+  const button =
+    document.querySelector(
+      ".club-films-filter-button"
+    );
 
-          }).join("");
-
-
-        return `
-  <div class="film">
-
-    <div class="film-info">
-
-  ${
-    film.poster
-      ? `
-        <img
-          src="${esc(film.poster)}"
-          class="film-poster"
-          loading="lazy"
-          decoding="async"
-          alt="${esc(film.title)}"
-          onclick="openFilmModal('${film.id}')"
-          onerror="this.style.display='none';"
-        >
-      `
-      : ''
+  if (!filters || !button) {
+    return;
   }
 
-  <div>
-    <div class="title">
-      ${esc(film.title)}
-    </div>
+  const isOpen =
+    filters.style.display !== "none";
 
-    <div class="meta">
-      ${esc(film.year)}
-    </div>
-  </div>
+  filters.style.display =
+    isOpen
+      ? "none"
+      : "grid";
 
-</div>
+  button.setAttribute(
+    "aria-expanded",
+    String(!isOpen)
+  );
 
-    <div class="checks">
-      ${buttons}
-    </div>
-
-  </div>
-`;
-
-      }).join("");
-  }
+  button.classList.toggle(
+    "is-open",
+    !isOpen
+  );
 }
 
+
+/*
+ * =========================
+ * DATA DISCUSSIONE
+ * =========================
+ */
+
+function getClubFilmDiscussionDate(film) {
+
+  const value =
+    String(
+      film.dataDiscussione || ""
+    ).trim();
+
+  if (!value) {
+    return null;
+  }
+
+
+  /*
+   * Formato:
+   *
+   * Giovedì 24 Settembre 2026 - ore 21:30
+   */
+
+  const match =
+    value.match(
+      /(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4}).*?(\d{1,2}):(\d{2})/i
+    );
+
+  if (!match) {
+    return null;
+  }
+
+
+  const months = {
+    gennaio: 0,
+    febbraio: 1,
+    marzo: 2,
+    aprile: 3,
+    maggio: 4,
+    giugno: 5,
+    luglio: 6,
+    agosto: 7,
+    settembre: 8,
+    ottobre: 9,
+    novembre: 10,
+    dicembre: 11
+  };
+
+
+  const day =
+    Number(match[1]);
+
+  const month =
+    months[
+      match[2].toLowerCase()
+    ];
+
+  const year =
+    Number(match[3]);
+
+  const hour =
+    Number(match[4]);
+
+  const minute =
+    Number(match[5]);
+
+
+  if (
+    !Number.isFinite(day) ||
+    !Number.isFinite(year) ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute) ||
+    month === undefined
+  ) {
+    return null;
+  }
+
+
+  return new Date(
+    year,
+    month,
+    day,
+    hour,
+    minute
+  ).getTime();
+
+}
+
+
+/*
+ * =========================
+ * RENDER FILM FILTRATI
+ * =========================
+ */
+
+function renderClubFilms() {
+
+  const results =
+    document.getElementById(
+      "clubFilmsResults"
+    );
+
+  const count =
+    document.getElementById(
+      "clubFilmsCount"
+    );
+
+
+  if (!results || !count) {
+    return;
+  }
+
+
+  const searchInput =
+    document.getElementById(
+      "clubFilmsSearch"
+    );
+
+  const genreFilter =
+    document.getElementById(
+      "clubFilmsGenre"
+    );
+
+  const yearFilter =
+    document.getElementById(
+      "clubFilmsYear"
+    );
+
+  const decadeFilter =
+    document.getElementById(
+      "clubFilmsDecade"
+    );
+
+  const statusFilter =
+    document.getElementById(
+      "clubFilmsStatus"
+    );
+
+  const sortFilter =
+    document.getElementById(
+      "clubFilmsSort"
+    );
+
+
+  const search =
+    searchInput
+      ? searchInput.value
+          .trim()
+          .toLowerCase()
+      : "";
+
+
+  const selectedGenre =
+    genreFilter
+      ? genreFilter.value
+      : "";
+
+
+  const selectedYear =
+    yearFilter
+      ? yearFilter.value.trim()
+      : "";
+
+
+  const selectedDecade =
+    decadeFilter
+      ? decadeFilter.value
+      : "";
+
+
+  const selectedStatus =
+    statusFilter
+      ? statusFilter.value
+      : "";
+
+
+  const sort =
+    sortFilter
+      ? sortFilter.value
+      : "alpha";
+
+
+  let films =
+    Array.isArray(D.films)
+      ? D.films.slice()
+      : [];
+
+
+  /*
+   * =========================
+   * RICERCA
+   * =========================
+   */
+
+  if (search) {
+
+    films =
+      films.filter(function(film) {
+
+        return String(
+          film.title || ""
+        )
+          .toLowerCase()
+          .includes(search);
+
+      });
+
+  }
+
+
+  /*
+   * =========================
+   * GENERE
+   * =========================
+   */
+
+  if (selectedGenre) {
+
+    films =
+      films.filter(function(film) {
+
+        return String(
+          film.genere || ""
+        ).trim() === selectedGenre;
+
+      });
+
+  }
+
+
+  /*
+   * =========================
+   * ANNO
+   * =========================
+   */
+
+  if (selectedYear) {
+
+    const year =
+      Number(selectedYear);
+
+    if (Number.isFinite(year)) {
+
+      films =
+        films.filter(function(film) {
+
+          return Number(
+            film.year
+          ) === year;
+
+        });
+
+    }
+
+  }
+
+
+  /*
+   * =========================
+   * DECENNIO
+   * =========================
+   */
+
+  if (selectedDecade) {
+
+    const decade =
+      Number(selectedDecade);
+
+    films =
+      films.filter(function(film) {
+
+        const year =
+          Number(film.year);
+
+        return (
+          Number.isFinite(year) &&
+          Math.floor(year / 10) * 10 === decade
+        );
+
+      });
+
+  }
+
+
+  /*
+   * =========================
+   * VISTI / NON VISTI
+   *
+   * Qui "visto" significa:
+   * visto da almeno un membro.
+   * =========================
+   */
+
+  if (selectedStatus) {
+
+    films =
+      films.filter(function(film) {
+
+        const watchedBySomeone =
+          D.members.some(function(member) {
+
+            return Boolean(
+              D.watched[
+                member.id + "|" + film.id
+              ]
+            );
+
+          });
+
+
+        return selectedStatus === "watched"
+          ? watchedBySomeone
+          : !watchedBySomeone;
+
+      });
+
+  }
+
+
+  /*
+   * =========================
+   * ORDINAMENTO
+   * =========================
+   */
+
+  films.sort(function(a, b) {
+
+    if (sort === "year-newest") {
+
+      const yearA =
+        Number(a.year);
+
+      const yearB =
+        Number(b.year);
+
+      if (!Number.isFinite(yearA)) {
+        return 1;
+      }
+
+      if (!Number.isFinite(yearB)) {
+        return -1;
+      }
+
+      return yearB - yearA;
+
+    }
+
+
+    if (sort === "year-oldest") {
+
+      const yearA =
+        Number(a.year);
+
+      const yearB =
+        Number(b.year);
+
+      if (!Number.isFinite(yearA)) {
+        return 1;
+      }
+
+      if (!Number.isFinite(yearB)) {
+        return -1;
+      }
+
+      return yearA - yearB;
+
+    }
+
+
+    if (sort === "discussion-newest") {
+
+      const dateA =
+        getClubFilmDiscussionDate(a);
+
+      const dateB =
+        getClubFilmDiscussionDate(b);
+
+      if (dateA == null) {
+        return 1;
+      }
+
+      if (dateB == null) {
+        return -1;
+      }
+
+      return dateB - dateA;
+
+    }
+
+
+    if (sort === "discussion-oldest") {
+
+      const dateA =
+        getClubFilmDiscussionDate(a);
+
+      const dateB =
+        getClubFilmDiscussionDate(b);
+
+      if (dateA == null) {
+        return 1;
+      }
+
+      if (dateB == null) {
+        return -1;
+      }
+
+      return dateA - dateB;
+
+    }
+
+
+    /*
+     * Alfabetico
+     */
+
+    return String(
+      a.title || ""
+    ).localeCompare(
+      String(b.title || ""),
+      "it",
+      {
+        sensitivity: "base"
+      }
+    );
+
+  });
+
+
+  /*
+   * =========================
+   * CONTEGGIO
+   * =========================
+   */
+
+  count.textContent =
+    films.length === 1
+      ? "1 film"
+      : films.length + " film";
+
+
+  /*
+   * =========================
+   * NESSUN RISULTATO
+   * =========================
+   */
+
+  if (!films.length) {
+
+    results.innerHTML = `
+      <div class="empty">
+        Nessun film corrisponde ai criteri selezionati.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  /*
+   * =========================
+   * COSTRUZIONE LISTA
+   * =========================
+   */
+
+  results.innerHTML =
+    films.map(function(film) {
+
+      const buttons =
+        D.members.map(function(member) {
+
+          const key =
+            member.id + "|" + film.id;
+
+          const isWatched =
+            D.watched[key];
+
+          const isMe =
+            session &&
+            session.memberId === member.id;
+
+
+          /*
+           * LA TUA SIGLA
+           */
+
+          if (isMe) {
+
+            return `
+              <button
+                class="check ${isWatched ? "on" : ""}"
+                title="Segna come ${isWatched ? "non visto" : "visto"}"
+                onclick="event.stopPropagation(); toggleMyFilm('${film.id}')"
+              >
+                ${esc(
+                  member.sigla ||
+                  (member.name || "?")[0].toUpperCase()
+                )}
+              </button>
+            `;
+
+          }
+
+
+          /*
+           * SIGLE DEGLI ALTRI — ADMIN
+           */
+
+          if (adminSession) {
+
+            return `
+              <button
+                class="check ${isWatched ? "on" : ""}"
+                title="${esc(member.name)} — clicca per modificare"
+                onclick="event.stopPropagation(); toggleAdminFilm('${member.id}', '${film.id}')"
+              >
+                ${esc(
+                  member.sigla ||
+                  (member.name || "?")[0].toUpperCase()
+                )}
+              </button>
+            `;
+
+          }
+
+
+          /*
+           * MEMBRI NORMALI
+           */
+
+          return `
+            <button
+              class="check ${isWatched ? "on" : ""}"
+              title="${esc(member.name)}"
+              disabled
+              style="cursor:default;opacity:.75;"
+            >
+              ${esc(
+                member.sigla ||
+                (member.name || "?")[0].toUpperCase()
+              )}
+            </button>
+          `;
+
+        }).join("");
+
+
+      return `
+        <div class="film">
+
+          <div class="film-info">
+
+            ${
+              film.poster
+                ? `
+                  <img
+                    src="${esc(film.poster)}"
+                    class="film-poster"
+                    loading="lazy"
+                    decoding="async"
+                    alt="${esc(film.title)}"
+                    onclick="openFilmModal('${film.id}')"
+                    onerror="this.style.display='none';"
+                  >
+                `
+                : ''
+            }
+
+            <div>
+
+              <div class="title">
+                ${esc(film.title)}
+              </div>
+
+              <div class="meta">
+                ${esc(film.year || "")}
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="checks">
+            ${buttons}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+}  
+  
 /* =========================
    MODAL FILM MANCANTI MEMBRO
    ========================= */
