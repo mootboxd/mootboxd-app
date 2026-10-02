@@ -7394,7 +7394,7 @@ async function submitThemeProposal() {
    * Login
    */
 
-  if (!session) {
+  if (!session && !adminSession) {
     showLogin();
     return;
   }
@@ -7519,17 +7519,22 @@ async function submitThemeProposal() {
 
   try {
 
-    const result =
-      await api(
-        'addThemeProposal',
-        [
-          title,
-          year,
-          genere,
-          selectedThemeId,
-          session.token
-        ]
-      );
+    const proposalToken =
+  adminSession
+    ? adminSession.token
+    : session.token;
+
+const result =
+  await api(
+    'addThemeProposal',
+    [
+      title,
+      year,
+      genere,
+      selectedThemeId,
+      proposalToken
+    ]
+  );
 
 
     /*
