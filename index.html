@@ -7099,15 +7099,15 @@ async function submitProposal() {
 
 
   /*
-   * Deve esserci un membro autenticato.
-   */
+ * Deve esserci un membro oppure un admin autenticato.
+ */
 
-  if (!session) {
+if (!session && !adminSession) {
 
-    showLogin();
+  showLogin();
 
-    return;
-  }
+  return;
+}
 
 
   const title =
@@ -7165,16 +7165,21 @@ async function submitProposal() {
 
   try {
 
-    const result =
-      await api(
-        'addProposal',
-        [
-          title,
-          year,
-          genere,
-          session.token
-        ]
-      );
+    const proposalToken =
+  adminSession
+    ? adminSession.token
+    : session.token;
+
+const result =
+  await api(
+    'addProposal',
+    [
+      title,
+      year,
+      genere,
+      proposalToken
+    ]
+  );
 
 
     /*
