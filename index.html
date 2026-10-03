@@ -7932,7 +7932,11 @@ async function login() {
 
     updateProfile();
 
-    load();
+    await load();
+    
+    showPage("home");
+
+    playOctoberLeaves();
 
   } catch (error) {
 
@@ -8280,6 +8284,8 @@ async function checkSession() {
     updateProfile();
 
     render();
+
+    playOctoberLeaves();
 
   } catch (error) {
 
@@ -8661,8 +8667,6 @@ function showPage(page) {
   }
     
     render();
-
-    playOctoberLeaves();
 
 }
 
