@@ -8662,6 +8662,8 @@ function showPage(page) {
     
     render();
 
+    playOctoberLeaves();
+
 }
 
 
@@ -12947,27 +12949,6 @@ function playOctoberLeaves() {
   );
 
 }
-
-
-/* ---------------------------------------------------------
-   AVVIO
-   --------------------------------------------------------- */
-
-document.addEventListener(
-  'DOMContentLoaded',
-  function() {
-
-    window.setTimeout(
-      function() {
-
-        playOctoberLeaves();
-
-      },
-      1800
-    );
-
-  }
-);
   
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
