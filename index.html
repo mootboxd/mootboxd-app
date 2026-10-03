@@ -12779,26 +12779,6 @@ function playOctoberLeaves() {
     return;
   }
 
-
-  /* Evita che l'animazione venga ripetuta
-     durante la stessa apertura della pagina. */
-
-  if (
-    sessionStorage.getItem(
-      'mootboxd_october_leaves_played'
-    )
-  ) {
-    container.remove();
-    return;
-  }
-
-
-  sessionStorage.setItem(
-    'mootboxd_october_leaves_played',
-    '1'
-  );
-
-
   const leafCount = 32;
 
 
@@ -12849,7 +12829,7 @@ function playOctoberLeaves() {
     /* Durata */
 
     const duration =
-      5.5 +
+      7 +
       Math.random() * 3;
 
 
@@ -12963,7 +12943,7 @@ function playOctoberLeaves() {
       }
 
     },
-    12000
+    16000
   );
 
 }
@@ -12977,10 +12957,17 @@ document.addEventListener(
   'DOMContentLoaded',
   function() {
 
-    playOctoberLeaves();
+    window.setTimeout(
+      function() {
+
+        playOctoberLeaves();
+
+      },
+      1800
+    );
 
   }
-);  
+);
   
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
