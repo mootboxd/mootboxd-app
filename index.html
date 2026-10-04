@@ -8773,6 +8773,7 @@ function toggleMainMenu() {
 }
 
 let currentPage = "home";
+  
 
 function showPage(page) {
 
@@ -8879,8 +8880,8 @@ if (!weeklyThemesLoaded) {
     renderProposals();
   }
 
-  playOctoberJumpscare();
-
+  playHalloweenJumpscare();
+  
 }
 
   /* =========================
@@ -13114,91 +13115,6 @@ function playOctoberLeaves() {
   );
 
 }
-
-/* =========================================================
-   OCTOBER JUMPSCARE
-   ========================================================= */
-
-function playOctoberJumpscare() {
-
-  /* Solo nella pagina Proposte */
-
-  if (currentPage !== 'proposals') {
-    return;
-  }
-
-
-  /*
-   * Crea il contenitore.
-   */
-
-  const container =
-    document.createElement('div');
-
-  container.className =
-    'october-jumpscare';
-
-
-  /*
-   * Immagine del mostro.
-   *
-   * SOSTITUISCI questo URL con quello
-   * della foto caricata sul tuo hosting.
-   */
-
-  const image =
-    document.createElement('img');
-
-  image.className =
-    'october-jumpscare-image';
-
-  image.src =
-    'JUMPSCARE_IMAGE_URL';
-
-  image.alt = '';
-
-  image.draggable = false;
-
-
-  container.appendChild(image);
-
-  document.body.appendChild(container);
-
-
-  /*
-   * Piccolo ritardo prima del jumpscare.
-   *
-   * La pagina Proposte viene prima mostrata
-   * normalmente.
-   */
-
-  window.setTimeout(
-    function() {
-
-      container.classList.add('active');
-
-    },
-    1400
-  );
-
-
-  /*
-   * Rimuove completamente l'elemento
-   * dopo l'animazione.
-   */
-
-  window.setTimeout(
-    function() {
-
-      if (container) {
-        container.remove();
-      }
-
-    },
-    2800
-  );
-
-}  
 
 /* =========================================================
    HALLOWEEN PROPOSALS JUMPSCARE
