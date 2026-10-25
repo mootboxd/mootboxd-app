@@ -13754,7 +13754,8 @@ let newestDate = -Infinity;
         title: title,
         year: year,
         lines: lines,
-        filmId: String(film.id)
+        filmId: String(film.id),
+        shareImage: String(film.shareImage || '')
       };
     });
 
@@ -13788,6 +13789,46 @@ let newestDate = -Infinity;
     }
 
     canvas.height = height;
+
+    // Carica le immagini dedicate all'esportazione.
+    // Se una foto manca o non si carica, usa lo sfondo originale.
+    const shareImages = await Promise.all(
+      prepared.map(async function(item) {
+        if (!item.shareImage) return null;
+
+        try {
+          const dataUrl =
+            await getShareImageDataUrl(item.shareImage);
+
+          if (!dataUrl) return null;
+
+          const img = new Image();
+
+          const loadedImage = await new Promise(function(resolve) {
+            img.onload = function() {
+              resolve(img);
+            };
+
+            img.onerror = function() {
+              resolve(null);
+            };
+
+            img.src = dataUrl;
+          });
+
+          return loadedImage;
+        } catch (error) {
+          console.warn(
+            'Immagine di sfondo non disponibile per il film:',
+            item.filmId,
+            error
+          );
+
+          return null;
+        }
+      })
+    );
+
 
     // SFONDO
     ctx.fillStyle = '#0f1117';
@@ -13841,13 +13882,59 @@ let newestDate = -Infinity;
   newestFilmId !== null &&
   item.filmId === newestFilmId;
 
-    // Sfondo e bordi del riquadro
-    ctx.fillStyle = isNew ? '#292419' : '#191c25';
-    ctx.fillRect(x, y, cardWidth, cardHeight);
     
-    ctx.strokeStyle = isNew ? '#d9b36c' : '#363b48';
-    ctx.lineWidth = isNew ? 3 : 1;
-    ctx.strokeRect(x, y, cardWidth, cardHeight);
+      // Sfondo della scheda: foto se disponibile, altrimenti originale
+      const shareImage = shareImages[index];
+
+      if (shareImage) {
+        const imageRatio =
+          shareImage.width / shareImage.height;
+        const cardRatio =
+          cardWidth / cardHeight;
+
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = shareImage.width;
+        let sourceHeight = shareImage.height;
+
+        // Ritaglio centrale per riempire la scheda
+        if (imageRatio > cardRatio) {
+          sourceWidth =
+            shareImage.height * cardRatio;
+          sourceX =
+            (shareImage.width - sourceWidth) / 2;
+        } else {
+          sourceHeight =
+            shareImage.width / cardRatio;
+          sourceY =
+            (shareImage.height - sourceHeight) / 2;
+        }
+
+        ctx.drawImage(
+          shareImage,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          x,
+          y,
+          cardWidth,
+          cardHeight
+        );
+
+        // Oscuramento per mantenere leggibili i testi
+        ctx.fillStyle = 'rgba(15, 17, 23, 0.68)';
+        ctx.fillRect(x, y, cardWidth, cardHeight);
+      } else {
+        ctx.fillStyle = isNew ? '#292419' : '#191c25';
+        ctx.fillRect(x, y, cardWidth, cardHeight);
+      }
+
+      // Bordi originali, invariati
+      ctx.strokeStyle = isNew ? '#d9b36c' : '#363b48';
+      ctx.lineWidth = isNew ? 3 : 1;
+      ctx.strokeRect(x, y, cardWidth, cardHeight);
+
 
 
       // Numero di posizione grande e ben visibile
