@@ -13648,40 +13648,64 @@ async function exportRankingImage() {
     ctx.font = '600 21px Arial, sans-serif';
 
     
+
 function parseDiscussionDate(value) {
-  const text = String(value || '').trim();
+  const text = String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
   if (!text) return null;
 
-  // Formato YYYY-MM-DD
-  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const months = {
+    gennaio: 0,
+    febbraio: 1,
+    marzo: 2,
+    aprile: 3,
+    maggio: 4,
+    giugno: 5,
+    luglio: 6,
+    agosto: 7,
+    settembre: 8,
+    ottobre: 9,
+    novembre: 10,
+    dicembre: 11
+  };
 
-  if (match) {
-    const date = new Date(
-      Number(match[1]),
-      Number(match[2]) - 1,
-      Number(match[3])
-    );
+  // Formato: Giovedì 30 Aprile 2026 - 21:30
+  const match = text.match(
+    /(?:lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)?\s*(\d{1,2})\s+([a-z]+)\s+(\d{4})\s*-\s*(\d{1,2}):(\d{2})/
+  );
 
-    return isNaN(date.getTime()) ? null : date.getTime();
-  }
-
-  // Formato italiano DD/MM/YYYY o DD-MM-YYYY
-  match = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
-  
-  if (match) {
+  if (match && months[match[2]] !== undefined) {
     const date = new Date(
       Number(match[3]),
-      Number(match[2]) - 1,
-      Number(match[1])
+      months[match[2]],
+      Number(match[1]),
+      Number(match[4]),
+      Number(match[5])
     );
 
     return isNaN(date.getTime()) ? null : date.getTime();
   }
 
-  // Fallback per altri formati data riconosciuti dal browser
-  const parsed = new Date(text);
-  return isNaN(parsed.getTime()) ? null : parsed.getTime();
+  // Formato alternativo: YYYY-MM-DD
+  const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  if (iso) {
+    const date = new Date(
+      Number(iso[1]),
+      Number(iso[2]) - 1,
+      Number(iso[3])
+    );
+
+    return isNaN(date.getTime()) ? null : date.getTime();
+  }
+
+  return null;
 }
+
 
 let newestFilmId = null;
 let newestDate = -Infinity;
