@@ -5976,6 +5976,25 @@ async function api(action, args = []) {
   return result.data;
 }
 
+async function getShareImageDataUrl(fileId) {
+  const token =
+    sessionStorage.getItem('mootboxd_admin_token') ||
+    sessionStorage.getItem('mootboxd_token');
+
+  if (!token || !fileId) {
+    return null;
+  }
+
+  const result = await api(
+    'getShareImage',
+    [token, fileId]
+  );
+
+  return result && result.dataUrl
+    ? result.dataUrl
+    : null;
+}  
+  
 let D = null;
 let saving = false;
 let session = null;
