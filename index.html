@@ -8780,14 +8780,82 @@ function renderRanking() {
     return;
   }
 
-  const films =
-    (D.films || []).filter(function(film) {
+  
+const yearFilter =
+  document.getElementById('rankingYearFilter');
 
-      return film.media !== '' &&
-             film.media != null &&
-             !isNaN(Number(film.media));
+const memberFilter =
+  document.getElementById('rankingMemberFilter');
 
-    });
+const selectedYear =
+  yearFilter ? yearFilter.value : 'all';
+
+const selectedMember =
+  memberFilter ? memberFilter.value : 'club';
+
+let films =
+  (D.films || []).filter(function(film) {
+
+    // Filtro temporale: usa la data della discussione.
+    if (selectedYear !== 'all') {
+      const date =
+        String(film.dataDiscussione || '').trim();
+
+      const yearMatch =
+        date.match(/\b(\d{4})\b/);
+
+      if (!yearMatch || yearMatch[1] !== selectedYear) {
+        return false;
+      }
+    }
+
+    // Classifica personale: richiede un voto del membro.
+    if (selectedMember !== 'club') {
+      const voti = film.voti || {};
+
+      const member = (D.members || []).find(function(m) {
+        return String(m.id) === selectedMember;
+      });
+
+      if (!member) {
+        return false;
+      }
+
+      const memberName =
+        String(member.name || '').trim();
+
+      const memberVote = voti[memberName];
+
+      if (
+        memberVote === '' ||
+        memberVote == null ||
+        String(memberVote).trim() === '/' ||
+        isNaN(Number(String(memberVote).replace(',', '.')))
+      ) {
+        return false;
+      }
+
+      // Conserva il voto originale del membro,
+      // senza modificare la media del club.
+      film._rankingScore =
+        Number(String(memberVote).replace(',', '.'));
+
+    } else {
+
+      if (
+        film.media === '' ||
+        film.media == null ||
+        isNaN(Number(film.media))
+      ) {
+        return false;
+      }
+
+      film._rankingScore =
+        Number(film.media);
+    }
+
+    return true;
+  });
 
   if (!films.length) {
 
@@ -8809,10 +8877,10 @@ function renderRanking() {
   films.sort(function(a, b) {
 
     const mediaA =
-      Number(a.media);
-
+      Number(a._rankingScore);
+    
     const mediaB =
-      Number(b.media);
+      Number(b._rankingScore);
 
     // 1. Media reale: più alta prima
     if (mediaA !== mediaB) {
@@ -8849,7 +8917,7 @@ function renderRanking() {
         index + 1;
 
       const media =
-        Number(film.media)
+        Number(film._rankingScore)
           .toLocaleString('it-IT', {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1
