@@ -13490,6 +13490,363 @@ function playHalloweenJumpscare() {
   );
 
 }  
+
+
+async function exportRankingImage() {
+  if (!D || !Array.isArray(D.films)) {
+    alert('Dati della classifica non disponibili.');
+    return;
+  }
+
+  const yearFilter = document.getElementById('rankingYearFilter');
+  const memberFilter = document.getElementById('rankingMemberFilter');
+
+  const selectedYear = yearFilter ? yearFilter.value : 'all';
+  const selectedMember = memberFilter ? memberFilter.value : 'club';
+
+  const member = (D.members || []).find(function(m) {
+    return String(m.id) === selectedMember;
+  });
+
+  if (selectedMember !== 'club' && !member) {
+    alert('Membro selezionato non trovato.');
+    return;
+  }
+
+  const films = (D.films || []).map(function(film, index) {
+    let score = null;
+
+    if (selectedYear !== 'all') {
+      const match = String(film.dataDiscussione || '').match(/\b(\d{4})\b/);
+      if (!match || match[1] !== selectedYear) return null;
+    }
+
+    if (selectedMember === 'club') {
+      if (
+        film.media === '' ||
+        film.media == null ||
+        isNaN(Number(film.media))
+      ) return null;
+
+      score = Number(film.media);
+    } else {
+      const votes = film.voti || {};
+      const memberName = String(member.name || '').trim();
+
+      const key = Object.keys(votes).find(function(k) {
+        return k.trim().toLowerCase() === memberName.toLowerCase();
+      });
+
+      const vote = key ? votes[key] : null;
+
+      if (
+        vote == null ||
+        String(vote).trim() === '' ||
+        String(vote).trim() === '/' ||
+        isNaN(Number(String(vote).replace(',', '.')))
+      ) return null;
+
+      score = Number(String(vote).replace(',', '.'));
+    }
+
+    return {
+      film: film,
+      score: score,
+      originalIndex: index
+    };
+  }).filter(Boolean);
+
+  films.sort(function(a, b) {
+    if (a.score !== b.score) return b.score - a.score;
+
+    const watchedA = Number(a.film.vistoDa || 0);
+    const watchedB = Number(b.film.vistoDa || 0);
+
+    if (watchedA !== watchedB) return watchedB - watchedA;
+
+    return a.originalIndex - b.originalIndex;
+  });
+
+  if (!films.length) {
+    alert('Nessun film da esportare con questi filtri.');
+    return;
+  }
+
+  const width = 1200;
+  const headerHeight = 190;
+  const rowHeight = 145;
+  const footerHeight = 65;
+  const height = headerHeight + films.length * rowHeight + footerHeight;
+
+  // Evita di superare i limiti comuni delle immagini canvas.
+  if (height > 30000) {
+    alert('La classifica è troppo lunga per una singola immagine.');
+    return;
+  }
+
+  const button = document.querySelector(
+    'button[onclick="exportRankingImage()"]'
+  );
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Generazione immagine…';
+  }
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+
+    // Sfondo
+    ctx.fillStyle = '#0f1117';
+    ctx.fillRect(0, 0, width, height);
+
+    // Intestazione
+    ctx.fillStyle = '#d9b36c';
+    ctx.fillRect(0, 0, width, 8);
+
+    ctx.fillStyle = '#f5f6fa';
+    ctx.font = '800 43px system-ui, sans-serif';
+    ctx.fillText('MOOTBOXD', 48, 66);
+
+    ctx.font = '700 29px system-ui, sans-serif';
+    ctx.fillText('CLASSIFICA', 48, 108);
+
+    ctx.fillStyle = '#9ca3b2';
+    ctx.font = '18px system-ui, sans-serif';
+
+    const periodLabel =
+      selectedYear === 'all' ? 'Tutti gli anni' : selectedYear;
+
+    const memberLabel =
+      selectedMember === 'club'
+        ? 'Media del club'
+        : String(member.name || member.sigla || 'Membro');
+
+    ctx.fillText(
+      periodLabel + '  •  ' + memberLabel,
+      48,
+      148
+    );
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#d9b36c';
+    ctx.font = '700 18px system-ui, sans-serif';
+    ctx.fillText(films.length + ' FILM', width - 48, 65);
+    ctx.textAlign = 'left';
+
+    ctx.strokeStyle = '#2a2f3d';
+    ctx.beginPath();
+    ctx.moveTo(48, headerHeight - 12);
+    ctx.lineTo(width - 48, headerHeight - 12);
+    ctx.stroke();
+
+    // Carica le locandine. Se una non è accessibile,
+    // la classifica viene comunque generata.
+    const posterImages = await Promise.all(
+      films.map(function(item) {
+        return new Promise(function(resolve) {
+          const url = item.film.poster;
+
+          if (!url) {
+            resolve(null);
+            return;
+          }
+
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+
+          img.onload = function() {
+            resolve(img);
+          };
+
+          img.onerror = function() {
+            resolve(null);
+          };
+
+          img.src = url;
+        });
+      })
+    );
+
+    films.forEach(function(item, index) {
+      const film = item.film;
+      const y = headerHeight + index * rowHeight;
+      const posterX = 112;
+      const posterY = y + 12;
+      const posterW = 74;
+      const posterH = 111;
+
+      // Riga
+      ctx.fillStyle = index % 2 === 0 ? '#171a23' : '#13161e';
+      ctx.fillRect(32, y, width - 64, rowHeight);
+
+      // Posizione
+      ctx.fillStyle = index < 3 ? '#d9b36c' : '#9ca3b2';
+      ctx.font = '800 23px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('#' + (index + 1), 72, y + 72);
+      ctx.textAlign = 'left';
+
+      // Locandina o segnaposto
+      ctx.fillStyle = '#202534';
+      ctx.fillRect(posterX, posterY, posterW, posterH);
+
+      const img = posterImages[index];
+
+      if (img) {
+        const scale = Math.max(posterW / img.width, posterH / img.height);
+        const cropW = posterW / scale;
+        const cropH = posterH / scale;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(posterX, posterY, posterW, posterH);
+        ctx.clip();
+        ctx.drawImage(
+          img,
+          (img.width - cropW) / 2,
+          (img.height - cropH) / 2,
+          cropW,
+          cropH,
+          posterX,
+          posterY,
+          posterW,
+          posterH
+        );
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#9ca3b2';
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No poster', posterX + posterW / 2, posterY + 58);
+        ctx.textAlign = 'left';
+      }
+
+      // Titolo
+      const titleX = 218;
+      const maxTitleWidth = 650;
+      const title = String(film.title || 'Film senza titolo');
+
+      ctx.fillStyle = '#f5f6fa';
+      ctx.font = '800 24px system-ui, sans-serif';
+
+      let displayTitle = title;
+      while (
+        ctx.measureText(displayTitle).width > maxTitleWidth &&
+        displayTitle.length > 3
+      ) {
+        displayTitle = displayTitle.slice(0, -4) + '…';
+      }
+
+      ctx.fillText(displayTitle, titleX, y + 43);
+
+      // Anno e regista
+      ctx.fillStyle = '#9ca3b2';
+      ctx.font = '17px system-ui, sans-serif';
+
+      const details = [
+        film.year ? String(film.year) : '',
+        film.regista ? String(film.regista) : ''
+      ].filter(Boolean).join('  •  ');
+
+      ctx.fillText(details, titleX, y + 72, maxTitleWidth);
+
+      // Media o voto individuale
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#d9b36c';
+      ctx.font = '800 31px system-ui, sans-serif';
+
+      ctx.fillText(
+        '★ ' + item.score.toLocaleString('it-IT', {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        }),
+        width - 58,
+        y + 62
+      );
+
+      ctx.fillStyle = '#9ca3b2';
+      ctx.font = '15px system-ui, sans-serif';
+
+      ctx.fillText(
+        'Visto da ' + Number(film.vistoDa || 0) + '/' +
+          Number(D.totalMembers || (D.members || []).length || 0),
+        width - 58,
+        y + 88
+      );
+
+      ctx.textAlign = 'left';
+
+      ctx.strokeStyle = '#2a2f3d';
+      ctx.beginPath();
+      ctx.moveTo(48, y + rowHeight - 1);
+      ctx.lineTo(width - 48, y + rowHeight - 1);
+      ctx.stroke();
+    });
+
+    // Piè di pagina
+    ctx.fillStyle = '#9ca3b2';
+    ctx.font = '15px system-ui, sans-serif';
+    ctx.fillText(
+      'MOOTBOXD  •  Classifica generata il ' +
+        new Date().toLocaleDateString('it-IT'),
+      48,
+      height - 27
+    );
+
+    const blob = await new Promise(function(resolve) {
+      canvas.toBlob(resolve, 'image/png');
+    });
+
+    if (!blob) {
+      throw new Error('Impossibile creare il PNG.');
+    }
+
+    const file = new File(
+      [blob],
+      'mootboxd-classifica.png',
+      { type: 'image/png' }
+    );
+
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      await navigator.share({
+        title: 'MOOTBOXD — Classifica',
+        files: [file]
+      });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = 'mootboxd-classifica.png';
+      link.click();
+
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 2000);
+    }
+  } catch (error) {
+    console.error('Errore esportazione classifica:', error);
+    alert(
+      'Non è stato possibile generare o condividere l’immagine. ' +
+      'Alcune locandine potrebbero non consentire l’esportazione.'
+    );
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Condividi classifica';
+    }
+  }
+}
+  
   
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
