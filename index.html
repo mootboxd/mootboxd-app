@@ -1760,6 +1760,67 @@ input {
      RANKING
      ------------------------------------------------------- */
 
+  
+.ranking-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ranking-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 180px;
+}
+
+.ranking-filter label {
+  color: #9ca3b2;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ranking-filter select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+  background: #151821;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ranking-filter select:focus {
+  outline: 2px solid #6f7685;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .ranking-filters {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .ranking-filter {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  .ranking-filter label {
+    font-size: 12px;
+  }
+
+  .ranking-filter select {
+    font-size: 13px;
+    padding: 8px;
+  }
+}
+
+
   .ranking-panel {
     padding: 20px 14px;
   }
@@ -4990,6 +5051,42 @@ input {
   </div>
 
 </div>
+
+    
+<div class="ranking-filters">
+
+  <div class="ranking-filter">
+    <label for="rankingYearFilter">
+      Periodo
+    </label>
+
+    <select
+      id="rankingYearFilter"
+      onchange="renderRanking()"
+    >
+      <option value="all">
+        Tutti gli anni
+      </option>
+    </select>
+  </div>
+
+  <div class="ranking-filter">
+    <label for="rankingMemberFilter">
+      Classifica di
+    </label>
+
+    <select
+      id="rankingMemberFilter"
+      onchange="renderRanking()"
+    >
+      <option value="club">
+        Media del club
+      </option>
+    </select>
+  </div>
+
+</div>
+
 
     <div id="rankingList"></div>
 
@@ -8577,6 +8674,86 @@ const data =
 }
 
 
+function populateRankingFilters() {
+
+  const yearFilter =
+    document.getElementById('rankingYearFilter');
+
+  const memberFilter =
+    document.getElementById('rankingMemberFilter');
+
+  if (!yearFilter || !memberFilter || !D) {
+    return;
+  }
+
+  // Salva le selezioni correnti.
+  const selectedYear = yearFilter.value || 'all';
+  const selectedMember = memberFilter.value || 'club';
+
+  // Ricava gli anni dalle date delle discussioni.
+  const years = [...new Set(
+    (D.films || [])
+      .map(function(film) {
+        const date = String(film.dataDiscussione || '').trim();
+
+        let match = date.match(/^(\d{4})-\d{2}-\d{2}/);
+
+        if (!match) {
+          match = date.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+          if (match) {
+            return match[3];
+          }
+        }
+
+        if (match) {
+          return match[1];
+        }
+
+        return null;
+      })
+      .filter(Boolean)
+  )].sort(function(a, b) {
+    return Number(b) - Number(a);
+  });
+
+  yearFilter.innerHTML =
+    '<option value="all">Tutti gli anni</option>' +
+    years.map(function(year) {
+      return '<option value="' + year + '">' +
+        year +
+        '</option>';
+    }).join('');
+
+  // Ripristina l'anno selezionato, se ancora disponibile.
+  yearFilter.value =
+    selectedYear === 'all' || years.includes(selectedYear)
+      ? selectedYear
+      : 'all';
+
+  // Crea le opzioni dei membri.
+  const members = D.members || [];
+
+  memberFilter.innerHTML =
+    '<option value="club">Media del club</option>' +
+    members.map(function(member) {
+      return '<option value="' + esc(String(member.id)) + '">' +
+        esc(String(member.name || member.sigla || 'Membro')) +
+        '</option>';
+    }).join('');
+
+  // Ripristina la selezione del membro, se disponibile.
+  const memberExists = members.some(function(member) {
+    return String(member.id) === selectedMember;
+  });
+
+  memberFilter.value =
+    selectedMember === 'club' || memberExists
+      ? selectedMember
+      : 'club';
+}
+  
+
 function renderRanking() {
 
   const container =
@@ -8835,17 +9012,20 @@ function showPage(page) {
      CLASSIFICA
      ========================= */
 
+  
   if (page === 'ranking') {
-
-  if (rankingPage) {
-    rankingPage.style.display = 'block';
+  
+    if (rankingPage) {
+      rankingPage.style.display = 'block';
+    }
+  
+    render();
+  
+    populateRankingFilters();
+  
+    renderRanking();
+  
   }
-
-      render();
-
-  renderRanking();
-
-}
 
 /* =========================
    PROPOSTE
