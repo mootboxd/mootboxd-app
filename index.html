@@ -13493,6 +13493,7 @@ function playHalloweenJumpscare() {
 
 
 
+
 async function exportRankingImage() {
   if (!D || !Array.isArray(D.films)) {
     alert('Dati della classifica non disponibili.');
@@ -13514,7 +13515,7 @@ async function exportRankingImage() {
     return;
   }
 
-  // FILTRI E ORDINAMENTO: mantengono la logica attuale
+  // FILTRI E PUNTEGGI
   const films = (D.films || []).map(function(film, index) {
     let score = null;
 
@@ -13527,7 +13528,6 @@ async function exportRankingImage() {
       if (film.media === '' || film.media == null || isNaN(Number(film.media))) {
         return null;
       }
-
       score = Number(film.media);
     } else {
       const votes = film.voti || {};
@@ -13584,28 +13584,25 @@ async function exportRankingImage() {
   }
 
   try {
-    // FORMATO E IMPAGINAZIONE
     const width = 1200;
-    const columnsCount = 3;
-    const margin = 58;
-    const gutter = 30;
-    const headerHeight = 250;
-    const footerHeight = 76;
-    const columnWidth =
-      (width - margin * 2 - gutter * (columnsCount - 1)) / columnsCount;
+    const margin = 48;
+    const columns = 3;
+    const gutter = 20;
+    const headerHeight = 245;
+    const footerHeight = 75;
+    const cardWidth =
+      (width - margin * 2 - gutter * (columns - 1)) / columns;
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
 
     const ctx = canvas.getContext('2d');
 
-    if (!ctx) {
-      throw new Error('Canvas non disponibile.');
-    }
+    if (!ctx) throw new Error('Canvas non disponibile.');
 
-    // Titoli completi, con ritorno a capo automatico
+    // Titoli completi su più righe
     function wrapText(text, maxWidth) {
-      const words = String(text || '').split(/\s+/).filter(Boolean);
+      const words = String(text || 'Senza titolo').split(/\s+/).filter(Boolean);
       const lines = [];
       let line = '';
 
@@ -13617,28 +13614,27 @@ async function exportRankingImage() {
           return;
         }
 
-        if (line) {
-          lines.push(line);
-          line = '';
-        }
+        if (line) lines.push(line);
+        line = '';
 
-        // Gestisce anche parole singole molto lunghe
-        if (ctx.measureText(word).width > maxWidth) {
-          let part = '';
-
-          Array.from(word).forEach(function(char) {
-            if (part && ctx.measureText(part + char).width > maxWidth) {
-              lines.push(part);
-              part = char;
-            } else {
-              part += char;
-            }
-          });
-
-          line = part;
-        } else {
+        if (ctx.measureText(word).width <= maxWidth) {
           line = word;
+          return;
         }
+
+        // Evita che una parola molto lunga esca dal riquadro
+        let part = '';
+
+        Array.from(word).forEach(function(char) {
+          if (part && ctx.measureText(part + char).width > maxWidth) {
+            lines.push(part);
+            part = char;
+          } else {
+            part += char;
+          }
+        });
+
+        line = part;
       });
 
       if (line) lines.push(line);
@@ -13646,66 +13642,48 @@ async function exportRankingImage() {
       return lines.length ? lines : ['Senza titolo'];
     }
 
-    // Tre gruppi consecutivi: ogni colonna si legge dall'alto in basso
-    const perColumn = Math.ceil(films.length / columnsCount);
+    ctx.font = '600 21px Arial, sans-serif';
 
-    const columns = [
-      films.slice(0, perColumn),
-      films.slice(perColumn, perColumn * 2),
-      films.slice(perColumn * 2)
-    ];
+    const prepared = films.map(function(item, index) {
+      const film = item.film;
+      const title = String(
+        film.title || film.titolo || 'Senza titolo'
+      ).trim();
 
-    const titleFont = '600 21px Arial, sans-serif';
-    const titleLineHeight = 27;
-    const rowGap = 21;
-    const titleWidth = columnWidth - 4;
+      const year = String(film.year || '').trim();
+      const lines = wrapText(title, cardWidth - 36);
 
-    // Calcola l'altezza necessaria senza tagliare i titoli
-    ctx.font = titleFont;
-
-    const preparedColumns = columns.map(function(items) {
-      return items.map(function(item, index) {
-        const title = String(
-          item.film.title || item.film.titolo || 'Senza titolo'
-        ).trim();
-
-        const year = String(item.film.year || '').trim();
-        const lines = wrapText(title, titleWidth);
-
-        const titleHeight = lines.length * titleLineHeight;
-        const yearHeight = year ? 23 : 0;
-        const itemHeight = 27 + titleHeight + yearHeight + rowGap;
-
-        return {
-          rank: index,
-          item: item,
-          title: title,
-          year: year,
-          lines: lines,
-          height: itemHeight
-        };
-      });
+      return {
+        rank: index + 1,
+        score: item.score,
+        title: title,
+        year: year,
+        lines: lines
+      };
     });
 
-    // Corregge la numerazione per mantenere la posizione assoluta
-    let globalRank = 0;
+    // Tutti i riquadri hanno la stessa altezza,
+    // calcolata per contenere anche il titolo più lungo.
+    const maxTitleLines = Math.max.apply(
+      null,
+      prepared.map(function(item) {
+        return item.lines.length;
+      })
+    );
 
-    preparedColumns.forEach(function(column) {
-      column.forEach(function(entry) {
-        entry.rank = ++globalRank;
-      });
-    });
+    const titleLineHeight = 25;
+    const cardHeight = Math.max(
+      190,
+      122 + maxTitleLines * titleLineHeight + 28
+    );
 
-    const columnHeights = preparedColumns.map(function(column) {
-      return column.reduce(function(total, entry) {
-        return total + entry.height;
-      }, 0);
-    });
+    const rowCount = Math.ceil(prepared.length / columns);
+    const gridHeight = rowCount * cardHeight + (rowCount - 1) * gutter;
 
-    const contentHeight = Math.max.apply(null, columnHeights);
+    // Formato 3:4 come riferimento, più alto se necessario
     const height = Math.max(
       1600,
-      headerHeight + 38 + contentHeight + footerHeight
+      headerHeight + gridHeight + footerHeight
     );
 
     if (height > 30000) {
@@ -13715,11 +13693,10 @@ async function exportRankingImage() {
 
     canvas.height = height;
 
-    // Sfondo
+    // SFONDO
     ctx.fillStyle = '#0f1117';
     ctx.fillRect(0, 0, width, height);
 
-    // Accento superiore
     ctx.fillStyle = '#d9b36c';
     ctx.fillRect(0, 0, width, 8);
 
@@ -13727,14 +13704,11 @@ async function exportRankingImage() {
     ctx.textAlign = 'left';
     ctx.fillStyle = '#d9b36c';
     ctx.font = '700 24px Arial, sans-serif';
-    ctx.fillText('MOOTBOXD', margin, 65);
+    ctx.fillText('MOOTBOXD', margin, 60);
 
     ctx.fillStyle = '#f5f5f5';
     ctx.font = '800 52px Arial, sans-serif';
-    ctx.fillText('CLASSIFICA', margin, 125);
-
-    ctx.fillStyle = '#b9bdc8';
-    ctx.font = '22px Arial, sans-serif';
+    ctx.fillText('CLASSIFICA', margin, 120);
 
     const periodLabel = selectedYear === 'all'
       ? 'Tutti gli anni'
@@ -13744,79 +13718,91 @@ async function exportRankingImage() {
       ? 'Club'
       : String(member.name || 'Membro');
 
-    ctx.fillText(periodLabel + '  ·  ' + memberLabel, margin, 172);
+    ctx.fillStyle = '#b9bdc8';
+    ctx.font = '22px Arial, sans-serif';
+    ctx.fillText(periodLabel + '  ·  ' + memberLabel, margin, 165);
 
     ctx.fillStyle = '#8f95a3';
     ctx.font = '18px Arial, sans-serif';
     ctx.fillText(
-      films.length + (films.length === 1 ? ' film' : ' film'),
+      prepared.length + ' film in classifica',
       margin,
-      207
+      202
     );
 
     ctx.fillStyle = '#343844';
-    ctx.fillRect(margin, 232, width - margin * 2, 2);
+    ctx.fillRect(margin, 225, width - margin * 2, 2);
 
-    // CLASSIFICA IN TRE COLONNE
-    preparedColumns.forEach(function(column, columnIndex) {
-      const x = margin + columnIndex * (columnWidth + gutter);
-      let y = headerHeight + 28;
+    // RIQUADRI: ORDINE DA SINISTRA A DESTRA, POI A CAPO
+    prepared.forEach(function(item, index) {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
 
-      column.forEach(function(entry) {
-        const film = entry.item.film;
-        const score = entry.item.score;
+      const x = margin + column * (cardWidth + gutter);
+      const y = headerHeight + row * (cardHeight + gutter);
 
-        // Separatore leggero tra le voci
-        ctx.fillStyle = '#292d37';
-        ctx.fillRect(x, y, columnWidth, 1);
-        y += 20;
+      const isFirst = item.rank === 1;
 
-        // Posizione
-        ctx.fillStyle = '#d9b36c';
-        ctx.font = '700 18px Arial, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(
-          String(entry.rank).padStart(2, '0'),
-          x,
-          y + 1
-        );
+      // Sfondo e bordo del riquadro
+      ctx.fillStyle = isFirst ? '#292419' : '#191c25';
+      ctx.fillRect(x, y, cardWidth, cardHeight);
 
-        // Voto
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#f5f5f5';
-        ctx.font = '700 20px Arial, sans-serif';
-        ctx.fillText(
-          '★ ' + score.toLocaleString('it-IT', {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 2
-          }),
-          x + columnWidth,
-          y + 1
-        );
+      ctx.strokeStyle = isFirst ? '#d9b36c' : '#363b48';
+      ctx.lineWidth = isFirst ? 3 : 1;
+      ctx.strokeRect(x, y, cardWidth, cardHeight);
 
-        y += 31;
+      // Numero di posizione grande e ben visibile
+      const badgeSize = 54;
+      const badgeX = x + 15;
+      const badgeY = y + 15;
 
-        // Titolo completo
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#f1f2f5';
-        ctx.font = titleFont;
+      ctx.fillStyle = isFirst ? '#d9b36c' : '#343947';
+      ctx.fillRect(badgeX, badgeY, badgeSize, badgeSize);
 
-        entry.lines.forEach(function(line) {
-          ctx.fillText(line, x, y);
-          y += titleLineHeight;
-        });
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = isFirst ? '#171717' : '#f5f5f5';
+      ctx.font = '800 28px Arial, sans-serif';
+      ctx.fillText(
+        String(item.rank),
+        badgeX + badgeSize / 2,
+        badgeY + badgeSize / 2 + 1
+      );
 
-        // Anno, se disponibile
-        if (entry.year) {
-          y += 2;
-          ctx.fillStyle = '#969cab';
-          ctx.font = '16px Arial, sans-serif';
-          ctx.fillText(entry.year, x, y);
-          y += 21;
-        }
+      // Voto sempre con un solo decimale
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = isFirst ? '#f1cb78' : '#f5f5f5';
+      ctx.font = '800 27px Arial, sans-serif';
+      ctx.fillText(
+        item.score.toFixed(1).replace('.', ','),
+        x + cardWidth - 16,
+        badgeY + badgeSize / 2
+      );
 
-        y += rowGap - 1;
+      // Separatore
+      ctx.fillStyle = isFirst ? '#66552f' : '#363b48';
+      ctx.fillRect(x + 15, y + 83, cardWidth - 30, 1);
+
+      // Titolo del film
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#f1f2f5';
+      ctx.font = '600 21px Arial, sans-serif';
+
+      let titleY = y + 115;
+
+      item.lines.forEach(function(line) {
+        ctx.fillText(line, x + 16, titleY);
+        titleY += titleLineHeight;
       });
+
+      // Anno, se disponibile
+      if (item.year) {
+        ctx.fillStyle = '#969cab';
+        ctx.font = '16px Arial, sans-serif';
+        ctx.fillText(item.year, x + 16, titleY + 4);
+      }
     });
 
     // PIE' DI PAGINA
@@ -13825,10 +13811,11 @@ async function exportRankingImage() {
     ctx.fillStyle = '#343844';
     ctx.fillRect(margin, footerY - 22, width - margin * 2, 1);
 
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#8f95a3';
     ctx.font = '16px Arial, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('MOOTBOXD  ·  Classifica condivisa', margin, footerY + 5);
+    ctx.fillText('MOOTBOXD · Classifica condivisa', margin, footerY + 5);
 
     ctx.textAlign = 'right';
     ctx.fillText(
@@ -13842,9 +13829,7 @@ async function exportRankingImage() {
       canvas.toBlob(resolve, 'image/png');
     });
 
-    if (!blob) {
-      throw new Error('Impossibile creare il PNG.');
-    }
+    if (!blob) throw new Error('Impossibile creare il PNG.');
 
     const file = new File(
       [blob],
@@ -13884,6 +13869,7 @@ async function exportRankingImage() {
     }
   }
 }
+
 
   
 </script>
