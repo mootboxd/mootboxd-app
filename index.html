@@ -13505,6 +13505,9 @@ async function exportRankingImage() {
 
   const selectedYear = yearFilter ? yearFilter.value : 'all';
   const selectedMember = memberFilter ? memberFilter.value : 'club';
+  const showNewBadge =
+  selectedYear === 'all' &&
+  selectedMember === 'club';
 
   const member = (D.members || []).find(function(m) {
     return String(m.id) === selectedMember;
@@ -13664,7 +13667,7 @@ function parseDiscussionDate(value) {
 
   // Formato italiano DD/MM/YYYY o DD-MM-YYYY
   match = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
-
+  
   if (match) {
     const date = new Date(
       Number(match[3]),
@@ -13683,12 +13686,12 @@ function parseDiscussionDate(value) {
 let newestFilmId = null;
 let newestDate = -Infinity;
 
-films.forEach(function(item) {
-  const timestamp = parseDiscussionDate(item.film.dataDiscussione);
+(D.films || []).forEach(function(film) {
+  const timestamp = parseDiscussionDate(film.dataDiscussione);
 
-  if (timestamp !== null && timestamp > newestDate) {
+  if (timestamp !== null && !isNaN(timestamp) && timestamp > newestDate) {
     newestDate = timestamp;
-    newestFilmId = String(item.film.id);
+    newestFilmId = String(film.id);
   }
 });
 
@@ -13707,7 +13710,8 @@ films.forEach(function(item) {
         score: item.score,
         title: title,
         year: year,
-        lines: lines
+        lines: lines,
+        filmId: String(film.id)
       };
     });
 
@@ -13790,9 +13794,9 @@ films.forEach(function(item) {
       const x = margin + column * (cardWidth + gutter);
       const y = headerHeight + row * (cardHeight + gutter);
 
-      const isNew = String(
-        films[index].film.id
-      ) === newestFilmId;
+      const isNew = showNewBadge &&
+  newestFilmId !== null &&
+  item.filmId === newestFilmId;
 
     // Sfondo e bordi del riquadro
     ctx.fillStyle = isNew ? '#292419' : '#191c25';
