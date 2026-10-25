@@ -8824,7 +8824,10 @@ let films =
       const memberName =
         String(member.name || '').trim();
 
-      const memberVote = voti[memberName];
+      const memberVoteKey = Object.keys(voti).find(function(key) {
+        return key.trim().toLowerCase() === memberName.toLowerCase();
+      });
+      const memberVote = memberVoteKey ? voti[memberVoteKey] : null;
 
       if (
         memberVote === '' ||
