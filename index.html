@@ -13644,6 +13644,55 @@ async function exportRankingImage() {
 
     ctx.font = '600 21px Arial, sans-serif';
 
+    
+function parseDiscussionDate(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+
+  // Formato YYYY-MM-DD
+  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  if (match) {
+    const date = new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3])
+    );
+
+    return isNaN(date.getTime()) ? null : date.getTime();
+  }
+
+  // Formato italiano DD/MM/YYYY o DD-MM-YYYY
+  match = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+
+  if (match) {
+    const date = new Date(
+      Number(match[3]),
+      Number(match[2]) - 1,
+      Number(match[1])
+    );
+
+    return isNaN(date.getTime()) ? null : date.getTime();
+  }
+
+  // Fallback per altri formati data riconosciuti dal browser
+  const parsed = new Date(text);
+  return isNaN(parsed.getTime()) ? null : parsed.getTime();
+}
+
+let newestFilmId = null;
+let newestDate = -Infinity;
+
+films.forEach(function(item) {
+  const timestamp = parseDiscussionDate(item.film.dataDiscussione);
+
+  if (timestamp !== null && timestamp > newestDate) {
+    newestDate = timestamp;
+    newestFilmId = String(item.film.id);
+  }
+});
+
+
     const prepared = films.map(function(item, index) {
       const film = item.film;
       const title = String(
@@ -13671,7 +13720,7 @@ async function exportRankingImage() {
       })
     );
 
-    const titleLineHeight = 25;
+    const titleLineHeight = 29;
     const cardHeight = Math.max(
       190,
       122 + maxTitleLines * titleLineHeight + 28
@@ -13741,27 +13790,30 @@ async function exportRankingImage() {
       const x = margin + column * (cardWidth + gutter);
       const y = headerHeight + row * (cardHeight + gutter);
 
-      const isFirst = item.rank === 1;
+      const isNew = String(
+        films[index].film.id
+      ) === newestFilmId;
 
-      // Sfondo e bordo del riquadro
-      ctx.fillStyle = isFirst ? '#292419' : '#191c25';
-      ctx.fillRect(x, y, cardWidth, cardHeight);
+    // Sfondo e bordi del riquadro
+    ctx.fillStyle = isNew ? '#292419' : '#191c25';
+    ctx.fillRect(x, y, cardWidth, cardHeight);
+    
+    ctx.strokeStyle = isNew ? '#d9b36c' : '#363b48';
+    ctx.lineWidth = isNew ? 3 : 1;
+    ctx.strokeRect(x, y, cardWidth, cardHeight);
 
-      ctx.strokeStyle = isFirst ? '#d9b36c' : '#363b48';
-      ctx.lineWidth = isFirst ? 3 : 1;
-      ctx.strokeRect(x, y, cardWidth, cardHeight);
 
       // Numero di posizione grande e ben visibile
       const badgeSize = 54;
       const badgeX = x + 15;
       const badgeY = y + 15;
 
-      ctx.fillStyle = isFirst ? '#d9b36c' : '#343947';
+      ctx.fillStyle = isNew ? '#d9b36c' : '#343947';
       ctx.fillRect(badgeX, badgeY, badgeSize, badgeSize);
 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isFirst ? '#171717' : '#f5f5f5';
+      ctx.fillStyle = isNew ? '#171717' : '#f5f5f5';
       ctx.font = '800 28px Arial, sans-serif';
       ctx.fillText(
         String(item.rank),
@@ -13772,13 +13824,34 @@ async function exportRankingImage() {
       // Voto sempre con un solo decimale
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isFirst ? '#f1cb78' : '#f5f5f5';
+      ctx.fillStyle = isNew ? '#f1cb78' : '#f5f5f5';
       ctx.font = '800 27px Arial, sans-serif';
       ctx.fillText(
         item.score.toFixed(1).replace('.', ','),
         x + cardWidth - 16,
         badgeY + badgeSize / 2
       );
+
+      
+    if (isNew) {
+      const labelWidth = 58;
+      const labelHeight = 23;
+      const labelX = x + cardWidth - labelWidth - 16;
+      const labelY = y + 80;
+    
+      ctx.fillStyle = '#d9b36c';
+      ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+    
+      ctx.fillStyle = '#171717';
+      ctx.font = '800 13px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('NEW', labelX + labelWidth / 2, labelY + labelHeight / 2);
+    
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
+
 
       // Separatore
       ctx.fillStyle = isFirst ? '#66552f' : '#363b48';
@@ -13788,7 +13861,7 @@ async function exportRankingImage() {
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f1f2f5';
-      ctx.font = '600 21px Arial, sans-serif';
+      ctx.font = '600 24px Arial, sans-serif';
 
       let titleY = y + 115;
 
@@ -13800,7 +13873,7 @@ async function exportRankingImage() {
       // Anno, se disponibile
       if (item.year) {
         ctx.fillStyle = '#969cab';
-        ctx.font = '16px Arial, sans-serif';
+        ctx.font = '18px Arial, sans-serif';
         ctx.fillText(item.year, x + 16, titleY + 4);
       }
     });
