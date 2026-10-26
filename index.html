@@ -4795,6 +4795,18 @@ input {
     margin-bottom: 18px;
   }
 }
+
+.ranking-share-button svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.ranking-share-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}  
   
   
 </style>
@@ -13679,9 +13691,23 @@ async function exportRankingImage() {
     'button[onclick="exportRankingImage()"]'
   );
 
-  if (button) {
+    if (button) {
     button.disabled = true;
-    button.textContent = 'Generazione immagine…';
+    button.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle
+          cx="12"
+          cy="12"
+          r="8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-dasharray="38 14"
+        />
+      </svg>
+    `;
+    button.setAttribute('aria-label', 'Generazione immagine in corso');
+    button.setAttribute('title', 'Generazione immagine in corso');
   }
 
   try {
@@ -14170,7 +14196,20 @@ let newestDate = -Infinity;
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = 'Condividi classifica';
+      button.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 16V3m-5 5 5-5 5 5M5 13v7h14v-7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      `;
+      button.setAttribute('aria-label', 'Condividi classifica');
+      button.setAttribute('title', 'Condividi classifica');
     }
   }
 }
