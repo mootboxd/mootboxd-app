@@ -14044,22 +14044,41 @@ let newestDate = -Infinity;
       { type: 'image/png' }
     );
 
+   
+    let shared = false;
+
     if (
       navigator.share &&
       navigator.canShare &&
       navigator.canShare({ files: [file] })
     ) {
-      await navigator.share({
-        title: 'MOOTBOXD — Classifica',
-        files: [file]
-      });
-    } else {
+      try {
+        await navigator.share({
+          title: 'MOOTBOXD — Classifica',
+          files: [file]
+        });
+        shared = true;
+      } catch (shareError) {
+        if (shareError.name === 'AbortError') {
+          return;
+        }
+
+        console.warn(
+          'Condivisione diretta non disponibile; scarico il PNG.',
+          shareError
+        );
+      }
+    }
+
+    if (!shared) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 
       link.href = url;
       link.download = 'mootboxd-classifica.png';
+      document.body.appendChild(link);
       link.click();
+      link.remove();
 
       setTimeout(function() {
         URL.revokeObjectURL(url);
