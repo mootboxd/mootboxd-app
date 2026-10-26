@@ -4807,7 +4807,24 @@ input {
   opacity: 0.7;
   cursor: wait;
 }  
-  
+
+
+@keyframes rankingShareSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ranking-share-button .ranking-loading-icon {
+  animation: rankingShareSpin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ranking-share-button .ranking-loading-icon {
+    animation: none;
+  }
+}
+
   
 </style>
 </head>
@@ -13694,17 +13711,19 @@ async function exportRankingImage() {
     if (button) {
     button.disabled = true;
     button.innerHTML = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle
-          cx="12"
-          cy="12"
-          r="8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-dasharray="38 14"
-        />
-      </svg>
+      
+<svg class="ranking-loading-icon" viewBox="0 0 24 24" aria-hidden="true">
+  <circle
+    cx="12"
+    cy="12"
+    r="8"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-dasharray="38 14"
+  />
+</svg>
+
     `;
     button.setAttribute('aria-label', 'Generazione immagine in corso');
     button.setAttribute('title', 'Generazione immagine in corso');
