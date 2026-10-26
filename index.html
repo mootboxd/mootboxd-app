@@ -4731,6 +4731,71 @@ input {
   }
 
 }
+
+
+/* Barra dei controlli della classifica */
+.ranking-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ranking-toggle-filters,
+.ranking-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.ranking-toggle-filters svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+
+.ranking-share-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.ranking-share-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ranking-filters[hidden] {
+  display: none !important;
+}
+
+.ranking-filters:not([hidden]) {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .ranking-toolbar {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .ranking-share-button {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+  }
+
+  .ranking-filters:not([hidden]) {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+}
+  
   
 </style>
 </head>
@@ -5062,50 +5127,64 @@ input {
 </div>
 
     
-<div class="ranking-filters">
+
+<div class="ranking-toolbar">
+
+  <button
+    type="button"
+    class="btn primary ranking-toggle-filters"
+    id="rankingToggleFilters"
+    aria-expanded="false"
+    aria-controls="rankingFilters"
+    onclick="toggleRankingFilters()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16M7 12h10M10 17h4"
+        fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span>Filtri</span>
+  </button>
+
+  <button
+    type="button"
+    class="btn primary ranking-share-button"
+    onclick="exportRankingImage()"
+    aria-label="Condividi classifica"
+    title="Condividi classifica"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 16V3m-5 5 5-5 5 5M5 13v7h14v-7"
+        fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+</div>
+
+<div class="ranking-filters" id="rankingFilters" hidden>
 
   <div class="ranking-filter">
-    <label for="rankingYearFilter">
-      Periodo
-    </label>
-
+    <label for="rankingYearFilter">Periodo</label>
     <select
       id="rankingYearFilter"
       onchange="renderRanking()"
     >
-      <option value="all">
-        Tutti gli anni
-      </option>
+      <option value="all">Tutti gli anni</option>
     </select>
   </div>
 
   <div class="ranking-filter">
-    <label for="rankingMemberFilter">
-      Classifica di
-    </label>
-
+    <label for="rankingMemberFilter">Classifica di</label>
     <select
       id="rankingMemberFilter"
       onchange="renderRanking()"
     >
-      <option value="club">
-        Media del club
-      </option>
+      <option value="club">Media del club</option>
     </select>
   </div>
 
-</div>
-
-
-   
-<div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
-  <button
-    type="button"
-    class="btn primary"
-    onclick="exportRankingImage()"
-  >
-    Condividi classifica
-  </button>
 </div>
 
 <div id="rankingList"></div>
@@ -14095,6 +14174,19 @@ let newestDate = -Infinity;
     }
   }
 }
+
+
+function toggleRankingFilters() {
+  const filters = document.getElementById('rankingFilters');
+  const button = document.getElementById('rankingToggleFilters');
+
+  if (!filters || !button) return;
+
+  const willOpen = filters.hidden;
+
+  filters.hidden = !willOpen;
+  button.setAttribute('aria-expanded', String(willOpen));
+}  
 
 
   
