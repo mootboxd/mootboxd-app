@@ -14130,17 +14130,19 @@ films.forEach(function(item) {
         badgeY + badgeSize / 2
       );
       
-      // Badge NEW
+     // Badge NEW
       const labelWidth = columns <= 2 ? 58 : columns <= 4 ? 48 : 40;
       const labelHeight = columns <= 2 ? 23 : 19;
       const labelFontSize = columns <= 2 ? 13 : columns <= 4 ? 11 : 10;
       
+      // Il separatore e il titolo mantengono una posizione coerente.
+      // Il badge NEW si allinea alla prima riga del titolo.
       const separatorY = badgeY + badgeSize + (isNew ? labelHeight + 12 : 14);
-      const titleY = separatorY + titleFontSize + 9;
+      const titleStartY = separatorY + titleFontSize + 9;
       
       if (isNew) {
         const labelX = x + cardWidth - labelWidth - 12;
-        const labelY = titleY - titleFontSize - labelHeight + 2;
+        const labelY = titleStartY - titleFontSize - labelHeight + 2;
       
         ctx.fillStyle = '#d9b36c';
         ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
@@ -14166,6 +14168,8 @@ films.forEach(function(item) {
       ctx.fillStyle = '#f1f2f5';
       ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
       
+      let titleY = titleStartY;
+      
       const availableTitleHeight = cardHeight - (titleY - y) - 25;
       const maxVisibleLines = Math.max(
         1,
@@ -14177,8 +14181,6 @@ films.forEach(function(item) {
       visibleLines.forEach(function(line, lineIndex) {
         let displayLine = line;
       
-        // Se il titolo è troppo lungo, aggiungi i puntini finali
-        // all'ultima riga visibile.
         if (
           lineIndex === visibleLines.length - 1 &&
           item.lines.length > maxVisibleLines
@@ -14203,7 +14205,6 @@ films.forEach(function(item) {
         ctx.font = `${Math.max(11, titleFontSize - 4)}px Arial, sans-serif`;
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
-    });
 
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
