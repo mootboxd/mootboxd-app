@@ -14206,6 +14206,8 @@ films.forEach(function(item) {
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
 
+   });   
+
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
       canvas.toBlob(resolve, 'image/png');
