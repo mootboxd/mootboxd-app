@@ -14179,7 +14179,6 @@ films.forEach(function(item) {
       );
       
       const visibleLines = item.lines.slice(0, maxVisibleLines);
-      const labelWidth = columns <= 2 ? 58 : columns <= 4 ? 48 : 40;
       const firstLineMaxWidth = cardWidth - 32 - (isNew ? labelWidth + 8 : 0);
       
       visibleLines.forEach(function(line, lineIndex) {
