@@ -13803,7 +13803,7 @@ async function exportRankingImage() {
       return lines.length ? lines : ['Senza titolo'];
     }
 
-    ctx.font = '600 24px Arial, sans-serif';
+    ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
 
     
 
@@ -14179,7 +14179,7 @@ let newestDate = -Infinity;
         ctx.font = `${Math.max(11, titleFontSize - 4)}px Arial, sans-serif`;
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
-
+    });
 
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
