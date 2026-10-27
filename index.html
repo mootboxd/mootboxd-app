@@ -13871,12 +13871,15 @@ let newestDate = -Infinity;
 (D.films || []).forEach(function(film) {
   const timestamp = parseDiscussionDate(film.dataDiscussione);
 
-  if (timestamp !== null && !isNaN(timestamp) && timestamp > newestDate) {
+  if (
+    timestamp !== null &&
+    !isNaN(timestamp) &&
+    timestamp > newestDate
+  ) {
     newestDate = timestamp;
-    newestFilmId = String(film.id);
+    newestFilmId = String(film.id || '').trim();
   }
 });
-
 
     const prepared = films.map(function(item, index) {
       const film = item.film;
@@ -13893,7 +13896,7 @@ let newestDate = -Infinity;
         title: title,
         year: year,
         lines: lines,
-        filmId: String(film.id),
+        filmId: String(film.id || '').trim(),
         shareImage: String(film.shareImage || '')
       };
     });
@@ -14017,8 +14020,9 @@ let newestDate = -Infinity;
       const y = headerHeight + row * (cardHeight + gutter);
 
       const isNew = showNewBadge &&
-  newestFilmId !== null &&
-  item.filmId === newestFilmId;
+        newestFilmId !== null &&
+        newestFilmId !== '' &&
+        item.filmId === newestFilmId;
 
     
       // Sfondo della scheda: foto se disponibile, altrimenti originale
