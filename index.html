@@ -14179,6 +14179,8 @@ films.forEach(function(item) {
       );
       
       const visibleLines = item.lines.slice(0, maxVisibleLines);
+      const labelWidth = columns <= 2 ? 58 : columns <= 4 ? 48 : 40;
+      const firstLineMaxWidth = cardWidth - 32 - (isNew ? labelWidth + 8 : 0);
       
       visibleLines.forEach(function(line, lineIndex) {
         let displayLine = line;
@@ -14197,6 +14199,21 @@ films.forEach(function(item) {
           displayLine += '…';
         }
       
+        const maxLineWidth = isNew && lineIndex === 0
+          ? firstLineMaxWidth
+          : cardWidth - 32;
+        
+        while (
+          displayLine.length > 0 &&
+          ctx.measureText(displayLine).width > maxLineWidth
+        ) {
+          displayLine = displayLine.slice(0, -1);
+        }
+        
+        if (displayLine !== line) {
+          displayLine = displayLine.trimEnd() + '…';
+        }
+        
         ctx.fillText(displayLine, x + 16, titleY);
         titleY += titleLineHeight;
       });
