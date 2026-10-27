@@ -13747,12 +13747,12 @@ async function exportRankingImage() {
     const cardWidth =
       (width - margin * 2 - gutter * (columns - 1)) / columns;
     
-    const titleFontSize = [0, 24, 21, 19, 17, 15, 14][columns];
+    const titleFontSize = [0, 24, 21, 19, 17, 17, 16][columns];
     const titleLineHeight = titleFontSize + 5;
     
-    const badgeSize = [0, 54, 50, 46, 40, 36, 32][columns];
+    const badgeSize = [0, 54, 50, 46, 40, 39, 36][columns];
     const badgeFontSize = Math.round(badgeSize * 0.52);
-    const scoreFontSize = [0, 27, 25, 23, 20, 18, 16][columns];
+    const scoreFontSize = [0, 27, 25, 23, 20, 20, 18][columns];
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -13924,16 +13924,21 @@ films.forEach(function(item) {
         gutter * (rowCount - 1)) / rowCount
     );
     
-    const cardHeight = Math.max(
-      140,
-      Math.min(preferredCardHeight, availableCardHeight)
-    );
+    const cardHeight = columns >= 3
+      ? Math.max(140, availableCardHeight)
+      : Math.max(
+          140,
+          Math.min(preferredCardHeight, availableCardHeight)
+        );
     
     const gridHeight =
       rowCount * cardHeight + (rowCount - 1) * gutter;
     
     const height = prepared.length <= 36
-      ? targetHeight
+      ? Math.max(
+          targetHeight,
+          headerHeight + gridHeight + bottomPadding
+        )
       : headerHeight + gridHeight + bottomPadding;
     
     if (height > 30000) {
@@ -14130,9 +14135,12 @@ films.forEach(function(item) {
       const labelHeight = columns <= 2 ? 23 : 19;
       const labelFontSize = columns <= 2 ? 13 : columns <= 4 ? 11 : 10;
       
+      const separatorY = badgeY + badgeSize + (isNew ? labelHeight + 12 : 14);
+      const titleY = separatorY + titleFontSize + 9;
+      
       if (isNew) {
         const labelX = x + cardWidth - labelWidth - 12;
-        const labelY = badgeY + badgeSize + 5;
+        const labelY = titleY - titleFontSize - labelHeight + 2;
       
         ctx.fillStyle = '#d9b36c';
         ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
@@ -14149,8 +14157,6 @@ films.forEach(function(item) {
       }
       
       // Separatore
-      const separatorY = badgeY + badgeSize + (isNew ? labelHeight + 12 : 14);
-      
       ctx.fillStyle = isNew ? '#66552f' : '#363b48';
       ctx.fillRect(x + 12, separatorY, cardWidth - 24, 1);
       
@@ -14159,8 +14165,6 @@ films.forEach(function(item) {
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f1f2f5';
       ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
-      
-      let titleY = separatorY + titleFontSize + 9;
       
       const availableTitleHeight = cardHeight - (titleY - y) - 25;
       const maxVisibleLines = Math.max(
