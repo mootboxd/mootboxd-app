@@ -14032,6 +14032,17 @@ let newestDate = -Infinity;
         newestFilmId !== '' &&
         item.filmId === newestFilmId;
 
+      if (item.filmId === newestFilmId || isNew) {
+        console.log('[NEW] Verifica scheda:', {
+          titolo: item.title,
+          idScheda: item.filmId,
+          idUltimoFilm: newestFilmId,
+          isNew: isNew,
+          colonne: columns,
+          cardHeight: cardHeight
+        });
+      }
+
     
       // Sfondo della scheda: foto se disponibile, altrimenti originale
       const shareImage = shareImages[index];
