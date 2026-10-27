@@ -13868,7 +13868,8 @@ function parseDiscussionDate(value) {
 let newestFilmId = null;
 let newestDate = -Infinity;
 
-(D.films || []).forEach(function(film) {
+films.forEach(function(item) {
+  const film = item.film;
   const timestamp = parseDiscussionDate(film.dataDiscussione);
 
   if (
