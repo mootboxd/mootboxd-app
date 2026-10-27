@@ -14027,20 +14027,17 @@ let newestDate = -Infinity;
       const x = margin + column * (cardWidth + gutter);
       const y = headerHeight + row * (cardHeight + gutter);
 
-      const isNew = showNewBadge &&
+      const isNew =
+        showNewBadge &&
         newestFilmId !== null &&
         newestFilmId !== '' &&
-        item.filmId === newestFilmId;
-
-      if (item.filmId === newestFilmId || isNew) {
-        console.log('[NEW] Verifica scheda:', {
-          titolo: item.title,
-          idScheda: item.filmId,
-          idUltimoFilm: newestFilmId,
-          isNew: isNew,
-          colonne: columns,
-          cardHeight: cardHeight
-        });
+        String(item.filmId).trim() === String(newestFilmId).trim();
+      
+      console.log('[NEW] Scheda:', item.title, {
+        idScheda: item.filmId,
+        idUltimoFilm: newestFilmId,
+        isNew: isNew
+      });
       }
 
     
