@@ -14130,23 +14130,25 @@ films.forEach(function(item) {
         badgeY + badgeSize / 2
       );
       
-     // Badge NEW
+     
+      // Badge NEW
       const labelWidth = columns <= 2 ? 58 : columns <= 4 ? 48 : 40;
       const labelHeight = columns <= 2 ? 23 : 19;
       const labelFontSize = columns <= 2 ? 13 : columns <= 4 ? 11 : 10;
-      
-      // Il separatore e il titolo mantengono una posizione coerente.
-      // Il badge NEW si allinea alla prima riga del titolo.
-      const separatorY = badgeY + badgeSize + (isNew ? labelHeight + 12 : 14);
+
+      // Separatore sempre nella stessa posizione
+      const separatorY = badgeY + badgeSize + 14;
       const titleStartY = separatorY + titleFontSize + 9;
-      
+
       if (isNew) {
         const labelX = x + cardWidth - labelWidth - 12;
-        const labelY = titleStartY - titleFontSize - labelHeight + 2;
-      
+
+        // Allinea verticalmente NEW alla prima riga del titolo
+        const labelY = titleStartY - titleFontSize - 2;
+
         ctx.fillStyle = '#d9b36c';
         ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
-      
+
         ctx.fillStyle = '#171717';
         ctx.font = `800 ${labelFontSize}px Arial, sans-serif`;
         ctx.textAlign = 'center';
@@ -14157,7 +14159,7 @@ films.forEach(function(item) {
           labelY + labelHeight / 2
         );
       }
-      
+
       // Separatore
       ctx.fillStyle = isNew ? '#66552f' : '#363b48';
       ctx.fillRect(x + 12, separatorY, cardWidth - 24, 1);
@@ -14167,7 +14169,7 @@ films.forEach(function(item) {
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f1f2f5';
       ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
-      
+
       let titleY = titleStartY;
       
       const availableTitleHeight = cardHeight - (titleY - y) - 25;
