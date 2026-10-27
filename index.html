@@ -13732,12 +13732,27 @@ async function exportRankingImage() {
   try {
     const width = 1200;
     const margin = 48;
-    const columns = 3;
     const gutter = 20;
-    const headerHeight = 245;
-    const footerHeight = 75;
+    const headerHeight = 185;
+    const bottomPadding = 40;
+    const targetHeight = 1600;
+    
+    const columns =
+      films.length <= 6 ? 1 :
+      films.length <= 12 ? 2 :
+      films.length <= 18 ? 3 :
+      films.length <= 24 ? 4 :
+      films.length <= 30 ? 5 : 6;
+    
     const cardWidth =
       (width - margin * 2 - gutter * (columns - 1)) / columns;
+    
+    const titleFontSize = [0, 24, 21, 19, 17, 15, 14][columns];
+    const titleLineHeight = titleFontSize + 5;
+    
+    const badgeSize = [0, 54, 50, 46, 40, 36, 32][columns];
+    const badgeFontSize = Math.round(badgeSize * 0.52);
+    const scoreFontSize = [0, 27, 25, 23, 20, 18, 16][columns];
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -13885,33 +13900,35 @@ let newestDate = -Infinity;
 
     // Tutti i riquadri hanno la stessa altezza,
     // calcolata per contenere anche il titolo più lungo.
-    const maxTitleLines = Math.max.apply(
-      null,
-      prepared.map(function(item) {
-        return item.lines.length;
-      })
-    );
-
-    const titleLineHeight = 29;
-    const cardHeight = Math.max(
-      190,
-      122 + maxTitleLines * titleLineHeight + 28
-    );
-
     const rowCount = Math.ceil(prepared.length / columns);
-    const gridHeight = rowCount * cardHeight + (rowCount - 1) * gutter;
 
-    // Formato 3:4 come riferimento, più alto se necessario
-    const height = Math.max(
-      1600,
-      headerHeight + gridHeight + footerHeight
+    // Altezza massima desiderata per le schede, in base alle colonne.
+    const preferredCardHeight = [0, 250, 230, 210, 200, 190, 180][columns];
+    
+    // Fino a 36 film, mantieni il formato 1200 × 1600.
+    // Oltre 36 film, lascia crescere l'immagine per contenere tutte le righe.
+    const availableCardHeight = Math.floor(
+      (targetHeight - headerHeight - bottomPadding -
+        gutter * (rowCount - 1)) / rowCount
     );
-
+    
+    const cardHeight = Math.max(
+      140,
+      Math.min(preferredCardHeight, availableCardHeight)
+    );
+    
+    const gridHeight =
+      rowCount * cardHeight + (rowCount - 1) * gutter;
+    
+    const height = prepared.length <= 36
+      ? targetHeight
+      : headerHeight + gridHeight + bottomPadding;
+    
     if (height > 30000) {
       alert('La classifica è troppo lunga per una singola immagine.');
       return;
     }
-
+    
     canvas.height = height;
 
     // Carica le immagini dedicate all'esportazione.
@@ -13963,36 +13980,33 @@ let newestDate = -Infinity;
 
     // INTESTAZIONE
     ctx.textAlign = 'left';
+
     ctx.fillStyle = '#d9b36c';
-    ctx.font = '700 24px Arial, sans-serif';
-    ctx.fillText('MOOTBOXD', margin, 60);
-
+    ctx.font = '700 22px Arial, sans-serif';
+    ctx.fillText('MOOTBOXD', margin, 45);
+    
     ctx.fillStyle = '#f5f5f5';
-    ctx.font = '800 52px Arial, sans-serif';
-    ctx.fillText('CLASSIFICA', margin, 120);
-
+    ctx.font = '800 46px Arial, sans-serif';
+    ctx.fillText('CLASSIFICA', margin, 98);
+    
     const periodLabel = selectedYear === 'all'
       ? 'Tutti gli anni'
       : 'Anno ' + selectedYear;
-
+    
     const memberLabel = selectedMember === 'club'
       ? 'Club'
       : String(member.name || 'Membro');
-
+    
     ctx.fillStyle = '#b9bdc8';
-    ctx.font = '22px Arial, sans-serif';
-    ctx.fillText(periodLabel + '  ·  ' + memberLabel, margin, 165);
-
-    ctx.fillStyle = '#8f95a3';
-    ctx.font = '18px Arial, sans-serif';
+    ctx.font = '20px Arial, sans-serif';
     ctx.fillText(
-      prepared.length + ' film in classifica',
+      periodLabel + '  ·  ' + memberLabel,
       margin,
-      202
+      137
     );
-
+    
     ctx.fillStyle = '#343844';
-    ctx.fillRect(margin, 225, width - margin * 2, 2);
+    ctx.fillRect(margin, 165, width - margin * 2, 2);
 
     // RIQUADRI: ORDINE DA SINISTRA A DESTRA, POI A CAPO
     prepared.forEach(function(item, index) {
@@ -14061,99 +14075,111 @@ let newestDate = -Infinity;
 
 
 
-      // Numero di posizione grande e ben visibile
-      const badgeSize = 54;
-      const badgeX = x + 15;
-      const badgeY = y + 15;
-
+      // Numero in classifica
+      const badgeX = x + 12;
+      const badgeY = y + 12;
+      
       ctx.fillStyle = isNew ? '#d9b36c' : '#343947';
       ctx.fillRect(badgeX, badgeY, badgeSize, badgeSize);
-
+      
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = isNew ? '#171717' : '#f5f5f5';
-      ctx.font = '800 28px Arial, sans-serif';
+      ctx.font = `800 ${badgeFontSize}px Arial, sans-serif`;
+      
       ctx.fillText(
         String(item.rank),
         badgeX + badgeSize / 2,
         badgeY + badgeSize / 2 + 1
       );
-
-      // Voto sempre con un solo decimale
+      
+      // Voto
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = isNew ? '#f1cb78' : '#f5f5f5';
-      ctx.font = '800 27px Arial, sans-serif';
+      ctx.font = `800 ${scoreFontSize}px Arial, sans-serif`;
+      
       ctx.fillText(
         item.score.toFixed(1).replace('.', ','),
-        x + cardWidth - 16,
+        x + cardWidth - 12,
         badgeY + badgeSize / 2
       );
-
       
-    if (isNew) {
-      const labelWidth = 58;
-      const labelHeight = 23;
-      const labelX = x + cardWidth - labelWidth - 16;
-      const labelY = y + 108;
-    
-      ctx.fillStyle = '#d9b36c';
-      ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
-    
-      ctx.fillStyle = '#171717';
-      ctx.font = '800 13px Arial, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('NEW', labelX + labelWidth / 2, labelY + labelHeight / 2);
-    
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-    }
-
-
+      // Badge NEW
+      const labelWidth = columns <= 2 ? 58 : columns <= 4 ? 48 : 40;
+      const labelHeight = columns <= 2 ? 23 : 19;
+      const labelFontSize = columns <= 2 ? 13 : columns <= 4 ? 11 : 10;
+      
+      if (isNew) {
+        const labelX = x + cardWidth - labelWidth - 12;
+        const labelY = badgeY + badgeSize + 5;
+      
+        ctx.fillStyle = '#d9b36c';
+        ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+      
+        ctx.fillStyle = '#171717';
+        ctx.font = `800 ${labelFontSize}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          'NEW',
+          labelX + labelWidth / 2,
+          labelY + labelHeight / 2
+        );
+      }
+      
       // Separatore
+      const separatorY = badgeY + badgeSize + (isNew ? labelHeight + 12 : 14);
+      
       ctx.fillStyle = isNew ? '#66552f' : '#363b48';
-      ctx.fillRect(x + 15, y + 83, cardWidth - 30, 1);
-
+      ctx.fillRect(x + 12, separatorY, cardWidth - 24, 1);
+      
       // Titolo del film
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f1f2f5';
-      ctx.font = '600 24px Arial, sans-serif';
-
-      let titleY = y + 115;
-
-      item.lines.forEach(function(line) {
-        ctx.fillText(line, x + 16, titleY);
+      ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
+      
+      let titleY = separatorY + titleFontSize + 9;
+      
+      const availableTitleHeight = cardHeight - (titleY - y) - 25;
+      const maxVisibleLines = Math.max(
+        1,
+        Math.floor(availableTitleHeight / titleLineHeight)
+      );
+      
+      const visibleLines = item.lines.slice(0, maxVisibleLines);
+      
+      visibleLines.forEach(function(line, lineIndex) {
+        let displayLine = line;
+      
+        // Se il titolo è troppo lungo, aggiungi i puntini finali
+        // all'ultima riga visibile.
+        if (
+          lineIndex === visibleLines.length - 1 &&
+          item.lines.length > maxVisibleLines
+        ) {
+          while (
+            displayLine.length > 0 &&
+            ctx.measureText(displayLine + '…').width > cardWidth - 32
+          ) {
+            displayLine = displayLine.slice(0, -1);
+          }
+      
+          displayLine += '…';
+        }
+      
+        ctx.fillText(displayLine, x + 16, titleY);
         titleY += titleLineHeight;
       });
-
-      // Anno, se disponibile
-      if (item.year) {
+      
+      // Anno, se disponibile e se rimane spazio
+      if (item.year && titleY + 18 <= y + cardHeight - 8) {
         ctx.fillStyle = '#969cab';
-        ctx.font = '18px Arial, sans-serif';
-        ctx.fillText(item.year, x + 16, titleY + 4);
+        ctx.font = `${Math.max(11, titleFontSize - 4)}px Arial, sans-serif`;
+        ctx.fillText(item.year, x + 16, titleY + 2);
       }
-    });
 
-    // PIE' DI PAGINA
-    const footerY = height - 42;
-
-    ctx.fillStyle = '#343844';
-    ctx.fillRect(margin, footerY - 22, width - margin * 2, 1);
-
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#8f95a3';
-    ctx.font = '16px Arial, sans-serif';
-    ctx.fillText('MOOTBOXD · Classifica condivisa', margin, footerY + 5);
-
-    ctx.textAlign = 'right';
-    ctx.fillText(
-      new Date().toLocaleDateString('it-IT'),
-      width - margin,
-      footerY + 5
-    );
 
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
