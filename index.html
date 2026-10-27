@@ -14144,7 +14144,7 @@ films.forEach(function(item) {
         const labelX = x + cardWidth - labelWidth - 12;
 
         // Allinea verticalmente NEW alla prima riga del titolo
-        const labelY = titleStartY - titleFontSize - 2;
+        const labelY = titleStartY - titleFontSize + (titleFontSize - labelHeight) / 2 + 2;
 
         ctx.fillStyle = '#d9b36c';
         ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
