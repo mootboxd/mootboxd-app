@@ -13881,6 +13881,14 @@ let newestDate = -Infinity;
   }
 });
 
+   console.log('[NEW] Film individuato:', {
+    id: newestFilmId,
+    data: (D.films || []).find(function(film) {
+      return String(film.id || '').trim() === newestFilmId;
+    })?.dataDiscussione,
+    showNewBadge: showNewBadge
+  }); 
+
     const prepared = films.map(function(item, index) {
       const film = item.film;
       const title = String(
