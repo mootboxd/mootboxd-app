@@ -4825,6 +4825,196 @@ input {
   }
 }
 
+
+/* =========================
+   RUOTA DELLE PROPOSTE
+   ========================= */
+
+.proposal-roulette-panel {
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.roulette-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 4px 0 28px;
+}
+
+.roulette-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.roulette-filter label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.roulette-filter select {
+  width: 100%;
+  min-width: 0;
+}
+
+.roulette-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.05fr) minmax(220px, .95fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 56px);
+}
+
+.roulette-wheel-wrap {
+  position: relative;
+  width: min(100%, 390px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.roulette-wheel {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255,255,255,.035);
+  border: 5px solid rgba(220,180,90,.85);
+  box-shadow: 0 0 0 5px rgba(220,180,90,.10),
+              0 18px 42px rgba(0,0,0,.32);
+  transform: rotate(0deg);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.roulette-wheel svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.roulette-wheel-placeholder {
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+
+.roulette-pointer {
+  position: absolute;
+  z-index: 3;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 0;
+  border-bottom: 27px solid #e2b95f;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,.45));
+}
+
+.roulette-side {
+  min-width: 0;
+}
+
+.roulette-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+}
+
+.roulette-hint {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.roulette-spin-button {
+  width: 100%;
+  min-height: 48px;
+  font-weight: 800;
+}
+
+.roulette-spin-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.roulette-result {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid rgba(220,180,90,.28);
+  border-radius: 14px;
+  background: rgba(220,180,90,.07);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.roulette-result-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.roulette-result-title {
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 850;
+}
+
+.roulette-result-meta {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .roulette-filters {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .roulette-filter-theme {
+    grid-column: 1 / -1;
+  }
+
+  .roulette-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .roulette-wheel-wrap {
+    width: min(100%, 340px);
+  }
+
+  .roulette-side {
+    text-align: center;
+  }
+
+  .roulette-result {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roulette-wheel {
+    will-change: auto;
+  }
+}
+  
   
 </style>
 </head>
@@ -5480,6 +5670,109 @@ input {
       </div>
     </div>
 
+  </div>
+
+<!-- =========================
+     RUOTA DELLE PROPOSTE
+     ========================= -->
+
+  <div class="panel proposal-roulette-panel" id="proposalRoulettePanel">
+  
+    <div class="head">
+      <div>
+        <h2>Ruota delle proposte</h2>
+        <div class="muted">
+          Filtra i film e lascia scegliere alla ruota.
+        </div>
+      </div>
+    </div>
+  
+    <div class="roulette-filters">
+  
+      <div class="roulette-filter">
+        <label for="rouletteGenre">Genere</label>
+        <select
+          id="rouletteGenre"
+          onchange="renderProposalRoulette()"
+        >
+          <option value="all">Tutti i generi</option>
+        </select>
+      </div>
+  
+      <div class="roulette-filter">
+        <label for="rouletteDecade">Decennio</label>
+        <select
+          id="rouletteDecade"
+          onchange="renderProposalRoulette()"
+        >
+          <option value="all">Tutti i decenni</option>
+        </select>
+      </div>
+  
+      <div class="roulette-filter roulette-filter-theme">
+        <label for="rouletteTheme">Settimana a tema</label>
+        <select
+          id="rouletteTheme"
+          onchange="renderProposalRoulette()"
+        >
+          <option value="all">Tutte le proposte del club</option>
+        </select>
+      </div>
+  
+    </div>
+  
+    <div class="roulette-layout">
+  
+      <div class="roulette-wheel-wrap">
+        <div class="roulette-pointer" aria-hidden="true"></div>
+  
+        <div
+          class="roulette-wheel"
+          id="proposalRouletteWheel"
+          role="img"
+          aria-label="Ruota delle proposte"
+        >
+          <div class="roulette-wheel-placeholder">
+            Caricamento film…
+          </div>
+        </div>
+      </div>
+  
+      <div class="roulette-side">
+  
+        <div
+          class="roulette-count"
+          id="rouletteFilmCount"
+          aria-live="polite"
+        >
+          Caricamento film…
+        </div>
+  
+        <p class="roulette-hint">
+          La ruota estrae un film alla volta.
+          Puoi girarla di nuovo quando vuoi.
+        </p>
+  
+        <button
+          type="button"
+          class="btn primary roulette-spin-button"
+          id="rouletteSpinButton"
+          onclick="spinProposalRoulette()"
+          disabled
+        >
+          Gira la ruota
+        </button>
+  
+        <div
+          class="roulette-result"
+          id="rouletteResult"
+          aria-live="polite"
+        >
+          Applica i filtri e gira la ruota per estrarre un film.
+        </div>
+  
+      </div>
+    </div>
   </div>
 
 </section>    
@@ -6237,6 +6530,7 @@ async function loadWeeklyThemes() {
     weeklyThemesLoaded = true;
 
     renderWeeklyThemes();
+    initProposalRoulette();
 
   } catch (error) {
 
@@ -6617,6 +6911,7 @@ async function loadProposals() {
     proposalsLoaded = true;
 
     renderProposals();
+    initProposalRoulette();
 
   } catch (error) {
 
@@ -6870,6 +7165,452 @@ if (!validProposals.length) {
   box.innerHTML = html;
 
 }
+
+
+/* =========================
+   RUOTA DELLE PROPOSTE
+   ========================= */
+
+  let rouletteIsSpinning = false;
+  let rouletteLastWinnerKey = '';
+  
+  function rouletteTitleParts(proposal) {
+    const rawTitle = String(
+      proposal && proposal.title || ''
+    ).trim();
+  
+    const match = rawTitle.match(/^(.*)\s+\((\d{4})\)$/);
+    const title = match ? match[1].trim() : rawTitle;
+  
+    const year = String(
+      proposal && proposal.year ||
+      (match ? match[2] : '')
+    ).trim();
+  
+    const genre = String(
+      proposal && (proposal.genere || proposal.genre) || ''
+    ).trim();
+  
+    return {
+      title: title,
+      year: year,
+      genre: genre
+    };
+  }
+  
+  function rouletteFilmKey(proposal) {
+    const parts = rouletteTitleParts(proposal);
+  
+    return (
+      parts.title + '|' + parts.year
+    ).toLowerCase();
+  }
+  
+  function rouletteDecade(year) {
+    const value = Number(year);
+  
+    return /^\d{4}$/.test(String(year || '')) &&
+           value >= 1880 &&
+           value <= 2100
+      ? Math.floor(value / 10) * 10
+      : null;
+  }
+  
+  function rouletteGetBaseFilms() {
+    const selectedThemeId =
+      document.getElementById('rouletteTheme')?.value || 'all';
+  
+    let source = getValidProposals();
+  
+    if (selectedThemeId !== 'all') {
+      const theme = weeklyThemes.find(function(item) {
+        return String(item.id || '') === String(selectedThemeId);
+      });
+  
+      source = theme && Array.isArray(theme.proposte)
+        ? theme.proposte
+        : [];
+    }
+  
+    const seen = new Set();
+  
+    return source.map(function(proposal) {
+      const parts = rouletteTitleParts(proposal);
+  
+      return {
+        title: parts.title,
+        year: parts.year,
+        genre: parts.genre,
+        key: rouletteFilmKey(proposal)
+      };
+    }).filter(function(film) {
+      if (!film.title || seen.has(film.key)) {
+        return false;
+      }
+  
+      seen.add(film.key);
+      return true;
+    });
+  }
+  
+  function initProposalRoulette() {
+    const genreSelect =
+      document.getElementById('rouletteGenre');
+  
+    const decadeSelect =
+      document.getElementById('rouletteDecade');
+  
+    const themeSelect =
+      document.getElementById('rouletteTheme');
+  
+    if (!genreSelect || !decadeSelect || !themeSelect) {
+      return;
+    }
+  
+    /* FILTRO GENERE */
+  
+    const currentGenre = genreSelect.value || 'all';
+  
+    genreSelect.innerHTML =
+      '<option value="all">Tutti i generi</option>' +
+      PROPOSAL_GENRES.map(function(genre) {
+        return '<option value="' +
+          esc(genre.value) + '">' +
+          esc(genre.label) +
+          '</option>';
+      }).join('');
+  
+    genreSelect.value = PROPOSAL_GENRES.some(function(genre) {
+      return genre.value === currentGenre;
+    }) ? currentGenre : 'all';
+  
+  
+    /* FILTRO DECENNIO */
+  
+    const currentDecade = decadeSelect.value || 'all';
+  
+    const years = getValidProposals().map(function(proposal) {
+      return rouletteTitleParts(proposal).year;
+    });
+  
+    (Array.isArray(weeklyThemes) ? weeklyThemes : [])
+      .forEach(function(theme) {
+        (Array.isArray(theme.proposte) ? theme.proposte : [])
+          .forEach(function(proposal) {
+            years.push(rouletteTitleParts(proposal).year);
+          });
+      });
+  
+    const decades = Array.from(
+      new Set(
+        years.map(rouletteDecade).filter(function(value) {
+          return value !== null;
+        })
+      )
+    ).sort(function(a, b) {
+      return a - b;
+    });
+  
+    decadeSelect.innerHTML =
+      '<option value="all">Tutti i decenni</option>' +
+      decades.map(function(decade) {
+        return '<option value="' + decade + '">' +
+          decade + '–' + (decade + 9) +
+          '</option>';
+      }).join('');
+  
+    decadeSelect.value = decades.some(function(decade) {
+      return String(decade) === currentDecade;
+    }) ? currentDecade : 'all';
+  
+  
+    /* FILTRO SETTIMANA A TEMA */
+  
+    const currentTheme = themeSelect.value || 'all';
+  
+    themeSelect.innerHTML =
+      '<option value="all">Tutte le proposte del club</option>' +
+      (Array.isArray(weeklyThemes) ? weeklyThemes : [])
+        .map(function(theme) {
+          const id = String(theme.id || '');
+          const name = String(
+            theme.nome || 'Tema della settimana'
+          );
+  
+          return '<option value="' + esc(id) + '">' +
+            esc(name) +
+            '</option>';
+        }).join('');
+  
+    themeSelect.value = weeklyThemes.some(function(theme) {
+      return String(theme.id || '') === currentTheme;
+    }) ? currentTheme : 'all';
+  
+    renderProposalRoulette();
+  }
+  
+  function renderProposalRoulette() {
+    const wheel =
+      document.getElementById('proposalRouletteWheel');
+  
+    const count =
+      document.getElementById('rouletteFilmCount');
+  
+    const button =
+      document.getElementById('rouletteSpinButton');
+  
+    if (!wheel || !count || !button || rouletteIsSpinning) {
+      return;
+    }
+  
+    const genre =
+      document.getElementById('rouletteGenre')?.value || 'all';
+  
+    const decade =
+      document.getElementById('rouletteDecade')?.value || 'all';
+  
+    let films = rouletteGetBaseFilms();
+  
+    films = films.filter(function(film) {
+      if (genre !== 'all' && film.genre !== genre) {
+        return false;
+      }
+  
+      if (
+        decade !== 'all' &&
+        String(rouletteDecade(film.year)) !== decade
+      ) {
+        return false;
+      }
+  
+      return true;
+    });
+  
+    count.textContent = films.length +
+      (films.length === 1
+        ? ' film disponibile'
+        : ' film disponibili');
+  
+    button.disabled = films.length === 0;
+  
+    if (!films.length) {
+      wheel.style.transition = 'none';
+      wheel.style.transform = 'rotate(0deg)';
+      wheel._rouletteFilms = [];
+  
+      wheel.innerHTML =
+        '<div class="roulette-wheel-placeholder">' +
+        'Nessun film corrisponde ai filtri selezionati.' +
+        '</div>';
+  
+      return;
+    }
+  
+    const colors = [
+      '#b88635',
+      '#344b65',
+      '#7b3d43',
+      '#536b55',
+      '#6a527e',
+      '#8b633e',
+      '#365d61',
+      '#76524a'
+    ];
+  
+    const cx = 160;
+    const cy = 160;
+    const radius = 154;
+    const step = 360 / films.length;
+  
+    function point(angle, r) {
+      const rad = angle * Math.PI / 180;
+  
+      return {
+        x: cx + Math.cos(rad) * r,
+        y: cy + Math.sin(rad) * r
+      };
+    }
+  
+    const slices = films.map(function(film, index) {
+      const start = -90 + index * step;
+      const end = start + step;
+  
+      const p1 = point(start, radius);
+      const p2 = point(end, radius);
+  
+      const largeArc = step > 180 ? 1 : 0;
+  
+      const path = films.length === 1
+        ? 'M ' + cx + ' ' + cy +
+          ' L ' + cx + ' ' + (cy - radius) +
+          ' A ' + radius + ' ' + radius +
+          ' 0 1 1 ' + cx + ' ' + (cy + radius) +
+          ' A ' + radius + ' ' + radius +
+          ' 0 1 1 ' + cx + ' ' + (cy - radius) + ' Z'
+        : 'M ' + cx + ' ' + cy +
+          ' L ' + p1.x.toFixed(2) + ' ' +
+          p1.y.toFixed(2) +
+          ' A ' + radius + ' ' + radius +
+          ' 0 ' + largeArc + ' 1 ' +
+          p2.x.toFixed(2) + ' ' +
+          p2.y.toFixed(2) + ' Z';
+  
+      const mid = start + step / 2;
+      const labelPoint = point(
+        mid,
+        films.length < 8 ? 91 : 104
+      );
+  
+      const displayTitle = film.title.length > 19
+        ? film.title.slice(0, 17) + '…'
+        : film.title;
+  
+      const fontSize = films.length > 18
+        ? 7
+        : films.length > 10
+          ? 8
+          : 10;
+  
+      const textRotation = mid + 90;
+  
+      return '<path d="' + path +
+        '" fill="' + colors[index % colors.length] +
+        '" stroke="rgba(255,255,255,.45)" stroke-width="1" />' +
+  
+        '<text x="' + labelPoint.x.toFixed(2) +
+        '" y="' + labelPoint.y.toFixed(2) +
+        '" fill="#fff" font-size="' + fontSize +
+        '" font-weight="700" text-anchor="middle" ' +
+        'dominant-baseline="middle" transform="rotate(' +
+        textRotation.toFixed(2) + ' ' +
+        labelPoint.x.toFixed(2) + ' ' +
+        labelPoint.y.toFixed(2) + ')">' +
+        esc(displayTitle) +
+        '</text>';
+    }).join('');
+  
+    wheel.style.transition = 'none';
+    wheel.style.transform = 'rotate(0deg)';
+  
+    wheel.innerHTML =
+      '<svg viewBox="0 0 320 320" ' +
+      'aria-hidden="true" focusable="false">' +
+  
+      '<circle cx="160" cy="160" r="158" fill="#151821" />' +
+      slices +
+  
+      '<circle cx="160" cy="160" r="25" ' +
+      'fill="#11131a" stroke="#e2b95f" stroke-width="4" />' +
+  
+      '<circle cx="160" cy="160" r="5" fill="#e2b95f" />' +
+      '</svg>';
+  
+    wheel._rouletteFilms = films;
+  }
+  
+  function spinProposalRoulette() {
+    const wheel =
+      document.getElementById('proposalRouletteWheel');
+  
+    const button =
+      document.getElementById('rouletteSpinButton');
+  
+    const result =
+      document.getElementById('rouletteResult');
+  
+    if (!wheel || !button || !result || rouletteIsSpinning) {
+      return;
+    }
+  
+    const films = wheel._rouletteFilms || [];
+  
+    if (!films.length) {
+      result.textContent =
+        'Nessun film disponibile con questi filtri.';
+      return;
+    }
+  
+    rouletteIsSpinning = true;
+    button.disabled = true;
+    button.textContent = 'Estrazione in corso…';
+    result.textContent = 'La ruota sta girando…';
+  
+    let winnerIndex = Math.floor(
+      Math.random() * films.length
+    );
+  
+    /* Evita di estrarre subito lo stesso film,
+       se ci sono almeno due film disponibili. */
+  
+    if (
+      films.length > 1 &&
+      films[winnerIndex].key === rouletteLastWinnerKey
+    ) {
+      winnerIndex = (
+        winnerIndex +
+        1 +
+        Math.floor(Math.random() * (films.length - 1))
+      ) % films.length;
+    }
+  
+    const winner = films[winnerIndex];
+  
+    rouletteLastWinnerKey = winner.key;
+  
+    const step = 360 / films.length;
+  
+    const finalAngle = (
+      (
+        360 -
+        ((winnerIndex + 0.5) * step) % 360
+      ) % 360
+    );
+  
+    const fullSpins = 5 + Math.floor(Math.random() * 3);
+  
+    wheel.style.transition =
+      'transform 4.6s cubic-bezier(.12,.72,.08,1)';
+  
+    requestAnimationFrame(function() {
+      wheel.style.transform =
+        'rotate(' +
+        (fullSpins * 360 + finalAngle) +
+        'deg)';
+    });
+  
+    window.setTimeout(function() {
+      const genreInfo = PROPOSAL_GENRES.find(function(item) {
+        return item.value === winner.genre;
+      });
+  
+      const genreLabel = genreInfo
+        ? genreInfo.label
+        : winner.genre;
+  
+      result.innerHTML =
+        '<span class="roulette-result-label">Film estratto</span>' +
+        '<div class="roulette-result-title">' +
+        esc(winner.title) +
+        '</div>' +
+  
+        (winner.year
+          ? '<div class="roulette-result-meta">' +
+            esc(winner.year) +
+            (genreLabel ? ' · ' + esc(genreLabel) : '') +
+            '</div>'
+          : (genreLabel
+              ? '<div class="roulette-result-meta">' +
+                esc(genreLabel) +
+                '</div>'
+              : ''));
+  
+      rouletteIsSpinning = false;
+      button.disabled = false;
+      button.textContent = 'Gira di nuovo';
+  
+    }, 4700);
+  }
+    
 
 function toggleProposalGenre(button) {
 
@@ -7737,6 +8478,7 @@ const result =
 
 
     renderProposals();
+    initProposalRoulette();
 
 
     successBox.textContent =
@@ -9266,6 +10008,7 @@ if (page === 'proposals') {
   }
 
   renderProposalGenres();
+  initProposalRoulette();
 
 
   /*
