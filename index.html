@@ -4835,29 +4835,47 @@ input {
   overflow: hidden;
 }
 
+
+.roulette-filter-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin: 4px 0 14px;
+}
+
 .roulette-filters {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 4px 0 28px;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid rgba(127, 127, 127, .15);
+  border-radius: 10px;
+  background: rgba(127, 127, 127, .045);
 }
 
 .roulette-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
   min-width: 0;
 }
 
 .roulette-filter label {
+  display: block;
+  margin-bottom: 5px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .roulette-filter select {
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 9px;
+  border: 1px solid rgba(127, 127, 127, .20);
+  border-radius: 8px;
+  background: #1e2230;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
 }
 
 .roulette-layout {
@@ -4867,25 +4885,32 @@ input {
   gap: clamp(24px, 5vw, 56px);
 }
 
+
 .roulette-wheel-wrap {
   position: relative;
   width: min(100%, 390px);
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 8px;
+  border: 5px solid rgba(220,180,90,.85);
+  border-radius: 50%;
+  background: #151821;
+  box-shadow: 0 0 0 5px rgba(220,180,90,.10),
+              0 18px 42px rgba(0,0,0,.32);
 }
 
 .roulette-wheel {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
   display: grid;
   place-items: center;
+  border: 0;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(255,255,255,.035);
-  border: 5px solid rgba(220,180,90,.85);
-  box-shadow: 0 0 0 5px rgba(220,180,90,.10),
-              0 18px 42px rgba(0,0,0,.32);
+  background: transparent;
   transform: rotate(0deg);
   transform-origin: center;
   will-change: transform;
@@ -4895,6 +4920,8 @@ input {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .roulette-wheel-placeholder {
@@ -4929,13 +4956,6 @@ input {
   font-weight: 700;
   letter-spacing: .35px;
   text-transform: uppercase;
-}
-
-.roulette-hint {
-  margin: 12px 0 20px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.6;
 }
 
 .roulette-spin-button {
@@ -4980,11 +5000,10 @@ input {
   font-size: 13px;
 }
 
+
 @media (max-width: 700px) {
   .roulette-filters {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .roulette-filter-theme {
@@ -5008,6 +5027,7 @@ input {
     text-align: left;
   }
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .roulette-wheel {
@@ -5687,8 +5707,26 @@ input {
       </div>
     </div>
   
-    <div class="roulette-filters">
-  
+    
+    <div class="roulette-filter-toolbar">
+      <button
+        type="button"
+        class="proposals-filter-button"
+        id="rouletteToggleFilters"
+        onclick="toggleRouletteFilters()"
+        aria-expanded="false"
+        aria-controls="rouletteFilters"
+      >
+        <span aria-hidden="true">☷</span>
+        <span>Filtri</span>
+      </button>
+    </div>
+    
+    <div
+      class="roulette-filters"
+      id="rouletteFilters"
+      style="display:none;"
+    >
       <div class="roulette-filter">
         <label for="rouletteGenre">Genere</label>
         <select
@@ -5698,7 +5736,7 @@ input {
           <option value="all">Tutti i generi</option>
         </select>
       </div>
-  
+    
       <div class="roulette-filter">
         <label for="rouletteDecade">Decennio</label>
         <select
@@ -5708,7 +5746,7 @@ input {
           <option value="all">Tutti i decenni</option>
         </select>
       </div>
-  
+    
       <div class="roulette-filter roulette-filter-theme">
         <label for="rouletteTheme">Settimana a tema</label>
         <select
@@ -5718,8 +5756,8 @@ input {
           <option value="all">Tutte le proposte del club</option>
         </select>
       </div>
-  
     </div>
+
   
     <div class="roulette-layout">
   
@@ -5747,11 +5785,7 @@ input {
         >
           Caricamento film…
         </div>
-  
-        <p class="roulette-hint">
-          La ruota estrae un film alla volta.
-          Puoi girarla di nuovo quando vuoi.
-        </p>
+        
   
         <button
           type="button"
@@ -8307,6 +8341,23 @@ function renderAllProposalResults() {
     }).join('');
 
 }
+
+
+function toggleRouletteFilters() {
+  const filters = document.getElementById('rouletteFilters');
+  const button = document.getElementById('rouletteToggleFilters');
+
+  if (!filters || !button) {
+    return;
+  }
+
+  const isOpen = filters.style.display !== 'none';
+
+  filters.style.display = isOpen ? 'none' : 'grid';
+
+  button.setAttribute('aria-expanded', String(!isOpen));
+  button.classList.toggle('is-open', !isOpen);
+}  
 
 
 function toggleProposalFilters() {
