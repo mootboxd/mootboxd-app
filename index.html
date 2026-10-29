@@ -1083,25 +1083,35 @@ input {
 .main-nav-toggle {
   width: 46px;
   height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #171a23;
   color: #f5f6fa;
   border: 1px solid #2a2f3d;
   border-radius: 8px;
-  font-size: 22px;
-  line-height: 1;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+.main-nav-toggle svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
 }
 
 .top .main-nav-toggle {
   width: 52px;
   height: 52px;
-  font-size: 28px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
+.top .main-nav-toggle svg {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+}
 .main-nav-menu {
   position: absolute;
   top: 50px;
@@ -5358,11 +5368,20 @@ input {
   </div>
 
   <button
+    type="button"
     class="main-nav-toggle"
     onclick="toggleMainMenu()"
     aria-label="Apri menu"
   >
-    ☰
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 6h16M4 12h16M4 18h16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    </svg>
   </button>
 
 </div>
