@@ -6767,6 +6767,27 @@ input {
       <option value="">Seleziona il vincitore</option>
     </select>
 
+    
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+      <input
+        type="checkbox"
+        id="rouletteHistoryCancelled"
+      >
+      Estrazione annullata
+    </label>
+    
+    <div style="margin-top:12px;">
+      <label for="rouletteHistoryWeek">Settimana ufficiale (facoltativa)</label>
+      <input
+        id="rouletteHistoryWeek"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Es. 12"
+      >
+    </div>
+
+
     <textarea
       id="rouletteHistoryNotes"
       rows="3"
@@ -15936,8 +15957,16 @@ async function openRouletteHistoryModal() {
             SETTIMANA ${numeroSettimana}
           </div>   
 
-          <div style="font-weight:700;margin-bottom:4px;">
+          <div style="font-weight:800;margin-bottom:4px;">
+            ${entry.settimana_ufficiale
+              ? `<div style="font-size:11px;letter-spacing:1.2px;margin-bottom:5px;">
+                   SETTIMANA ${escapeHtml(entry.settimana_ufficiale)}
+                 </div>`
+              : ''}
             ${escapeHtml(entry.data)}
+            ${entry.annullata
+              ? '<span style="color:#e57373;font-size:11px;font-weight:800;margin-left:8px;">ANNULLATA</span>'
+              : ''}
           </div>
           
           ${entry.note ? `
@@ -16042,6 +16071,8 @@ function resetRouletteHistoryForm() {
   document.getElementById('rouletteHistoryFilm2').value = '';
   document.getElementById('rouletteHistoryFilm3').value = '';
   document.getElementById('rouletteHistoryNotes').value = '';
+  document.getElementById('rouletteHistoryCancelled').checked = false;
+  document.getElementById('rouletteHistoryWeek').value = '';
 
   updateRouletteHistoryWinnerOptions('');
 
@@ -16079,7 +16110,9 @@ async function loadRouletteHistoryAdmin() {
       return `
         <div style="padding:12px 0;border-bottom:1px solid var(--border-color, #444);">
           <strong>${esc(entry.data)}</strong>
-          <div>${esc(entry.film1)} · ${esc(entry.film2)} · ${esc(entry.film3)}</div>
+          ${entry.annullata ? '<span style="color:#e57373;font-weight:800;margin-left:8px;">ANNULLATA</span>' : ''}
+          ${entry.settimana_ufficiale ? `<div style="font-size:11px;font-weight:800;letter-spacing:1px;margin-top:4px;">SETTIMANA ${esc(entry.settimana_ufficiale)}</div>` : ''}
+            <div>${esc(entry.film1)} · ${esc(entry.film2)} · ${esc(entry.film3)}</div>
           <div style="color:#7ee0a1;font-weight:700;">
             Vincitore: ${esc(entry.vincitore)}
           </div>
@@ -16118,7 +16151,9 @@ function editRouletteHistoryEntry(riga) {
   document.getElementById('rouletteHistoryFilm2').value = entry.film2;
   document.getElementById('rouletteHistoryFilm3').value = entry.film3;
   document.getElementById('rouletteHistoryNotes').value = entry.note;
-
+  document.getElementById('rouletteHistoryCancelled').checked = entry.annullata === true;
+  document.getElementById('rouletteHistoryWeek').value = entry.settimana_ufficiale || '';
+  
   updateRouletteHistoryWinnerOptions(entry.vincitore);
 
   document.getElementById('rouletteHistoryWinner').value = entry.vincitore;
@@ -16137,6 +16172,7 @@ function editRouletteHistoryEntry(riga) {
   });
 }
 
+
 async function saveRouletteHistoryEntry() {
   const token = rouletteHistoryAdminToken();
 
@@ -16152,6 +16188,8 @@ async function saveRouletteHistoryEntry() {
   const vincitore = document.getElementById('rouletteHistoryWinner').value;
   const note = document.getElementById('rouletteHistoryNotes').value.trim();
   const riga = document.getElementById('rouletteHistoryRow').value;
+  const annullata = document.getElementById('rouletteHistoryCancelled').checked;
+  const settimanaUfficiale = document.getElementById('rouletteHistoryWeek').value.trim();
 
   if (!data || !film1 || !film2 || !film3 || !vincitore) {
     rouletteHistoryAdminMessage('Inserisci data, tre film e vincitore.', true);
@@ -16163,14 +16201,41 @@ async function saveRouletteHistoryEntry() {
     return;
   }
 
+  if (annullata && settimanaUfficiale) {
+    rouletteHistoryAdminMessage('Un’estrazione annullata non può avere una settimana ufficiale.', true);
+    return;
+  }
+
+  if (settimanaUfficiale && (!Number.isInteger(Number(settimanaUfficiale)) || Number(settimanaUfficiale) < 1)) {
+    rouletteHistoryAdminMessage('Inserisci un numero di settimana valido.', true);
+    return;
+  }
+
   try {
     if (riga) {
       await api('updateRouletteHistory', [
-        Number(riga), data, film1, film2, film3, vincitore, note, token
+        Number(riga),
+        data,
+        film1,
+        film2,
+        film3,
+        vincitore,
+        note,
+        annullata,
+        settimanaUfficiale,
+        token
       ]);
     } else {
       await api('addRouletteHistory', [
-        data, film1, film2, film3, vincitore, note, token
+        data,
+        film1,
+        film2,
+        film3,
+        vincitore,
+        note,
+        annullata,
+        settimanaUfficiale,
+        token
       ]);
     }
 
@@ -16181,6 +16246,7 @@ async function saveRouletteHistoryEntry() {
     rouletteHistoryAdminMessage('Errore durante il salvataggio: ' + error.message, true);
   }
 }
+
 
 async function removeRouletteHistoryEntry(riga) {
   if (!confirm('Vuoi eliminare questa voce dalla cronologia?')) return;
