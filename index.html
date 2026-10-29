@@ -4892,12 +4892,11 @@ input {
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 8px;
-  border: 5px solid rgba(220,180,90,.85);
+  padding: 0;
+  border: none;
   border-radius: 50%;
-  background: #151821;
-  box-shadow: 0 0 0 5px rgba(220,180,90,.10),
-              0 18px 42px rgba(0,0,0,.32);
+  background: transparent;
+  box-shadow: none;
 }
 
 .roulette-wheel {
@@ -4941,11 +4940,11 @@ input {
   height: 0;
   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
-  border-top: 0;
-  border-bottom: 27px solid #e2b95f;
+  border-top: 27px solid #e2b95f;
+  border-bottom: 0;
   filter: drop-shadow(0 3px 3px rgba(0,0,0,.45));
 }
-
+  
 .roulette-side {
   min-width: 0;
 }
@@ -4956,8 +4955,9 @@ input {
   font-weight: 700;
   letter-spacing: .35px;
   text-transform: uppercase;
+  margin-bottom: 24px;
 }
-
+  
 .roulette-spin-button {
   width: 100%;
   min-height: 48px;
@@ -5000,7 +5000,10 @@ input {
   font-size: 13px;
 }
 
-
+.roulette-result[hidden] {
+  display: none;
+}
+  
 @media (max-width: 700px) {
   .roulette-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5700,9 +5703,9 @@ input {
   
     <div class="head">
       <div>
-        <h2>Ruota delle proposte</h2>
+        <h2>Ruota delle estrazioni</h2>
         <div class="muted">
-          Filtra i film e lascia scegliere alla ruota.
+          Filtra le proposte e lascia scegliere alla fortuna.
         </div>
       </div>
     </div>
@@ -5797,13 +5800,12 @@ input {
           Gira la ruota
         </button>
   
-        <div
+         <div
           class="roulette-result"
           id="rouletteResult"
           aria-live="polite"
-        >
-          Applica i filtri e gira la ruota per estrarre un film.
-        </div>
+          hidden
+        ></div>
   
       </div>
     </div>
@@ -15315,9 +15317,9 @@ function toggleRankingFilters() {
           <li>
             Preferibilmente vi chiedo di scrivere il titolo in inglese e
             come mostrato sul Letterboxd (per facilità basta andare nella
-            pagina del film, tenere premuto sul titolo e copiarlo), visto
-            che il sistema dovrebbe leggere i duplicati anche se le
-            maiuscole e minuscole sono diverse, ma non li riconosce nel
+            pagina del film, tenere premuto sul titolo e copiarlo), anche
+            se il sistema dovrebbe leggere i duplicati anche quando
+            maiuscole e minuscole sono diverse, ma fa più fatica nel
             caso in cui siano scritti in lingue diverse.
           </li>
 
