@@ -5248,15 +5248,22 @@ input {
 
 @media (max-width: 600px) {
   #rouletteHistoryModal .roulette-history-filters {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    padding: 10px !important;
+  }
+
+  #rouletteHistoryModal .roulette-history-filters label {
+    font-size: 10px;
   }
 
   #rouletteHistoryModal .roulette-history-filters select {
     min-height: 40px;
+    padding: 8px 9px;
+    font-size: 11px;
     box-sizing: border-box;
   }
-}  
+}
   
 </style>
 </head>
@@ -16666,42 +16673,35 @@ async function removeRouletteHistoryEntry(riga) {
       <div class="film-modal-title">Cronologia delle estrazioni</div>
 
       
-      <div class="roulette-history-filters" style="
-        display:grid;
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:10px;
-        margin:16px 0;
-      ">
-        <div>
-          <label for="rouletteHistoryYear" style="display:block;margin-bottom:5px;font-size:12px;">
-            Anno
-          </label>
-          <select id="rouletteHistoryYear" style="width:100%;min-width:0;">
+      
+      <div class="roulette-history-filters proposals-filters">
+      
+        <div class="proposals-filter-field">
+          <label for="rouletteHistoryYear">Anno</label>
+          <select id="rouletteHistoryYear">
             <option value="">Tutti gli anni</option>
           </select>
         </div>
       
-        <div>
-          <label for="rouletteHistoryTheme" style="display:block;margin-bottom:5px;font-size:12px;">
-            Settimane a tema
-          </label>
-          <select id="rouletteHistoryTheme" style="width:100%;min-width:0;">
+        <div class="proposals-filter-field">
+          <label for="rouletteHistoryTheme">Settimane a tema</label>
+          <select id="rouletteHistoryTheme">
             <option value="all">Tutte</option>
-            <option value="yes">Con note</option>
-            <option value="no">Senza note</option>
+            <option value="yes">Con tema</option>
+            <option value="no">Senza tema</option>
           </select>
         </div>
       
-        <div>
-          <label for="rouletteHistoryOrder" style="display:block;margin-bottom:5px;font-size:12px;">
-            Ordine
-          </label>
-          <select id="rouletteHistoryOrder" style="width:100%;min-width:0;">
+        <div class="proposals-filter-field">
+          <label for="rouletteHistoryOrder">Ordine</label>
+          <select id="rouletteHistoryOrder">
             <option value="newest">Più recenti</option>
             <option value="oldest">Più vecchie</option>
           </select>
         </div>
+      
       </div>
+
 
 
       <div
