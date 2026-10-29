@@ -5244,6 +5244,19 @@ input {
     line-height: 1.3;
   }
 }  
+
+
+@media (max-width: 600px) {
+  #rouletteHistoryModal .roulette-history-filters {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  #rouletteHistoryModal .roulette-history-filters select {
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+}  
   
 </style>
 </head>
@@ -15957,89 +15970,167 @@ async function saveAwardsAdminUi() {
   }
 }
 
+
 async function openRouletteHistoryModal() {
   const modal = document.getElementById('rouletteHistoryModal');
   const content = document.getElementById('rouletteHistoryContent');
+  const yearSelect = document.getElementById('rouletteHistoryYear');
+  const themeSelect = document.getElementById('rouletteHistoryTheme');
+  const orderSelect = document.getElementById('rouletteHistoryOrder');
 
   modal.style.display = 'flex';
   content.textContent = 'Caricamento cronologia…';
 
   try {
-    const history = await api('getRouletteHistory');
+    const history = await api('getRouletteHistory', []);
 
     if (!history || history.length === 0) {
       content.textContent = 'La cronologia è ancora vuota.';
+      yearSelect.innerHTML = '<option value="">Tutti gli anni</option>';
       return;
     }
 
-    content.innerHTML = history.map(function(entry) {
-      const escapeHtml = function(value) {
-        return String(value || '').replace(/[&<>"']/g, function(char) {
-          return {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-          }[char];
-        });
-      };
+    // Conserva le voci caricate per applicare i filtri senza nuove chiamate API.
+    const escapeHtml = function(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(char) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[char];
+      });
+    };
 
-      const films = [entry.film1, entry.film2, entry.film3];
+    // Popola gli anni presenti nella cronologia.
+    const years = [...new Set(
+      history.map(function(entry) {
+        const match = String(entry.data || '').match(/^(\d{4})-/);
+        return match ? match[1] : '';
+      }).filter(Boolean)
+    )].sort(function(a, b) {
+      return Number(b) - Number(a);
+    });
 
-      return `
-        <div class="roulette-history-entry"
-             style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color, #444);">
+    const previousYear = yearSelect.value;
 
-          <div style="font-weight:800;margin-bottom:4px;">
-            ${entry.settimana_ufficiale
-              ? `<div style="font-size:11px;letter-spacing:1.2px;margin-bottom:5px;">
-                   SETTIMANA ${escapeHtml(entry.settimana_ufficiale)}
-                 </div>`
-              : ''}
-            ${escapeHtml(entry.data)}
-            ${entry.annullata
-              ? '<span style="color:#e57373;font-size:11px;font-weight:800;margin-left:8px;">ANNULLATA</span>'
-              : ''}
-          </div>
-          
-          ${entry.note ? `
-            <div style="
-              margin-bottom:12px;
-              font-size:0.9em;
-              opacity:0.75;
-              line-height:1.4;
-            ">
-              ${escapeHtml(entry.note)}
+    yearSelect.innerHTML =
+      '<option value="">Tutti gli anni</option>' +
+      years.map(function(year) {
+        return `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`;
+      }).join('');
+
+    if (years.includes(previousYear)) {
+      yearSelect.value = previousYear;
+    } else {
+      yearSelect.value = '';
+    }
+
+    function renderRouletteHistory() {
+      const selectedYear = yearSelect.value;
+      const selectedTheme = themeSelect.value;
+      const selectedOrder = orderSelect.value;
+
+      let filtered = history.filter(function(entry) {
+        const date = String(entry.data || '');
+        const yearMatch = date.match(/^(\d{4})-/);
+        const year = yearMatch ? yearMatch[1] : '';
+        const hasNotes = String(entry.note || '').trim() !== '';
+
+        if (selectedYear && year !== selectedYear) {
+          return false;
+        }
+
+        if (selectedTheme === 'yes' && !hasNotes) {
+          return false;
+        }
+
+        if (selectedTheme === 'no' && hasNotes) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Le date sono nel formato ISO yyyy-mm-dd, quindi sono ordinabili
+      // direttamente come stringhe.
+      filtered.sort(function(a, b) {
+        const comparison = String(a.data || '').localeCompare(String(b.data || ''));
+        return selectedOrder === 'oldest' ? comparison : -comparison;
+      });
+
+      if (!filtered.length) {
+        content.textContent = 'Nessuna estrazione corrisponde ai filtri selezionati.';
+        return;
+      }
+
+      content.innerHTML = filtered.map(function(entry) {
+        const films = [entry.film1, entry.film2, entry.film3];
+
+        return `
+          <div class="roulette-history-entry"
+               style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color, #444);">
+
+            <div style="font-weight:800;margin-bottom:4px;">
+              ${entry.settimana_ufficiale
+                ? `<div style="font-size:11px;letter-spacing:1.2px;margin-bottom:5px;">
+                     SETTIMANA ${escapeHtml(entry.settimana_ufficiale)}
+                   </div>`
+                : ''}
+              ${escapeHtml(entry.data)}
+              ${entry.annullata
+                ? '<span style="color:#e57373;font-size:11px;font-weight:800;margin-left:8px;">ANNULLATA</span>'
+                : ''}
             </div>
-          ` : '<div style="margin-bottom:12px;"></div>'}
 
-          <div style="display:grid;gap:6px;">
-            ${films.map(function(film) {
-              const isWinner =
-                film.trim() !== '' &&
-                film.trim().toLowerCase() ===
-                entry.vincitore.trim().toLowerCase();
+            ${entry.note ? `
+              <div style="
+                margin-bottom:12px;
+                font-size:0.9em;
+                opacity:0.75;
+                line-height:1.4;
+              ">
+                ${escapeHtml(entry.note)}
+              </div>
+            ` : '<div style="margin-bottom:12px;"></div>'}
 
-              return `
-                <div style="
-                  padding:8px 10px;
-                  border-radius:6px;
-                  ${isWinner
-                    ? 'font-weight:700;color:#7ee0a1;background:rgba(60,180,100,0.12);'
-                    : ''}
-                ">
-                  ${isWinner ? '★ ' : ''}
-                  ${escapeHtml(film)}
-                  ${isWinner ? ' — VINCITORE' : ''}
-                </div>
-              `;
-            }).join('')}
+            <div style="display:grid;gap:6px;">
+              ${films.map(function(film) {
+                const isWinner =
+                  String(film || '').trim() !== '' &&
+                  String(film || '').trim().toLowerCase() ===
+                  String(entry.vincitore || '').trim().toLowerCase();
+
+                return `
+                  <div style="
+                    padding:8px 10px;
+                    border-radius:6px;
+                    ${isWinner
+                      ? 'font-weight:700;color:#7ee0a1;background:rgba(60,180,100,0.12);'
+                      : ''}
+                  ">
+                    ${isWinner ? '★ ' : ''}
+                    ${escapeHtml(film)}
+                    ${isWinner ? ' — VINCITORE' : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
+        `;
+      }).join('');
+    }
 
-        </div>
-      `;
-    }).join('');
+    // Evita di registrare più volte gli stessi listener se il modal viene riaperto.
+    if (yearSelect.dataset.historyListener !== 'true') {
+      yearSelect.addEventListener('change', renderRouletteHistory);
+      themeSelect.addEventListener('change', renderRouletteHistory);
+      orderSelect.addEventListener('change', renderRouletteHistory);
+      yearSelect.dataset.historyListener = 'true';
+    }
+
+    renderRouletteHistory();
 
   } catch (error) {
     content.textContent =
@@ -16573,6 +16664,45 @@ async function removeRouletteHistoryEntry(riga) {
 
     <div class="film-modal-content" style="display:block;">
       <div class="film-modal-title">Cronologia delle estrazioni</div>
+
+      
+      <div class="roulette-history-filters" style="
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:10px;
+        margin:16px 0;
+      ">
+        <div>
+          <label for="rouletteHistoryYear" style="display:block;margin-bottom:5px;font-size:12px;">
+            Anno
+          </label>
+          <select id="rouletteHistoryYear" style="width:100%;min-width:0;">
+            <option value="">Tutti gli anni</option>
+          </select>
+        </div>
+      
+        <div>
+          <label for="rouletteHistoryTheme" style="display:block;margin-bottom:5px;font-size:12px;">
+            Settimane a tema
+          </label>
+          <select id="rouletteHistoryTheme" style="width:100%;min-width:0;">
+            <option value="all">Tutte</option>
+            <option value="yes">Con note</option>
+            <option value="no">Senza note</option>
+          </select>
+        </div>
+      
+        <div>
+          <label for="rouletteHistoryOrder" style="display:block;margin-bottom:5px;font-size:12px;">
+            Ordine
+          </label>
+          <select id="rouletteHistoryOrder" style="width:100%;min-width:0;">
+            <option value="newest">Più recenti</option>
+            <option value="oldest">Più vecchie</option>
+          </select>
+        </div>
+      </div>
+
 
       <div
         id="rouletteHistoryContent"
