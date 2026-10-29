@@ -5051,6 +5051,22 @@ input {
   height: 19px;
   flex-shrink: 0;
 }
+
+.proposals-filter-button,
+.club-films-filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.proposals-filter-button svg,
+.club-films-filter-button svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}  
   
 </style>
 </head>
@@ -6051,16 +6067,21 @@ input {
   </div>
 
 
-  <button
-    type="button"
-    class="club-films-filter-button"
-    onclick="toggleClubFilmFilters()"
-    aria-expanded="false"
-    aria-label="Apri filtri"
-  >
-    <span aria-hidden="true">☷</span>
-    <span>Filtri</span>
-  </button>
+<button
+  type="button"
+  class="btn primary club-films-filter-button"
+  onclick="toggleClubFilmFilters()"
+  aria-expanded="false"
+  aria-label="Apri filtri"
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 7h16M7 12h10M10 17h4"
+      fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <span>Filtri</span>
+</button>
+
 
 </div>
 
@@ -7509,7 +7530,7 @@ if (!validProposals.length) {
           p2.y.toFixed(2) + ' Z';
   
       const mid = start + step / 2;
-      const labelPoint = point(mid, films.length < 8 ? 125 : 132);
+      const labelPoint = point(mid, films.length < 8 ? 115 : 122);
       const maxTitleLength = films.length > 16 ? 10 : films.length > 9 ? 13 : 17;
       const displayTitle = film.title.length > maxTitleLength
         ? film.title.slice(0, maxTitleLength - 1) + '…'
@@ -7769,17 +7790,22 @@ function toggleAllProposals() {
 
       </div>
 
-
+   
       <button
         type="button"
-        class="proposals-filter-button"
+        class="btn primary proposals-filter-button"
         onclick="toggleProposalFilters()"
         aria-expanded="false"
         aria-label="Apri filtri"
       >
-        <span aria-hidden="true">☷</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16M7 12h10M10 17h4"
+            fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <span>Filtri</span>
       </button>
+
 
     </div>
 
