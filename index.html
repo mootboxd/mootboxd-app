@@ -6666,6 +6666,21 @@ input {
       <option value="roulette">Estrazione dalla cronologia della ruota</option>
     </select>
 
+    
+    <div id="awardsBuilderCompositeArea" style="display:none;margin-top:12px;">
+    
+      <label for="awardsBuilderCompositeMode">
+        Campi della risposta composta
+      </label>
+    
+      <select id="awardsBuilderCompositeMode">
+        <option value="film_number">Film + risposta numerica</option>
+        <option value="film_text">Film + risposta testuale</option>
+      </select>
+    
+    </div>
+
+
     <label style="margin-top:12px;">
       <input
         id="awardsBuilderQuestionRequired"
@@ -15822,6 +15837,7 @@ function awardsSetMemberMessage(message, isError) {
   el.style.color = isError ? '#e88' : '';
 }
 
+
 async function loadAwardsMemberUi() {
   const statusLabel = document.getElementById('awardsStatusLabel');
   const questionsBox = document.getElementById('awardsQuestions');
@@ -15842,18 +15858,16 @@ async function loadAwardsMemberUi() {
     const status = await api('getAwardsStatus', [token]);
     awardsCurrentStatus = status || {};
 
-    const edition = String(awardsCurrentStatus.edition || '');
+    const edition = String(status.edition || '');
 
     if (statusLabel) {
       statusLabel.textContent = edition
         ? 'Edizione ' + edition +
-          (awardsCurrentStatus.votingOpen
-            ? ' · votazioni aperte'
-            : ' · votazioni chiuse')
+          (status.votingOpen ? ' · votazioni aperte' : ' · votazioni chiuse')
         : 'Nessuna edizione attiva';
     }
 
-    if (!edition || !awardsCurrentStatus.votingOpen) {
+    if (!edition || !status.votingOpen) {
       questionsBox.textContent = edition
         ? 'Le votazioni sono chiuse.'
         : 'Gli Awards non sono ancora configurati.';
@@ -15867,6 +15881,7 @@ async function loadAwardsMemberUi() {
     if (draft && draft.status === 'submitted') {
       questionsBox.textContent = 'Il tuo voto è già stato inviato.';
       if (actions) actions.style.display = 'none';
+
       awardsSetMemberMessage(
         'Il voto definitivo non può essere modificato.',
         false
@@ -15874,8 +15889,8 @@ async function loadAwardsMemberUi() {
       return;
     }
 
-    const questions = Array.isArray(awardsCurrentStatus.questions)
-      ? awardsCurrentStatus.questions
+    const questions = Array.isArray(status.questions)
+      ? status.questions
       : [];
 
     if (!questions.length) {
@@ -15884,31 +15899,136 @@ async function loadAwardsMemberUi() {
       return;
     }
 
+    function renderField(q, field, value) {
+      const fieldId = String(field.id || '');
+      const fieldType = field.type || 'text';
+      const fieldValue = value == null ? '' : value;
+      const name = 'awards-q-' + q.id + '-' + fieldId;
+
+      if (fieldType === 'select') {
+        const source = field.source === 'members'
+          ? status.members
+          : status.films;
+
+        const options = (source || []).map(function(item) {
+          return '<option value="' + awardsEsc(item.id) + '"' +
+            (String(fieldValue) === String(item.id) ? ' selected' : '') +
+            '>' + awardsEsc(item.label) + '</option>';
+        }).join('');
+
+        return '<label style="display:block;margin-top:10px;">' +
+          awardsEsc(field.label || 'Seleziona') +
+          '<select data-awards-question="' + awardsEsc(q.id) +
+          '" data-awards-field="' + awardsEsc(fieldId) +
+          '" style="width:100%;margin-top:5px;">' +
+          '<option value="">Seleziona...</option>' +
+          options +
+          '</select></label>';
+      }
+
+      if (fieldType === 'number') {
+        return '<label style="display:block;margin-top:10px;">' +
+          awardsEsc(field.label || 'Numero') +
+          '<input type="number" step="0.1" ' +
+          'data-awards-question="' + awardsEsc(q.id) +
+          '" data-awards-field="' + awardsEsc(fieldId) +
+          '" value="' + awardsEsc(fieldValue) +
+          '" style="width:100%;margin-top:5px;"></label>';
+      }
+
+      return '<label style="display:block;margin-top:10px;">' +
+        awardsEsc(field.label || 'Risposta') +
+        '<input type="text" ' +
+        'data-awards-question="' + awardsEsc(q.id) +
+        '" data-awards-field="' + awardsEsc(fieldId) +
+        '" value="' + awardsEsc(fieldValue) +
+        '" style="width:100%;margin-top:5px;"></label>';
+    }
+
     questionsBox.innerHTML = questions.map(function(q, index) {
       const selected = awardsCurrentDraft[q.id];
-      const selectedValues = Array.isArray(selected)
-        ? selected.map(String)
-        : (selected == null || selected === '' ? [] : [String(selected)]);
 
-      const options = (q.options || []).map(function(option) {
-        const checked =
-          selectedValues.indexOf(String(option.id)) !== -1;
-        const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+      let content = '';
 
-        return '<label style="display:flex;gap:10px;align-items:center;padding:9px 0;">' +
-          '<input style="width:auto;" type="' + inputType +
-          '" name="awards-q-' + awardsEsc(q.id) +
-          '" data-awards-question="' + awardsEsc(q.id) +
-          '" value="' + awardsEsc(option.id) + '"' +
-          (checked ? ' checked' : '') + '>' +
-          '<span>' + awardsEsc(option.label) + '</span></label>';
-      }).join('');
+      if (q.type === 'single' || q.type === 'multiple') {
+        const selectedValues = Array.isArray(selected)
+          ? selected.map(String)
+          : (selected == null || selected === '' ? [] : [String(selected)]);
+
+        content = (q.options || []).map(function(option) {
+          const checked =
+            selectedValues.indexOf(String(option.id)) !== -1;
+
+          const inputType = q.type === 'multiple'
+            ? 'checkbox'
+            : 'radio';
+
+          return '<label style="display:flex;gap:10px;align-items:center;padding:9px 0;">' +
+            '<input style="width:auto;" type="' + inputType +
+            '" name="awards-q-' + awardsEsc(q.id) +
+            '" data-awards-question="' + awardsEsc(q.id) +
+            '" value="' + awardsEsc(option.id) + '"' +
+            (checked ? ' checked' : '') + '>' +
+            '<span>' + awardsEsc(option.label) + '</span></label>';
+        }).join('');
+      }
+
+      else if (q.type === 'select' || q.type === 'member' || q.type === 'roulette') {
+        const source = q.type === 'member'
+          ? status.members
+          : q.type === 'roulette'
+            ? status.roulette
+            : status.films;
+
+        content = '<select data-awards-question="' +
+          awardsEsc(q.id) +
+          '" style="width:100%;margin-top:8px;">' +
+          '<option value="">Seleziona...</option>' +
+          (source || []).map(function(item) {
+            return '<option value="' + awardsEsc(item.id) + '"' +
+              (String(selected || '') === String(item.id) ? ' selected' : '') +
+              '>' + awardsEsc(item.label) + '</option>';
+          }).join('') +
+          '</select>';
+      }
+
+      else if (q.type === 'text' || q.type === 'textarea') {
+        content = q.type === 'textarea'
+          ? '<textarea data-awards-question="' + awardsEsc(q.id) +
+            '" rows="5" style="width:100%;margin-top:8px;">' +
+            awardsEsc(selected || '') + '</textarea>'
+          : '<input type="text" data-awards-question="' +
+            awardsEsc(q.id) + '" value="' +
+            awardsEsc(selected || '') +
+            '" style="width:100%;margin-top:8px;">';
+      }
+
+      else if (q.type === 'number') {
+        content = '<input type="number" step="0.1" ' +
+          'data-awards-question="' + awardsEsc(q.id) +
+          '" value="' + awardsEsc(selected || '') +
+          '" style="width:100%;margin-top:8px;">';
+      }
+
+      else if (q.type === 'composite') {
+        const fields = Array.isArray(q.fields) ? q.fields : [];
+
+        content = fields.map(function(field) {
+          return renderField(
+            q,
+            field,
+            selected && selected[field.id]
+          );
+        }).join('');
+      }
 
       return '<div class="member" style="padding:18px 4px;">' +
         '<div class="name">' + (index + 1) + '. ' +
         awardsEsc(q.title) +
-        (q.required ? ' *' : '') + '</div>' +
-        '<div style="margin-top:8px;">' + options + '</div></div>';
+        (q.required ? ' *' : '') +
+        '</div>' +
+        '<div style="margin-top:8px;">' + content + '</div>' +
+        '</div>';
     }).join('');
 
     if (actions) actions.style.display = 'flex';
@@ -15917,6 +16037,7 @@ async function loadAwardsMemberUi() {
       'Puoi salvare una bozza prima dell’invio definitivo.',
       false
     );
+
   } catch (error) {
     if (statusLabel) statusLabel.textContent = 'Errore';
     questionsBox.textContent = 'Impossibile caricare gli Awards.';
@@ -15924,6 +16045,8 @@ async function loadAwardsMemberUi() {
     awardsSetMemberMessage(error.message || String(error), true);
   }
 }
+
+
 
 function collectAwardsAnswersUi() {
   const questions = awardsCurrentStatus &&
@@ -15940,19 +16063,53 @@ function collectAwardsAnswersUi() {
       return input.dataset.awardsQuestion === String(q.id);
     });
 
-    const checked = inputs
-      .filter(function(input) { return input.checked; })
-      .map(function(input) { return input.value; });
+    if (q.type === 'single' || q.type === 'multiple') {
+      const checked = inputs
+        .filter(function(input) {
+          return input.checked;
+        })
+        .map(function(input) {
+          return input.value;
+        });
 
-    if (q.type === 'multiple') {
-      if (checked.length) answers[q.id] = checked;
-    } else if (checked.length) {
-      answers[q.id] = checked[0];
+      if (q.type === 'multiple') {
+        if (checked.length) answers[q.id] = checked;
+      } else if (checked.length) {
+        answers[q.id] = checked[0];
+      }
+
+      return;
+    }
+
+    if (q.type === 'composite') {
+      const value = {};
+
+      inputs.forEach(function(input) {
+        const field = input.dataset.awardsField;
+        if (field) value[field] = input.value;
+      });
+
+      if (Object.values(value).some(function(v) {
+        return String(v || '').trim() !== '';
+      })) {
+        answers[q.id] = value;
+      }
+
+      return;
+    }
+
+    if (inputs.length) {
+      const value = inputs[0].value;
+
+      if (String(value || '').trim() !== '') {
+        answers[q.id] = value;
+      }
     }
   });
 
   return answers;
 }
+
 
 async function saveAwardsDraftUi() {
   try {
@@ -16107,6 +16264,12 @@ function awardsBuilderResetForm() {
 
   document.getElementById('awardsBuilderCancelEdit').style.display =
     'none';
+
+  document.getElementById(
+    'awardsBuilderCompositeMode'
+  ).value = 'film_number';
+  
+  awardsBuilderUpdateTypeOptions();
 }
 
 function awardsBuilderEdit(id) {
@@ -16207,14 +16370,48 @@ function awardsBuilderSaveQuestion() {
     required: required
   };
 
-  if (['single', 'multiple'].includes(type)) {
-    question.options = optionLines.map(function(label, index) {
-      return {
-        id: 'option_' + (index + 1),
-        label: label
-      };
-    });
+  
+if (['single', 'multiple'].includes(type)) {
+  question.options = optionLines.map(function(label, index) {
+    return {
+      id: 'option_' + (index + 1),
+      label: label
+    };
+  });
+}
+
+  if (type === 'composite') {
+    const mode = document.getElementById(
+      'awardsBuilderCompositeMode'
+    ).value;
+  
+    question.fields = [
+      {
+        id: 'filmId',
+        label: 'Film',
+        type: 'select',
+        source: 'films',
+        required: true
+      }
+    ];
+  
+    if (mode === 'film_number') {
+      question.fields.push({
+        id: 'rating',
+        label: 'Media realistica',
+        type: 'number',
+        required: true
+      });
+    } else {
+      question.fields.push({
+        id: 'detail',
+        label: 'Specifica',
+        type: 'text',
+        required: true
+      });
+    }
   }
+
 
   if (existing) {
     awardsAdminQuestions = awardsAdminQuestions.map(function(q) {
@@ -16228,6 +16425,32 @@ function awardsBuilderSaveQuestion() {
   awardsBuilderResetForm();
   awardsBuilderRender();
 }
+
+
+function awardsBuilderUpdateTypeOptions() {
+  const type = document.getElementById(
+    'awardsBuilderQuestionType'
+  ).value;
+
+  const compositeArea = document.getElementById(
+    'awardsBuilderCompositeArea'
+  );
+
+  const optionsArea = document.getElementById(
+    'awardsBuilderOptionsArea'
+  );
+
+  if (compositeArea) {
+    compositeArea.style.display =
+      type === 'composite' ? 'block' : 'none';
+  }
+
+  if (optionsArea) {
+    optionsArea.style.display =
+      ['single', 'multiple'].includes(type) ? 'block' : 'none';
+  }
+}
+  
   
 
 
@@ -16319,6 +16542,19 @@ async function saveAwardsAdminUi() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
+  const questionTypeSelect = document.getElementById(
+    'awardsBuilderQuestionType'
+  );
+  
+  if (questionTypeSelect) {
+    questionTypeSelect.addEventListener(
+      'change',
+      awardsBuilderUpdateTypeOptions
+    );
+  
+    awardsBuilderUpdateTypeOptions();
+  }
+  
   const sectionSelect = document.getElementById(
     'awardsBuilderSection'
   );
