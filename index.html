@@ -15927,8 +15927,7 @@ async function openRouletteHistoryModal() {
       return;
     }
 
-    content.innerHTML = history.map(function(entry, index) {
-      const numeroSettimana = history.length - index;
+    content.innerHTML = history.map(function(entry) {
       const escapeHtml = function(value) {
         return String(value || '').replace(/[&<>"']/g, function(char) {
           return {
@@ -15946,16 +15945,6 @@ async function openRouletteHistoryModal() {
       return `
         <div class="roulette-history-entry"
              style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color, #444);">
-
-          <div style="
-            font-size:11px;
-            font-weight:800;
-            letter-spacing:1.2px;
-            color:var(--muted);
-            margin-bottom:5px;
-          ">
-            SETTIMANA ${numeroSettimana}
-          </div>   
 
           <div style="font-weight:800;margin-bottom:4px;">
             ${entry.settimana_ufficiale
@@ -16198,11 +16187,6 @@ async function saveRouletteHistoryEntry() {
 
   if (![film1, film2, film3].includes(vincitore)) {
     rouletteHistoryAdminMessage('Il vincitore deve essere uno dei tre film.', true);
-    return;
-  }
-
-  if (annullata && settimanaUfficiale) {
-    rouletteHistoryAdminMessage('Un’estrazione annullata non può avere una settimana ufficiale.', true);
     return;
   }
 
