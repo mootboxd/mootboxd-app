@@ -7492,22 +7492,18 @@ if (!validProposals.length) {
           p2.y.toFixed(2) + ' Z';
   
       const mid = start + step / 2;
-      const labelPoint = point(
-        mid,
-        films.length < 8 ? 91 : 104
-      );
-  
-      const displayTitle = film.title.length > 19
-        ? film.title.slice(0, 17) + '…'
+      const labelPoint = point(mid, films.length < 8 ? 105 : 112);
+      const maxTitleLength = films.length > 16 ? 10 : films.length > 9 ? 13 : 17;
+      const displayTitle = film.title.length > maxTitleLength
+        ? film.title.slice(0, maxTitleLength - 1) + '…'
         : film.title;
-  
-      const fontSize = films.length > 18
-        ? 7
-        : films.length > 10
-          ? 8
-          : 10;
-  
-      const textRotation = mid + 90;
+      const fontSize = films.length > 18 ? 7 : films.length > 10 ? 8 : 10;
+        
+      let textRotation = mid;
+
+      if (textRotation > 90 && textRotation < 270) {
+        textRotation += 180;
+      }
   
       return '<path d="' + path +
         '" fill="' + colors[index % colors.length] +
@@ -7569,6 +7565,8 @@ if (!validProposals.length) {
     rouletteIsSpinning = true;
     button.disabled = true;
     button.textContent = 'Estrazione in corso…';
+    
+    result.hidden = false;
     result.textContent = 'La ruota sta girando…';
   
     let winnerIndex = Math.floor(
@@ -7622,7 +7620,8 @@ if (!validProposals.length) {
       const genreLabel = genreInfo
         ? genreInfo.label
         : winner.genre;
-  
+      
+      result.hidden = false;
       result.innerHTML =
         '<span class="roulette-result-label">Film estratto</span>' +
         '<div class="roulette-result-title">' +
