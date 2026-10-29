@@ -5037,7 +5037,20 @@ input {
     will-change: auto;
   }
 }
-  
+
+ #rouletteToggleFilters {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+#rouletteToggleFilters svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
   
 </style>
 </head>
@@ -5720,8 +5733,12 @@ input {
         aria-expanded="false"
         aria-controls="rouletteFilters"
       >
-        <span aria-hidden="true">☷</span>
-        <span>Filtri</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M7 12h10M10 17h4"
+          fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Filtri</span>
       </button>
     </div>
     
@@ -7492,7 +7509,7 @@ if (!validProposals.length) {
           p2.y.toFixed(2) + ' Z';
   
       const mid = start + step / 2;
-      const labelPoint = point(mid, films.length < 8 ? 135 : 142);
+      const labelPoint = point(mid, films.length < 8 ? 125 : 132);
       const maxTitleLength = films.length > 16 ? 10 : films.length > 9 ? 13 : 17;
       const displayTitle = film.title.length > maxTitleLength
         ? film.title.slice(0, maxTitleLength - 1) + '…'
