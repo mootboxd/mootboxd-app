@@ -6366,6 +6366,55 @@ input {
 
 
 <!-- =========================
+     PAGINA MOOTBOXD AWARDS
+     ========================= -->
+<section id="awardsPage" style="display:none;">
+  <div class="panel ranking-panel">
+    <div class="head">
+      <h2>MOOTBOXD Awards</h2>
+      <span id="awardsStatusLabel" class="muted">
+        Caricamento…
+      </span>
+    </div>
+
+    <p id="awardsIntro" class="muted">
+      Votazione del club.
+    </p>
+
+    <div id="awardsQuestions" class="list"></div>
+
+    <div
+      id="awardsMemberMessage"
+      class="muted"
+      role="status"
+      style="padding:12px 0;"
+    ></div>
+
+    <div
+      id="awardsMemberActions"
+      style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"
+    >
+      <button
+        class="btn"
+        type="button"
+        onclick="saveAwardsDraftUi()"
+      >
+        Salva bozza
+      </button>
+
+      <button
+        class="btn primary"
+        type="button"
+        onclick="submitAwardsVoteUi()"
+      >
+        Invia voto definitivo
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- =========================
      PAGINA GESTIONE ADMIN
      ========================= -->
 
@@ -6378,6 +6427,89 @@ input {
   <div class="head">
     <h2>Gestione membri & film</h2>
     <span class="muted">solo Admin</span>
+  </div>
+
+
+  <!-- =========================
+       CONFIGURAZIONE MOOTBOXD AWARDS
+       ========================= -->
+
+  <div class="head" style="margin-top:32px;">
+    <h2>MOOTBOXD Awards</h2>
+  </div>
+
+  <div class="film-admin-form">
+
+    <label for="awardsAdminEdition">
+      Edizione
+    </label>
+
+    <input
+      id="awardsAdminEdition"
+      type="text"
+      placeholder="Es. 2026"
+    >
+
+    <label>
+      <input
+        id="awardsAdminVotingOpen"
+        type="checkbox"
+      >
+      Votazioni aperte
+    </label>
+
+    <label>
+      <input
+        id="awardsAdminResultsVisible"
+        type="checkbox"
+      >
+      Risultati visibili ai membri
+    </label>
+
+    <label for="awardsAdminQuestions">
+      Domande e categorie (JSON)
+    </label>
+
+    <textarea
+      id="awardsAdminQuestions"
+      rows="12"
+      placeholder='[{"id":"film_anno","title":"Film dell’anno","type":"single","required":true,"options":[{"value":"film1","label":"Titolo del film"}]}]'
+    ></textarea>
+
+    <button
+      class="btn"
+      type="button"
+      onclick="loadAwardsAdminUi()"
+    >
+      Ricarica configurazione
+    </button>
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveAwardsAdminUi()"
+    >
+      Salva configurazione
+    </button>
+
+  </div>
+
+  <div class="list" style="margin-top:12px;">
+    <p>
+      Bozze salvate:
+      <strong id="awardsAdminDraftCount">—</strong>
+    </p>
+
+    <p>
+      Voti inviati:
+      <strong id="awardsAdminVoteCount">—</strong>
+    </p>
+
+    <div
+      id="awardsAdminMessage"
+      class="muted"
+      role="status"
+    ></div>
   </div>
 
 
@@ -10139,6 +10271,9 @@ function showPage(page) {
 
   const adminPage =
     document.getElementById('adminPanel');
+    
+  const awardsPage =
+    document.getElementById('awardsPage');
 
   const menuItems =
     document.querySelectorAll('.main-nav-item');
@@ -10162,6 +10297,10 @@ function showPage(page) {
   
   if (adminPage) {
     adminPage.style.display = 'none';
+  }
+  
+  if (awardsPage) {
+    awardsPage.style.display = 'none';
   }
 
 
@@ -10237,6 +10376,25 @@ if (!weeklyThemesLoaded) {
   
 }
 
+
+  /* =========================
+     MOOTBOXD AWARDS
+     ========================= */
+
+  if (page === 'awards') {
+    if (!session) {
+      showLogin();
+      return;
+    }
+
+    if (awardsPage) {
+      awardsPage.style.display = 'block';
+    }
+
+    loadAwardsMemberUi();
+  }
+
+
   /* =========================
      GESTIONE ADMIN
      ========================= */
@@ -10255,6 +10413,7 @@ if (!weeklyThemesLoaded) {
     renderAdminMembers();
     renderAdminFilms();
     renderAdminThemes();
+    loadAwardsAdminUi();
 
   }
 
@@ -15267,6 +15426,301 @@ function toggleRankingFilters() {
   button.setAttribute('aria-expanded', String(willOpen));
 }  
 
+
+/* =========================================
+   MOOTBOXD AWARDS - FUNZIONI FRONTEND
+   ========================================= */
+
+let awardsCurrentStatus = null;
+let awardsCurrentDraft = {};
+
+function awardsEsc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function awardsMemberToken() {
+  return sessionStorage.getItem('mootboxd_token') || '';
+}
+
+function awardsAdminToken() {
+  return sessionStorage.getItem('mootboxd_admin_token') || '';
+}
+
+function awardsSetMemberMessage(message, isError) {
+  const el = document.getElementById('awardsMemberMessage');
+  if (!el) return;
+
+  el.textContent = message || '';
+  el.style.color = isError ? '#e88' : '';
+}
+
+async function loadAwardsMemberUi() {
+  const statusLabel = document.getElementById('awardsStatusLabel');
+  const questionsBox = document.getElementById('awardsQuestions');
+  const actions = document.getElementById('awardsMemberActions');
+
+  if (!questionsBox) return;
+
+  try {
+    const token = awardsMemberToken();
+
+    if (!token) {
+      if (statusLabel) statusLabel.textContent = 'Accesso richiesto';
+      questionsBox.textContent = 'Accedi come membro per votare.';
+      if (actions) actions.style.display = 'none';
+      return;
+    }
+
+    const status = await api('getAwardsStatus', [token]);
+    awardsCurrentStatus = status || {};
+
+    const edition = String(awardsCurrentStatus.edition || '');
+
+    if (statusLabel) {
+      statusLabel.textContent = edition
+        ? 'Edizione ' + edition +
+          (awardsCurrentStatus.votingOpen
+            ? ' · votazioni aperte'
+            : ' · votazioni chiuse')
+        : 'Nessuna edizione attiva';
+    }
+
+    if (!edition || !awardsCurrentStatus.votingOpen) {
+      questionsBox.textContent = edition
+        ? 'Le votazioni sono chiuse.'
+        : 'Gli Awards non sono ancora configurati.';
+      if (actions) actions.style.display = 'none';
+      return;
+    }
+
+    const draft = await api('getAwardsDraft', [token, edition]);
+    awardsCurrentDraft = draft && draft.answers ? draft.answers : {};
+
+    if (draft && draft.status === 'submitted') {
+      questionsBox.textContent = 'Il tuo voto è già stato inviato.';
+      if (actions) actions.style.display = 'none';
+      awardsSetMemberMessage(
+        'Il voto definitivo non può essere modificato.',
+        false
+      );
+      return;
+    }
+
+    const questions = Array.isArray(awardsCurrentStatus.questions)
+      ? awardsCurrentStatus.questions
+      : [];
+
+    if (!questions.length) {
+      questionsBox.textContent = 'Le domande non sono ancora disponibili.';
+      if (actions) actions.style.display = 'none';
+      return;
+    }
+
+    questionsBox.innerHTML = questions.map(function(q, index) {
+      const selected = awardsCurrentDraft[q.id];
+      const selectedValues = Array.isArray(selected)
+        ? selected.map(String)
+        : (selected == null || selected === '' ? [] : [String(selected)]);
+
+      const options = (q.options || []).map(function(option) {
+        const checked =
+          selectedValues.indexOf(String(option.id)) !== -1;
+        const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+
+        return '<label style="display:flex;gap:10px;align-items:center;padding:9px 0;">' +
+          '<input style="width:auto;" type="' + inputType +
+          '" name="awards-q-' + awardsEsc(q.id) +
+          '" data-awards-question="' + awardsEsc(q.id) +
+          '" value="' + awardsEsc(option.id) + '"' +
+          (checked ? ' checked' : '') + '>' +
+          '<span>' + awardsEsc(option.label) + '</span></label>';
+      }).join('');
+
+      return '<div class="member" style="padding:18px 4px;">' +
+        '<div class="name">' + (index + 1) + '. ' +
+        awardsEsc(q.title) +
+        (q.required ? ' *' : '') + '</div>' +
+        '<div style="margin-top:8px;">' + options + '</div></div>';
+    }).join('');
+
+    if (actions) actions.style.display = 'flex';
+
+    awardsSetMemberMessage(
+      'Puoi salvare una bozza prima dell’invio definitivo.',
+      false
+    );
+  } catch (error) {
+    if (statusLabel) statusLabel.textContent = 'Errore';
+    questionsBox.textContent = 'Impossibile caricare gli Awards.';
+    if (actions) actions.style.display = 'none';
+    awardsSetMemberMessage(error.message || String(error), true);
+  }
+}
+
+function collectAwardsAnswersUi() {
+  const questions = awardsCurrentStatus &&
+    Array.isArray(awardsCurrentStatus.questions)
+      ? awardsCurrentStatus.questions
+      : [];
+
+  const answers = {};
+
+  questions.forEach(function(q) {
+    const inputs = Array.from(
+      document.querySelectorAll('[data-awards-question]')
+    ).filter(function(input) {
+      return input.dataset.awardsQuestion === String(q.id);
+    });
+
+    const checked = inputs
+      .filter(function(input) { return input.checked; })
+      .map(function(input) { return input.value; });
+
+    if (q.type === 'multiple') {
+      if (checked.length) answers[q.id] = checked;
+    } else if (checked.length) {
+      answers[q.id] = checked[0];
+    }
+  });
+
+  return answers;
+}
+
+async function saveAwardsDraftUi() {
+  try {
+    if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
+      throw new Error('Nessuna edizione Awards attiva.');
+    }
+
+    await api('saveAwardsDraft', [
+      awardsMemberToken(),
+      awardsCurrentStatus.edition,
+      collectAwardsAnswersUi()
+    ]);
+
+    awardsSetMemberMessage('Bozza salvata.', false);
+  } catch (error) {
+    awardsSetMemberMessage(error.message || String(error), true);
+  }
+}
+
+async function submitAwardsVoteUi() {
+  if (!confirm(
+    'Confermi l’invio definitivo? Dopo l’invio non potrai modificare il voto.'
+  )) return;
+
+  try {
+    if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
+      throw new Error('Nessuna edizione Awards attiva.');
+    }
+
+    await api('submitAwardsVote', [
+      awardsMemberToken(),
+      awardsCurrentStatus.edition,
+      collectAwardsAnswersUi()
+    ]);
+
+    awardsSetMemberMessage('Voto inviato correttamente.', false);
+    await loadAwardsMemberUi();
+  } catch (error) {
+    awardsSetMemberMessage(error.message || String(error), true);
+  }
+}
+
+async function loadAwardsAdminUi() {
+  const message = document.getElementById('awardsAdminMessage');
+
+  try {
+    const data = await api('getAwardsAdminData', [awardsAdminToken()]);
+    const config = data.config || {};
+
+    document.getElementById('awardsAdminEdition').value =
+      config.activeEdition || '';
+
+    document.getElementById('awardsAdminVotingOpen').checked =
+      !!config.votingOpen;
+
+    document.getElementById('awardsAdminResultsVisible').checked =
+      !!config.resultsVisible;
+
+    document.getElementById('awardsAdminQuestions').value =
+      JSON.stringify(config.questions || [], null, 2);
+
+    document.getElementById('awardsAdminDraftCount').textContent =
+      data.draftCount || 0;
+
+    document.getElementById('awardsAdminVoteCount').textContent =
+      data.voteCount || 0;
+
+    if (message) {
+      message.style.color = '';
+      message.textContent = 'Configurazione caricata.';
+    }
+  } catch (error) {
+    if (message) {
+      message.style.color = '#e88';
+      message.textContent = error.message || String(error);
+    }
+  }
+}
+
+async function saveAwardsAdminUi() {
+  const message = document.getElementById('awardsAdminMessage');
+
+  try {
+    let questions;
+
+    try {
+      questions = JSON.parse(
+        document.getElementById('awardsAdminQuestions').value || '[]'
+      );
+    } catch (error) {
+      throw new Error('Il JSON delle domande non è valido.');
+    }
+
+    if (!Array.isArray(questions)) {
+      throw new Error('Le domande devono essere un array JSON.');
+    }
+
+    const config = {
+      activeEdition:
+        document.getElementById('awardsAdminEdition').value.trim(),
+      votingOpen:
+        document.getElementById('awardsAdminVotingOpen').checked,
+      resultsVisible:
+        document.getElementById('awardsAdminResultsVisible').checked,
+      questions: questions
+    };
+
+    const data = await api('saveAwardsAdminConfig', [
+      awardsAdminToken(),
+      config
+    ]);
+
+    document.getElementById('awardsAdminDraftCount').textContent =
+      data.draftCount || 0;
+
+    document.getElementById('awardsAdminVoteCount').textContent =
+      data.voteCount || 0;
+
+    if (message) {
+      message.style.color = '';
+      message.textContent = 'Configurazione salvata.';
+    }
+
+    awardsCurrentStatus = null;
+  } catch (error) {
+    if (message) {
+      message.style.color = '#e88';
+      message.textContent = error.message || String(error);
+    }
+  }
+}
 
   
 </script>
