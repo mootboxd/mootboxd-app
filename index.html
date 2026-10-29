@@ -5848,23 +5848,33 @@ input {
     </div>
   
     
-    <div class="roulette-filter-toolbar">
-      <button
-        type="button"
-        class="proposals-filter-button"
-        id="rouletteToggleFilters"
-        onclick="toggleRouletteFilters()"
-        aria-expanded="false"
-        aria-controls="rouletteFilters"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 7h16M7 12h10M10 17h4"
-          fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span>Filtri</span>
-      </button>
-    </div>
+        <div class="roulette-filter-toolbar">
+          <button
+            type="button"
+            class="proposals-filter-button"
+            id="rouletteToggleFilters"
+            onclick="toggleRouletteFilters()"
+            aria-expanded="false"
+            aria-controls="rouletteFilters"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M7 12h10M10 17h4"
+                fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Filtri</span>
+          </button>
+    
+          <!-- NUOVO PULSANTE -->
+          <button
+            type="button"
+            class="proposals-filter-button"
+            id="rouletteHistoryButton"
+            onclick="openRouletteHistoryModal()"
+          >
+            <span>Cronologia</span>
+          </button>
+        </div>
     
     <div
       class="roulette-filters"
@@ -6640,9 +6650,96 @@ input {
 
   <!-- ELENCO TEMI -->
 
+  
   <div
     class="list"
     id="themeAdminList"
+  ></div>
+
+  <!-- CRONOLOGIA ROULETTE - ADMIN -->
+
+  <div
+    class="head"
+    style="margin-top:32px;"
+  >
+    <h2>Cronologia roulette</h2>
+  </div>
+
+  <div class="film-admin-form">
+
+    <input
+      id="rouletteHistoryDate"
+      type="date"
+      aria-label="Data"
+    >
+
+    <input
+      id="rouletteHistoryFilm1"
+      type="text"
+      placeholder="Primo film"
+    >
+
+    <input
+      id="rouletteHistoryFilm2"
+      type="text"
+      placeholder="Secondo film"
+    >
+
+    <input
+      id="rouletteHistoryFilm3"
+      type="text"
+      placeholder="Terzo film"
+    >
+
+    <label for="rouletteHistoryWinner">
+      Film vincitore
+    </label>
+
+    <select id="rouletteHistoryWinner">
+      <option value="">Seleziona il vincitore</option>
+    </select>
+
+    <textarea
+      id="rouletteHistoryNotes"
+      rows="3"
+      placeholder="Note (es. Settimana a tema thriller)"
+    ></textarea>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button
+        class="btn primary"
+        type="button"
+        onclick="saveRouletteHistoryEntry()"
+      >
+        Salva voce
+      </button>
+
+      <button
+        class="btn"
+        type="button"
+        onclick="resetRouletteHistoryForm()"
+      >
+        Nuova voce
+      </button>
+    </div>
+
+    <input
+      id="rouletteHistoryRow"
+      type="hidden"
+      value=""
+    >
+
+    <div
+      id="rouletteHistoryAdminMessage"
+      class="muted"
+      role="status"
+    ></div>
+  </div>
+
+  <div
+    class="list"
+    id="rouletteHistoryAdminList"
+    style="margin-top:12px;"
   ></div>
 
 </section>
@@ -9576,8 +9673,10 @@ await load();
 
 showPage("admin");
 
-return true;
+await loadRouletteHistoryAdmin();
 
+return true;
+    
   } catch (error) {
 
     sessionStorage.removeItem(
@@ -15724,6 +15823,312 @@ async function saveAwardsAdminUi() {
   }
 }
 
+async function openRouletteHistoryModal() {
+  const modal = document.getElementById('rouletteHistoryModal');
+  const content = document.getElementById('rouletteHistoryContent');
+
+  modal.style.display = 'flex';
+  content.textContent = 'Caricamento cronologia…';
+
+  try {
+    const history = await api('getRouletteHistory');
+
+    if (!history || history.length === 0) {
+      content.textContent = 'La cronologia è ancora vuota.';
+      return;
+    }
+
+    content.innerHTML = history.map(function(entry) {
+      const escapeHtml = function(value) {
+        return String(value || '').replace(/[&<>"']/g, function(char) {
+          return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+          }[char];
+        });
+      };
+
+      const films = [entry.film1, entry.film2, entry.film3];
+
+      return `
+        <div class="roulette-history-entry"
+             style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color, #444);">
+
+          <div style="font-weight:700;margin-bottom:8px;">
+            ${escapeHtml(entry.data)}
+          </div>
+
+          <div style="display:grid;gap:6px;">
+            ${films.map(function(film) {
+              const isWinner =
+                film.trim() !== '' &&
+                film.trim().toLowerCase() ===
+                entry.vincitore.trim().toLowerCase();
+
+              return `
+                <div style="
+                  padding:8px 10px;
+                  border-radius:6px;
+                  ${isWinner
+                    ? 'font-weight:700;color:#7ee0a1;background:rgba(60,180,100,0.12);'
+                    : ''}
+                ">
+                  ${isWinner ? '★ ' : ''}
+                  ${escapeHtml(film)}
+                  ${isWinner ? ' — VINCITORE' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${entry.note ? `
+            <div style="margin-top:10px;opacity:0.8;font-size:0.9em;">
+              ${escapeHtml(entry.note)}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    content.textContent =
+      'Errore nel caricamento della cronologia: ' + error.message;
+  }
+}
+
+function closeRouletteHistoryModal(event) {
+  const modal = document.getElementById('rouletteHistoryModal');
+
+  if (
+    !event ||
+    event.target === modal ||
+    event.target.closest('.film-modal-close')
+  ) {
+    modal.style.display = 'none';
+  }
+}  
+
+
+let rouletteHistoryAdminEntries = [];
+
+function rouletteHistoryAdminToken() {
+  return sessionStorage.getItem('mootboxd_admin_token') || '';
+}
+
+function rouletteHistoryAdminMessage(message, isError) {
+  const box = document.getElementById('rouletteHistoryAdminMessage');
+  if (!box) return;
+
+  box.textContent = message;
+  box.style.color = isError ? '#e57373' : '';
+}
+
+function updateRouletteHistoryWinnerOptions(selectedValue) {
+  const select = document.getElementById('rouletteHistoryWinner');
+  if (!select) return;
+
+  const films = [
+    document.getElementById('rouletteHistoryFilm1').value.trim(),
+    document.getElementById('rouletteHistoryFilm2').value.trim(),
+    document.getElementById('rouletteHistoryFilm3').value.trim()
+  ];
+
+  const uniqueFilms = [...new Set(films.filter(Boolean))];
+
+  select.innerHTML =
+    '<option value="">Seleziona il vincitore</option>' +
+    uniqueFilms.map(function(film) {
+      const selected = film === selectedValue ? ' selected' : '';
+      return `<option value="${esc(film)}"${selected}>${esc(film)}</option>`;
+    }).join('');
+
+  if (selectedValue && !uniqueFilms.includes(selectedValue)) {
+    select.value = '';
+  }
+}
+
+function resetRouletteHistoryForm() {
+  document.getElementById('rouletteHistoryRow').value = '';
+  document.getElementById('rouletteHistoryDate').value = '';
+  document.getElementById('rouletteHistoryFilm1').value = '';
+  document.getElementById('rouletteHistoryFilm2').value = '';
+  document.getElementById('rouletteHistoryFilm3').value = '';
+  document.getElementById('rouletteHistoryNotes').value = '';
+
+  updateRouletteHistoryWinnerOptions('');
+
+  rouletteHistoryAdminMessage('Nuova voce pronta.', false);
+
+  const button = document.querySelector(
+    '#adminPanel button[onclick="saveRouletteHistoryEntry()"]'
+  );
+
+  if (button) button.textContent = 'Salva voce';
+}
+
+async function loadRouletteHistoryAdmin() {
+  const box = document.getElementById('rouletteHistoryAdminList');
+  if (!box) return;
+
+  if (!rouletteHistoryAdminToken()) {
+    box.textContent = 'Accedi come amministratore per gestire la cronologia.';
+    return;
+  }
+
+  box.textContent = 'Caricamento cronologia…';
+
+  try {
+    const entries = await api('getRouletteHistory', []);
+
+    rouletteHistoryAdminEntries = Array.isArray(entries) ? entries : [];
+
+    if (!rouletteHistoryAdminEntries.length) {
+      box.textContent = 'Nessuna voce inserita.';
+      return;
+    }
+
+    box.innerHTML = rouletteHistoryAdminEntries.map(function(entry) {
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border-color, #444);">
+          <strong>${esc(entry.data)}</strong>
+          <div>${esc(entry.film1)} · ${esc(entry.film2)} · ${esc(entry.film3)}</div>
+          <div style="color:#7ee0a1;font-weight:700;">
+            Vincitore: ${esc(entry.vincitore)}
+          </div>
+          ${entry.note ? `<div class="muted">${esc(entry.note)}</div>` : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="btn" type="button"
+              onclick="editRouletteHistoryEntry(${Number(entry.riga)})">
+              Modifica
+            </button>
+            <button class="danger" type="button"
+              onclick="removeRouletteHistoryEntry(${Number(entry.riga)})">
+              Elimina
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    box.textContent = 'Errore: ' + error.message;
+  }
+}
+
+function editRouletteHistoryEntry(riga) {
+  const entry = rouletteHistoryAdminEntries.find(function(item) {
+    return Number(item.riga) === Number(riga);
+  });
+
+  if (!entry) {
+    rouletteHistoryAdminMessage('Voce non trovata. Ricarica la cronologia.', true);
+    return;
+  }
+
+  document.getElementById('rouletteHistoryRow').value = entry.riga;
+  document.getElementById('rouletteHistoryDate').value = entry.data;
+  document.getElementById('rouletteHistoryFilm1').value = entry.film1;
+  document.getElementById('rouletteHistoryFilm2').value = entry.film2;
+  document.getElementById('rouletteHistoryFilm3').value = entry.film3;
+  document.getElementById('rouletteHistoryNotes').value = entry.note;
+
+  updateRouletteHistoryWinnerOptions(entry.vincitore);
+
+  document.getElementById('rouletteHistoryWinner').value = entry.vincitore;
+
+  const button = document.querySelector(
+    '#adminPanel button[onclick="saveRouletteHistoryEntry()"]'
+  );
+
+  if (button) button.textContent = 'Salva modifiche';
+
+  rouletteHistoryAdminMessage('Stai modificando la voce del ' + entry.data + '.', false);
+
+  document.getElementById('rouletteHistoryDate').scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+  });
+}
+
+async function saveRouletteHistoryEntry() {
+  const token = rouletteHistoryAdminToken();
+
+  if (!token) {
+    rouletteHistoryAdminMessage('Sessione amministratore assente. Accedi di nuovo.', true);
+    return;
+  }
+
+  const data = document.getElementById('rouletteHistoryDate').value;
+  const film1 = document.getElementById('rouletteHistoryFilm1').value.trim();
+  const film2 = document.getElementById('rouletteHistoryFilm2').value.trim();
+  const film3 = document.getElementById('rouletteHistoryFilm3').value.trim();
+  const vincitore = document.getElementById('rouletteHistoryWinner').value;
+  const note = document.getElementById('rouletteHistoryNotes').value.trim();
+  const riga = document.getElementById('rouletteHistoryRow').value;
+
+  if (!data || !film1 || !film2 || !film3 || !vincitore) {
+    rouletteHistoryAdminMessage('Inserisci data, tre film e vincitore.', true);
+    return;
+  }
+
+  if (![film1, film2, film3].includes(vincitore)) {
+    rouletteHistoryAdminMessage('Il vincitore deve essere uno dei tre film.', true);
+    return;
+  }
+
+  try {
+    if (riga) {
+      await api('updateRouletteHistory', [
+        Number(riga), data, film1, film2, film3, vincitore, note, token
+      ]);
+    } else {
+      await api('addRouletteHistory', [
+        data, film1, film2, film3, vincitore, note, token
+      ]);
+    }
+
+    rouletteHistoryAdminMessage('Cronologia salvata.', false);
+    resetRouletteHistoryForm();
+    await loadRouletteHistoryAdmin();
+  } catch (error) {
+    rouletteHistoryAdminMessage('Errore durante il salvataggio: ' + error.message, true);
+  }
+}
+
+async function removeRouletteHistoryEntry(riga) {
+  if (!confirm('Vuoi eliminare questa voce dalla cronologia?')) return;
+
+  const token = rouletteHistoryAdminToken();
+
+  if (!token) {
+    rouletteHistoryAdminMessage('Sessione amministratore assente. Accedi di nuovo.', true);
+    return;
+  }
+
+  try {
+    await api('deleteRouletteHistory', [Number(riga), token]);
+    rouletteHistoryAdminMessage('Voce eliminata.', false);
+    await loadRouletteHistoryAdmin();
+  } catch (error) {
+    rouletteHistoryAdminMessage('Errore durante l’eliminazione: ' + error.message, true);
+  }
+}
+
+[
+  'rouletteHistoryFilm1',
+  'rouletteHistoryFilm2',
+  'rouletteHistoryFilm3'
+].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', function() {
+    updateRouletteHistoryWinnerOptions(
+      document.getElementById('rouletteHistoryWinner').value
+    );
+  });
+});
+  
+
   
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
@@ -15968,6 +16373,37 @@ async function saveAwardsAdminUi() {
   >
 
 </div>
+
+<!-- CRONOLOGIA RUOTA DELLE ESTRAZIONI -->
+<div
+  id="rouletteHistoryModal"
+  class="film-modal"
+  onclick="closeRouletteHistoryModal(event)"
+>
+  <div class="film-modal-box">
+
+    <button
+      type="button"
+      class="film-modal-close"
+      onclick="closeRouletteHistoryModal()"
+      aria-label="Chiudi"
+    >
+      ×
+    </button>
+
+    <div class="film-modal-content" style="display:block;">
+      <div class="film-modal-title">Cronologia delle estrazioni</div>
+
+      <div
+        id="rouletteHistoryContent"
+        style="margin-top:16px;"
+      >
+        Caricamento cronologia…
+      </div>
+    </div>
+
+  </div>
+</div>    
     
 </body>
 </html>
