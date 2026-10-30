@@ -16272,6 +16272,7 @@ function awardsBuilderResetForm() {
   awardsBuilderUpdateTypeOptions();
 }
 
+
 function awardsBuilderEdit(id) {
   const question = awardsAdminQuestions.find(function(q) {
     return String(q.id) === String(id);
@@ -16298,6 +16299,20 @@ function awardsBuilderEdit(id) {
       return option.label || '';
     }).join('\n');
 
+  if (question.type === 'composite') {
+    const fields = question.fields || [];
+
+    const mode = fields.some(function(field) {
+      return field.id === 'rating';
+    })
+      ? 'film_number'
+      : 'film_text';
+
+    document.getElementById(
+      'awardsBuilderCompositeMode'
+    ).value = mode;
+  }
+
   document.getElementById('awardsBuilderFormTitle').textContent =
     'Modifica domanda';
 
@@ -16307,8 +16322,10 @@ function awardsBuilderEdit(id) {
   document.getElementById('awardsBuilderCancelEdit').style.display =
     'inline-block';
 
+  awardsBuilderUpdateTypeOptions();
   awardsBuilderRender();
 }
+
 
 function awardsBuilderDelete(id) {
   if (!confirm('Vuoi eliminare questa domanda?')) return;
@@ -16324,6 +16341,7 @@ function awardsBuilderDelete(id) {
   awardsBuilderSyncJson();
   awardsBuilderRender();
 }
+
 
 function awardsBuilderSaveQuestion() {
   const title = document.getElementById(
@@ -16353,6 +16371,14 @@ function awardsBuilderSaveQuestion() {
     return;
   }
 
+  if (
+    ['single', 'multiple'].includes(type) &&
+    optionLines.length < 2
+  ) {
+    alert('Inserisci almeno due opzioni.');
+    return;
+  }
+
   const existing = awardsAdminEditingId
     ? awardsAdminQuestions.find(function(q) {
         return String(q.id) === String(awardsAdminEditingId);
@@ -16370,21 +16396,30 @@ function awardsBuilderSaveQuestion() {
     required: required
   };
 
-  
-if (['single', 'multiple'].includes(type)) {
-  question.options = optionLines.map(function(label, index) {
-    return {
-      id: 'option_' + (index + 1),
-      label: label
-    };
-  });
-}
+  // Opzioni personalizzate.
+  if (['single', 'multiple'].includes(type)) {
+    const oldOptions = existing && Array.isArray(existing.options)
+      ? existing.options
+      : [];
 
+    question.options = optionLines.map(function(label, index) {
+      const oldOption = oldOptions[index];
+
+      return {
+        id: oldOption
+          ? oldOption.id
+          : 'option_' + Date.now() + '_' + index,
+        label: label
+      };
+    });
+  }
+
+  // Risposte composte: film + numero oppure film + testo.
   if (type === 'composite') {
     const mode = document.getElementById(
       'awardsBuilderCompositeMode'
     ).value;
-  
+
     question.fields = [
       {
         id: 'filmId',
@@ -16394,7 +16429,7 @@ if (['single', 'multiple'].includes(type)) {
         required: true
       }
     ];
-  
+
     if (mode === 'film_number') {
       question.fields.push({
         id: 'rating',
@@ -16412,8 +16447,17 @@ if (['single', 'multiple'].includes(type)) {
     }
   }
 
-
+  // Mantiene eventuali proprietà aggiuntive delle domande
+  // quando si modifica una domanda esistente.
   if (existing) {
+    if (type !== 'single' && type !== 'multiple') {
+      delete question.options;
+    }
+
+    if (type !== 'composite') {
+      delete question.fields;
+    }
+
     awardsAdminQuestions = awardsAdminQuestions.map(function(q) {
       return String(q.id) === String(existing.id) ? question : q;
     });
