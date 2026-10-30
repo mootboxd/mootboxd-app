@@ -16695,6 +16695,12 @@ function awardsLoadInitialQuestions() {
 
   awardsAdminQuestions = awardsCreateInitialQuestions();
 
+  if (awardsAdminQuestions.length !== 65) {
+  throw new Error(
+    'Errore: il numero di domande deve essere esattamente 65.'
+  );
+}
+
   awardsBuilderSyncJson();
   awardsBuilderResetForm();
   awardsBuilderRender();
