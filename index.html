@@ -6558,6 +6558,7 @@ input {
 </section>
 
 
+
 <!-- =========================
      PAGINA GESTIONE ADMIN
      ========================= -->
@@ -6574,250 +6575,9 @@ input {
   </div>
 
 
-  
-<!-- =========================
-     CONFIGURAZIONE MOOTBOXD AWARDS
-     ========================= -->
-
-<div class="head" style="margin-top:32px;">
-  <h2>MOOTBOXD Awards</h2>
-</div>
-
-<div class="film-admin-form">
-
-  <label for="awardsAdminEdition">Edizione</label>
-  <input
-    id="awardsAdminEdition"
-    type="text"
-    placeholder="Es. 2026"
-  >
-
-  <label>
-    <input id="awardsAdminVotingOpen" type="checkbox">
-    Votazioni aperte
-  </label>
-
-  <label>
-    <input id="awardsAdminResultsVisible" type="checkbox">
-    Risultati visibili ai membri
-  </label>
-
-  <hr style="margin:20px 0;border-color:var(--border-color,#444);">
-
-  <div class="head">
-    <h3>Questionario</h3>
-    <p class="muted">
-      Crea le sezioni e gestisci le domande senza modificare
-      manualmente il JSON.
-    </p>
-  </div>
-
-  <div id="awardsBuilder">
-
-    <div style="margin-bottom:16px;">
-      <label for="awardsBuilderSection">
-        Sezione da gestire
-      </label>
-
-      <select id="awardsBuilderSection">
-        <option value="film">Premi per i film</option>
-        <option value="membri">Premi per i membri</option>
-        <option value="momenti">Premi per i momenti più iconici</option>
-        <option value="pensieri">Pensieri e propositi per l'anno nuovo</option>
-      </select>
-    </div>
-
-    <button
-      class="btn"
-      type="button"
-      onclick="awardsLoadInitialQuestions()"
-      style="margin-bottom:12px;"
-    >
-      Carica le 65 domande iniziali
-    </button>
-
-    <div
-      id="awardsBuilderQuestionList"
-      aria-live="polite"
-    >
-      <p class="muted">
-        Carica la configurazione per visualizzare le domande.
-      </p>
-    </div>
-
-    <hr style="margin:20px 0;border-color:var(--border-color,#444);">
-
-    <h3 id="awardsBuilderFormTitle">Aggiungi una domanda</h3>
-
-    <label for="awardsBuilderQuestionTitle">
-      Testo della domanda
-    </label>
-
-    <textarea
-      id="awardsBuilderQuestionTitle"
-      rows="3"
-      placeholder="Scrivi il testo della domanda"
-    ></textarea>
-
-    <label for="awardsBuilderQuestionType">
-      Modalità di risposta
-    </label>
-
-    <select id="awardsBuilderQuestionType">
-      <option value="select">Menu a tendina dei film</option>
-      <option value="member">Menu a tendina dei membri</option>
-      <option value="single">Scelta singola</option>
-      <option value="multiple">Scelta multipla</option>
-      <option value="text">Risposta testuale breve</option>
-      <option value="textarea">Risposta testuale lunga</option>
-      <option value="number">Risposta numerica</option>
-      <option value="composite">Risposta composta</option>
-      <option value="roulette">Estrazione dalla cronologia della ruota</option>
-    </select>
-
-    
-    <div id="awardsBuilderCompositeArea" style="display:none;margin-top:12px;">
-    
-      <label for="awardsBuilderCompositeMode">
-        Campi della risposta composta
-      </label>
-    
-      <select id="awardsBuilderCompositeMode">
-        <option value="film_number">Film + risposta numerica</option>
-        <option value="film_text">Film + risposta testuale</option>
-      </select>
-    
-    </div>
-
-
-    <label style="margin-top:12px;">
-      <input
-        id="awardsBuilderQuestionRequired"
-        type="checkbox"
-        checked
-      >
-      Risposta obbligatoria
-    </label>
-
-    <div id="awardsBuilderOptionsArea" style="margin-top:12px;">
-      <label for="awardsBuilderOptions">
-        Opzioni personalizzate
-      </label>
-
-      <textarea
-        id="awardsBuilderOptions"
-        rows="4"
-        placeholder="Una opzione per riga"
-      ></textarea>
-
-      <p class="muted">
-        Verranno utilizzate per le domande a scelta singola
-        o multipla. Gli altri tipi useranno i dati o i campi
-        appropriati.
-      </p>
-    </div>
-
-    <div
-      style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"
-    >
-      <button
-        class="btn primary"
-        id="awardsBuilderSaveQuestion"
-        type="button"
-      >
-        Aggiungi domanda
-      </button>
-
-      <button
-        class="btn"
-        id="awardsBuilderCancelEdit"
-        type="button"
-        style="display:none;"
-      >
-        Annulla modifica
-      </button>
-    </div>
-
-  </div>
-
-  <!-- JSON mantenuto temporaneamente per compatibilità -->
-  <textarea
-    id="awardsAdminQuestions"
-    rows="12"
-    aria-hidden="true"
-    tabindex="-1"
-    style="display:none;"
-  ></textarea>
-
-  <hr style="margin:20px 0;border-color:var(--border-color,#444);">
-
-  <button
-    class="btn"
-    type="button"
-    onclick="loadAwardsAdminUi()"
-  >
-    Ricarica configurazione
-  </button>
-
-  <button
-    class="btn primary"
-    type="button"
-    onclick="saveAwardsAdminUi()"
-  >
-    Salva configurazione
-  </button>
-
-</div>
-
-<div class="list" style="margin-top:12px;">
-
-  <p>
-    Bozze salvate:
-    <strong id="awardsAdminDraftCount">—</strong>
-  </p>
-
-  <p>
-    Voti inviati:
-    <strong id="awardsAdminVoteCount">—</strong>
-  </p>
-
-  <div
-    id="awardsAdminMessage"
-    class="muted"
-    role="status"
-  ></div>
-
-</div>
-
-  <!-- MEMBRI -->
-
-  <div class="head">
-    <h2>Membri</h2>
-  </div>
-
-  <div class="form">
-
-    <input
-      id="mn"
-      placeholder="Nome membro"
-    >
-
-    <button
-      class="btn primary"
-      onclick="addM()"
-    >
-      Aggiungi
-    </button>
-
-  </div>
-
-  <div
-    class="list"
-    id="memberList"
-  ></div>
-
-
-  <!-- FILM -->
+  <!-- =========================
+       FILM
+       ========================= -->
 
   <div
     class="head"
@@ -6872,56 +6632,10 @@ input {
     id="filmAdminList"
   ></div>
 
-    <!-- =========================
-       TEMI DELLA SETTIMANA
+
+  <!-- =========================
+       CRONOLOGIA ROULETTE - ADMIN
        ========================= -->
-
-  <div
-    class="head"
-    style="margin-top:32px;"
-  >
-    <h2>Settimana a tema</h2>
-  </div>
-
-  <!-- CREA -->
-
-  <div class="film-admin-form">
-
-    <input
-      id="themeName"
-      placeholder="Nome del tema"
-    >
-
-    <input
-      id="themeStart"
-      type="date"
-      title="Data inizio"
-    >
-
-    <input
-      id="themeEnd"
-      type="date"
-      title="Data fine"
-    >
-
-    <button
-      class="btn primary film-admin-submit"
-      onclick="createAdminTheme()"
-    >
-      Crea tema
-    </button>
-
-  </div>
-
-  <!-- ELENCO TEMI -->
-
-  
-  <div
-    class="list"
-    id="themeAdminList"
-  ></div>
-
-  <!-- CRONOLOGIA ROULETTE - ADMIN -->
 
   <div
     class="head"
@@ -6964,7 +6678,6 @@ input {
       <option value="">Seleziona il vincitore</option>
     </select>
 
-    
     <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
       <input
         type="checkbox"
@@ -6972,7 +6685,7 @@ input {
       >
       Estrazione annullata
     </label>
-    
+
     <div style="margin-top:12px;">
       <label for="rouletteHistoryWeek">Settimana ufficiale (facoltativa)</label>
       <input
@@ -6983,7 +6696,6 @@ input {
         placeholder="Es. 12"
       >
     </div>
-
 
     <textarea
       id="rouletteHistoryNotes"
@@ -7028,7 +6740,296 @@ input {
     style="margin-top:12px;"
   ></div>
 
+
+  <!-- =========================
+       SETTIMANE A TEMA
+       ========================= -->
+
+  <div
+    class="head"
+    style="margin-top:32px;"
+  >
+    <h2>Settimana a tema</h2>
+  </div>
+
+  <div class="film-admin-form">
+
+    <input
+      id="themeName"
+      placeholder="Nome del tema"
+    >
+
+    <input
+      id="themeStart"
+      type="date"
+      title="Data inizio"
+    >
+
+    <input
+      id="themeEnd"
+      type="date"
+      title="Data fine"
+    >
+
+    <button
+      class="btn primary film-admin-submit"
+      onclick="createAdminTheme()"
+    >
+      Crea tema
+    </button>
+
+  </div>
+
+  <div
+    class="list"
+    id="themeAdminList"
+  ></div>
+
+
+  <!-- =========================
+       MEMBRI
+       ========================= -->
+
+  <div class="head" style="margin-top:32px;">
+    <h2>Membri</h2>
+  </div>
+
+  <div class="form">
+
+    <input
+      id="mn"
+      placeholder="Nome membro"
+    >
+
+    <button
+      class="btn primary"
+      onclick="addM()"
+    >
+      Aggiungi
+    </button>
+
+  </div>
+
+  <div
+    class="list"
+    id="memberList"
+  ></div>
+
+
+  <!-- =========================
+       MOOTBOXD AWARDS
+       ========================= -->
+
+  <div class="head" style="margin-top:40px;">
+    <h2>MOOTBOXD Awards</h2>
+  </div>
+
+  <div class="film-admin-form">
+
+    <label for="awardsAdminEdition">Edizione</label>
+    <input
+      id="awardsAdminEdition"
+      type="text"
+      placeholder="Es. 2026"
+    >
+
+    <label>
+      <input id="awardsAdminVotingOpen" type="checkbox">
+      Votazioni aperte
+    </label>
+
+    <label>
+      <input id="awardsAdminResultsVisible" type="checkbox">
+      Risultati visibili ai membri
+    </label>
+
+    <hr style="margin:20px 0;border-color:var(--border-color,#444);">
+
+    <div class="head">
+      <h3>Questionario</h3>
+      <p class="muted">
+        Crea le sezioni e gestisci le domande senza modificare
+        manualmente il JSON.
+      </p>
+    </div>
+
+    <div id="awardsBuilder">
+
+      <div style="margin-bottom:16px;">
+        <label for="awardsBuilderSection">
+          Sezione da gestire
+        </label>
+
+        <select id="awardsBuilderSection">
+          <option value="film">Premi per i film</option>
+          <option value="membri">Premi per i membri</option>
+          <option value="momenti">Premi per i momenti più iconici</option>
+          <option value="pensieri">Pensieri e propositi per l'anno nuovo</option>
+        </select>
+      </div>
+
+      <button
+        class="btn"
+        type="button"
+        onclick="awardsLoadInitialQuestions()"
+        style="margin-bottom:12px;"
+      >
+        Carica le 65 domande iniziali
+      </button>
+
+      <div
+        id="awardsBuilderQuestionList"
+        aria-live="polite"
+      >
+        <p class="muted">
+          Carica la configurazione per visualizzare le domande.
+        </p>
+      </div>
+
+      <hr style="margin:20px 0;border-color:var(--border-color,#444);">
+
+      <h3 id="awardsBuilderFormTitle">Aggiungi una domanda</h3>
+
+      <label for="awardsBuilderQuestionTitle">
+        Testo della domanda
+      </label>
+
+      <textarea
+        id="awardsBuilderQuestionTitle"
+        rows="3"
+        placeholder="Scrivi il testo della domanda"
+      ></textarea>
+
+      <label for="awardsBuilderQuestionType">
+        Modalità di risposta
+      </label>
+
+      <select id="awardsBuilderQuestionType">
+        <option value="select">Menu a tendina dei film</option>
+        <option value="member">Menu a tendina dei membri</option>
+        <option value="single">Scelta singola</option>
+        <option value="multiple">Scelta multipla</option>
+        <option value="text">Risposta testuale breve</option>
+        <option value="textarea">Risposta testuale lunga</option>
+        <option value="number">Risposta numerica</option>
+        <option value="composite">Risposta composta</option>
+        <option value="roulette">Estrazione dalla cronologia della ruota</option>
+      </select>
+
+      <div id="awardsBuilderCompositeArea" style="display:none;margin-top:12px;">
+
+        <label for="awardsBuilderCompositeMode">
+          Campi della risposta composta
+        </label>
+
+        <select id="awardsBuilderCompositeMode">
+          <option value="film_number">Film + risposta numerica</option>
+          <option value="film_text">Film + risposta testuale</option>
+        </select>
+
+      </div>
+
+      <label style="margin-top:12px;">
+        <input
+          id="awardsBuilderQuestionRequired"
+          type="checkbox"
+          checked
+        >
+        Risposta obbligatoria
+      </label>
+
+      <div id="awardsBuilderOptionsArea" style="margin-top:12px;">
+        <label for="awardsBuilderOptions">
+          Opzioni personalizzate
+        </label>
+
+        <textarea
+          id="awardsBuilderOptions"
+          rows="4"
+          placeholder="Una opzione per riga"
+        ></textarea>
+
+        <p class="muted">
+          Verranno utilizzate per le domande a scelta singola
+          o multipla. Gli altri tipi useranno i dati o i campi
+          appropriati.
+        </p>
+      </div>
+
+      <div
+        style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"
+      >
+        <button
+          class="btn primary"
+          id="awardsBuilderSaveQuestion"
+          type="button"
+        >
+          Aggiungi domanda
+        </button>
+
+        <button
+          class="btn"
+          id="awardsBuilderCancelEdit"
+          type="button"
+          style="display:none;"
+        >
+          Annulla modifica
+        </button>
+      </div>
+
+    </div>
+
+    <!-- JSON mantenuto temporaneamente per compatibilità -->
+    <textarea
+      id="awardsAdminQuestions"
+      rows="12"
+      aria-hidden="true"
+      tabindex="-1"
+      style="display:none;"
+    ></textarea>
+
+    <hr style="margin:20px 0;border-color:var(--border-color,#444);">
+
+    <button
+      class="btn"
+      type="button"
+      onclick="loadAwardsAdminUi()"
+    >
+      Ricarica configurazione
+    </button>
+
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveAwardsAdminUi()"
+    >
+      Salva configurazione
+    </button>
+
+  </div>
+
+  <div class="list" style="margin-top:12px;">
+
+    <p>
+      Bozze salvate:
+      <strong id="awardsAdminDraftCount">—</strong>
+    </p>
+
+    <p>
+      Voti inviati:
+      <strong id="awardsAdminVoteCount">—</strong>
+    </p>
+
+    <div
+      id="awardsAdminMessage"
+      class="muted"
+      role="status"
+    ></div>
+
+  </div>
+
 </section>
+
 <script>
   const API_URL =
   'https://mootboxd-api.manuelrullo2002.workers.dev/';
