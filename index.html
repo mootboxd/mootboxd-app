@@ -6627,6 +6627,15 @@ input {
       </select>
     </div>
 
+    <button
+      class="btn"
+      type="button"
+      onclick="awardsLoadInitialQuestions()"
+      style="margin-bottom:12px;"
+    >
+      Carica le 65 domande iniziali
+    </button>
+
     <div
       id="awardsBuilderQuestionList"
       aria-live="polite"
@@ -15929,7 +15938,7 @@ async function loadAwardsMemberUi() {
       if (fieldType === 'number') {
         return '<label style="display:block;margin-top:10px;">' +
           awardsEsc(field.label || 'Numero') +
-          '<input type="number" step="0.1" ' +
+          '<input type="number" min="0" max="10" step="0.1" ' +
           'data-awards-question="' + awardsEsc(q.id) +
           '" data-awards-field="' + awardsEsc(fieldId) +
           '" value="' + awardsEsc(fieldValue) +
@@ -16497,6 +16506,208 @@ function awardsBuilderUpdateTypeOptions() {
   
   
 
+function awardsCreateInitialQuestions() {
+  const films = [
+    'IL FILM PIÙ SOTTOVALUTATO',
+    'IL FILM PIÙ SOPRAVVALUTATO',
+    'IL FILM MIGLIORE SCOPERTA DELL’ANNO',
+    'IL FILM PIÙ DIVISIVO',
+    'IL FILM CHE RIGUARDERESTI ALL’INFINITO',
+    'IL FILM CHE PENSI DI AVER GIUDICATO TROPPO NEGATIVAMENTE, MA CHE SE RIGUARDERESTI POTRESTI CAMBIARE IDEA',
+    'IL FILM A CUI HAI REGALATO UN VOTO FORSE TROPPO ALTO, MA QUEL CHE È FATTO È FATTO',
+    'UN FILM CHE PENSI CHE IL CLUB ABBIA VALUTATO ERRONEAMENTE, CHE ABBIA UNA MEDIA TROPPO ALTA O TROPPO BASSA (QUALE MEDIA DOVREBBE AVERE REALISTICAMENTE SECONDO TE)',
+    'IL FILM CHE TI HA FATTO PIANGERE DI PIÙ',
+    'IL FILM CHE TI HA FATTO RIDERE DI PIÙ',
+    'IL FILM PIÙ NOIOSO',
+    'IL FILM PIÙ PRETENZIOSO',
+    'IL FILM CHE HA FATTO PARLARE PIÙ A LUNGO (ANCHE OLTRE LA DISCUSSIONE)',
+    'PREMIO MIGLIOR FOTOGRAFIA',
+    'PREMIO MIGLIOR ANIMAZIONE',
+    'PREMIO MIGLIOR FINALE',
+    'PREMIO MIGLIOR COLONNA SONORA',
+    'PREMIO MIGLIOR PERFORMANCE ATTORIALE',
+    'PREMIO PEGGIOR PERFORMANCE ATTORIALE',
+    'PREMIO MIGLIOR PERSONAGGIO',
+    'PREMIO MIGLIORE COPPIA / STORIA D’AMORE',
+    'IL FILM CHE VORRESTI ASSOLUTAMENTE FAR VEDERE AL CLUB L’ANNO PROSSIMO'
+  ];
+
+  const members = [
+    'L’HATER PROFESSIONISTA DEL CLUB',
+    'IL MEMBRO CHE PIANGE PER OGNI FILM',
+    'IL MEMBRO PIÙ GIMMICK (QUEL MEMBRO CHE FA DI TUTTO PER DISTINGUERSI DALLA MASSA)',
+    'IL MEMBRO PIÙ INFLUENZABILE (QUEL MEMBRO CHE BASA O CAMBIA LE PROPRIE OPINIONI SOLO INTORNO A QUELLO CHE PENSANO GLI ALTRI)',
+    'IL MEMBRO PIÙ FAN DEL MAINSTREAM',
+    'IL MEMBRO PIÙ "CINEFILO"',
+    'IL MEMBRO FANTASMA DEL CLUB',
+    'IL MEMBRO CON PIÙ TASTE',
+    'IL MEMBRO CON MENO TASTE',
+    'IL MIGLIOR DISCUSSORE DEL CLUB',
+    'IL MEMBRO CON LE OPINIONI MIGLIORI SUI FILM',
+    'IL MEMBRO SECCHIONE DEL CLUB',
+    'IL MEMBRO CHE SCLERA DI PIÙ',
+    "IL MEMBRO CON IL DEFICIT DELL'ATTENZIONE",
+    'IL CUORE DEL CLUB',
+    'IL MIGLIOR CONVINCITORE DEL CLUB',
+    'IL MEMBRO CHE CAMBIA IDEA CONTINUAMENTE',
+    'IL MEMBRO PIÙ DRAMMATICO',
+    'IL MEMBRO PIÙ TECNICO NELL’ANALISI DEI FILM',
+    'L’ESPERTO DI HORROR DEL CLUB',
+    'L’ESPERTO DI ANIMAZIONE DEL CLUB',
+    'L’ESPERTO DI CINEMA CLASSICO DEL CLUB',
+    'L’ESPERTO DI CINEMA ASIATICO DEL CLUB',
+    'L’ESPERTO DI CINEMA FANTASY DEL CLUB',
+    'IL MEMBRO PIÙ PUNTUALE ALLE DISCUSSIONI',
+    'IL MEMBRO PIÙ RITARDATARIO ALLE DISCUSSIONI',
+    'IL MEMBRO CHE SEMBRA SEMPRE AVER VISTO UN FILM DIVERSO DAGLI ALTRI',
+    'IL MEMBRO CHE DÀ VOTI ALTI O BASSI SOLO PER CONTROPESARE QUELLI DEGLI ALTRI',
+    'IL MEMBRO "QUESTO FILM NON È PER TUTTI"',
+    'IL MEMBRO "QUESTO FILM MI HA CAMBIATO LA VITA"',
+    'IL MEMBRO "NON MI RICORDO ESATTAMENTE COSA SUCCEDE MA COMUNQUE..."'
+  ];
+
+  const moments = [
+    'LA DISCUSSIONE PIÙ INUTILE',
+    'LA DISCUSSIONE PIÙ MEMORABILE',
+    'LA DISCUSSIONE PIÙ CAOTICA',
+    'LA DISCUSSIONE PIÙ FILOSOFICA',
+    'IL MIGLIOR RANT NELLE DISCUSSIONI',
+    'MIGLIOR COLPO DI SCENA DURANTE UNO SPACE',
+    'IL COMMENTO PIÙ DIVERTENTE SUI FILM',
+    'IL MIGLIOR TEMA SETTIMANALE',
+    'LA MIGLIORE RECENSIONE DELL’ANNO',
+    'L’ESTRAZIONE PEGGIORE DELLA RUOTA',
+    'IL MOMENTO PIÙ BELLO DEL CLUB QUEST’ANNO'
+  ];
+
+  const questions = [];
+
+  function addQuestion(section, id, title, type, extra) {
+    questions.push(Object.assign({
+      id: id,
+      section: section,
+      title: title,
+      type: type,
+      required: true
+    }, extra || {}));
+  }
+
+  films.forEach(function(title, index) {
+    const id = 'film_' + (index + 1);
+
+    if (index === 7) {
+      addQuestion('film', id, title, 'composite', {
+        fields: [
+          {
+            id: 'filmId',
+            label: 'Seleziona il film',
+            type: 'select',
+            source: 'films',
+            required: true
+          },
+          {
+            id: 'rating',
+            label: 'Quale media dovrebbe avere realisticamente?',
+            type: 'number',
+            required: true
+          }
+        ]
+      });
+    } else if (index === 17 || index === 18) {
+      addQuestion('film', id, title, 'composite', {
+        fields: [
+          {
+            id: 'filmId',
+            label: 'Seleziona il film',
+            type: 'select',
+            source: 'films',
+            required: true
+          },
+          {
+            id: 'detail',
+            label: 'Nome dell’attore o dell’attrice',
+            type: 'text',
+            required: true
+          }
+        ]
+      });
+    } else if (index === 19 || index === 20) {
+      addQuestion('film', id, title, 'composite', {
+        fields: [
+          {
+            id: 'filmId',
+            label: 'Seleziona il film',
+            type: 'select',
+            source: 'films',
+            required: true
+          },
+          {
+            id: 'detail',
+            label: index === 19
+              ? 'Nome del personaggio'
+              : 'Descrivi la coppia o la storia d’amore',
+            type: 'text',
+            required: true
+          }
+        ]
+      });
+    } else if (index === 21) {
+      addQuestion('film', id, title, 'text');
+    } else {
+      addQuestion('film', id, title, 'select');
+    }
+  });
+
+  members.forEach(function(title, index) {
+    addQuestion(
+      'membri',
+      'membro_' + (index + 1),
+      title,
+      'member'
+    );
+  });
+
+  moments.forEach(function(title, index) {
+    addQuestion(
+      'momenti',
+      'momento_' + (index + 1),
+      title,
+      index === 9 ? 'roulette' : 'text'
+    );
+  });
+
+  addQuestion(
+    'pensieri',
+    'pensieri_finali',
+    'Scrivi liberamente quello che vuoi sul tempo trascorso dall’inizio del club. Puoi raccontare cosa pensi del club o cosa ha significato per te partecipare, qualcosa che hai imparato o apprezzato, qualcosa che vorresti migliorasse con il nuovo anno, oppure qualcosa che hai scoperto su te stess* o sul cinema.',
+    'textarea'
+  );
+
+  return questions;
+}
+
+function awardsLoadInitialQuestions() {
+  if (awardsAdminQuestions.length > 0) {
+    if (!confirm(
+      'Esistono già delle domande. Vuoi sostituirle tutte con le 65 domande iniziali?'
+    )) return;
+  }
+
+  awardsAdminQuestions = awardsCreateInitialQuestions();
+
+  awardsBuilderSyncJson();
+  awardsBuilderResetForm();
+  awardsBuilderRender();
+
+  const message = document.getElementById('awardsAdminMessage');
+
+  if (message) {
+    message.style.color = '';
+    message.textContent =
+      'Caricate 65 domande nelle quattro sezioni. Salva la configurazione per conservarle.';
+  }
+}
+  
 
 async function loadAwardsAdminUi() {
   const message = document.getElementById('awardsAdminMessage');
