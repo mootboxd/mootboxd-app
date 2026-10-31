@@ -5738,6 +5738,7 @@ input {
       class="main-nav-item"
       data-page="awards"
       onclick="showPage('awards')"
+      style="display:none;"
     >
       MOOTBOXD Awards
     </button>
@@ -10941,6 +10942,11 @@ if (!weeklyThemesLoaded) {
      ========================= */
 
   if (page === 'awards') {
+    if (!adminSession) {
+      alert('Pagina temporaneamente non disponibile.');
+      showPage('home');
+      return;
+    }
   
     if (awardsPage) {
       awardsPage.style.display = 'block';
