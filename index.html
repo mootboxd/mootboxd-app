@@ -5820,10 +5820,13 @@ input {
 
     <button
       class="main-nav-item"
-      data-page="proposals"
-      onclick="showPage('proposals')"
+      type="button"
+      onclick="
+        document.getElementById('mainNavMenu').classList.remove('open');
+        openSuggestionModal();
+      "
     >
-      Proposte
+      Suggerimenti App
     </button>
 
     
