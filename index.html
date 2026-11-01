@@ -7497,7 +7497,7 @@ async function deleteSiteSuggestionUi(id) {
 async function getShareImageDataUrl(fileId) {
   const token =
     sessionStorage.getItem('mootboxd_admin_token') ||
-    sessionStorage.getItem('mootboxd_token');
+    getMemberToken();
 
   if (!token || !fileId) {
     return null;
