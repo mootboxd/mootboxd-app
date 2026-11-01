@@ -5535,6 +5535,25 @@ input {
         Accesso Admin
       </button>
 
+      <button
+        type="button"
+        onclick="openSuggestionModal()"
+        style="
+          display:block;
+          width:100%;
+          margin-top:20px;
+          padding:8px;
+          background:none;
+          border:0;
+          color:#d9b36c;
+          text-decoration:underline;
+          cursor:pointer;
+          font-size:13px;
+        "
+      >
+        Hai un suggerimento per MOOTBOXD?
+      </button>
+
       <div
         id="loginError"
         style="
@@ -5549,6 +5568,85 @@ input {
     </div>
 
   </div>
+
+  <!-- MODAL SUGGERIMENTI -->
+    <div
+      id="suggestionModal"
+      style="
+        display:none;
+        position:fixed;
+        inset:0;
+        z-index:11000;
+        background:rgba(0,0,0,.8);
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+      "
+      onclick="if(event.target === this) closeSuggestionModal()"
+    >
+      <div
+        style="
+          width:100%;
+          max-width:440px;
+          padding:24px;
+          background:#171a23;
+          border:1px solid #2a2f3d;
+          border-radius:14px;
+        "
+      >
+        <h2 style="margin:0 0 10px;">Un suggerimento per MOOTBOXD</h2>
+    
+        <p class="muted" style="font-size:13px;">
+          Hai un'idea, una proposta o qualcosa da segnalare?
+          Scrivila qui. Non è necessario effettuare l'accesso.
+        </p>
+    
+        <textarea
+          id="siteSuggestionText"
+          rows="5"
+          placeholder="Scrivi il tuo suggerimento..."
+          style="
+            width:100%;
+            margin:12px 0;
+            padding:12px;
+            background:#1e2230;
+            color:#fff;
+            border:1px solid #2a2f3d;
+            border-radius:8px;
+            resize:vertical;
+            font:inherit;
+          "
+        ></textarea>
+    
+        <div
+          id="siteSuggestionMessage"
+          class="muted"
+          role="status"
+          style="margin-bottom:12px;font-size:13px;"
+        ></div>
+    
+        <div style="display:flex;gap:8px;">
+          <button
+            class="btn"
+            type="button"
+            onclick="closeSuggestionModal()"
+            style="flex:1;"
+          >
+            Annulla
+          </button>
+    
+          <button
+            id="siteSuggestionSubmit"
+            class="btn primary"
+            type="button"
+            onclick="submitSiteSuggestionUi()"
+            style="flex:1;"
+          >
+            Invia
+          </button>
+        </div>
+      </div>
+    </div>
 
 
   <!-- =========================
@@ -7201,6 +7299,30 @@ input {
 
   </div>
 
+  <!-- =========================
+     SUGGERIMENTI DEGLI UTENTI
+     ========================= -->
+
+    <div class="head" style="margin-top:32px;">
+      <h2>Suggerimenti degli utenti</h2>
+    
+      <button
+        class="btn"
+        type="button"
+        onclick="loadSiteSuggestionsAdmin()"
+      >
+        Aggiorna
+      </button>
+    </div>
+    
+    <div
+      id="siteSuggestionsAdminList"
+      class="list"
+      aria-live="polite"
+    >
+      <p class="muted">Caricamento suggerimenti...</p>
+    </div>
+
 </section>
 
 <script>
@@ -7248,6 +7370,132 @@ async function api(action, args = []) {
   return result.data;
 }
 
+/* =========================================================
+   SUGGERIMENTI ANONIMI
+   ========================================================= */
+
+function openSuggestionModal() {
+  document.getElementById('suggestionModal').style.display = 'flex';
+  document.getElementById('siteSuggestionText').value = '';
+  document.getElementById('siteSuggestionMessage').textContent = '';
+}
+
+function closeSuggestionModal() {
+  document.getElementById('suggestionModal').style.display = 'none';
+}
+
+async function submitSiteSuggestionUi() {
+  const textarea = document.getElementById('siteSuggestionText');
+  const message = document.getElementById('siteSuggestionMessage');
+  const button = document.getElementById('siteSuggestionSubmit');
+
+  const suggestion = textarea.value.trim();
+
+  if (!suggestion) {
+    message.textContent = 'Scrivi prima il tuo suggerimento.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Invio...';
+  message.textContent = '';
+
+  try {
+    await api('submitSiteSuggestion', [suggestion]);
+
+    textarea.value = '';
+    message.textContent = 'Suggerimento inviato. Grazie!';
+    button.textContent = 'Inviato';
+
+  } catch (error) {
+    message.textContent = error.message;
+    button.disabled = false;
+    button.textContent = 'Riprova';
+  }
+}  
+
+async function loadSiteSuggestionsAdmin() {
+  const box = document.getElementById('siteSuggestionsAdminList');
+
+  if (!box) return;
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  if (!token) {
+    box.innerHTML = '<p class="muted">Sessione Admin non disponibile.</p>';
+    return;
+  }
+
+  box.innerHTML = '<p class="muted">Caricamento...</p>';
+
+  try {
+    const suggestions = await api('getSiteSuggestions', [token]);
+
+    if (!suggestions.length) {
+      box.innerHTML = '<p class="empty">Non ci sono ancora suggerimenti.</p>';
+      return;
+    }
+
+    box.innerHTML = suggestions.map(function(item) {
+      return `
+        <div style="
+          padding:16px 4px;
+          border-bottom:1px solid #2a2f3d;
+        ">
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            margin-bottom:10px;
+          ">
+            <span class="muted" style="font-size:12px;">
+              ${esc(item.submittedAt)}
+            </span>
+
+            <button
+              class="btn"
+              type="button"
+              onclick="deleteSiteSuggestionUi('${esc(item.id)}')"
+              style="color:#e88;"
+            >
+              Elimina
+            </button>
+          </div>
+
+          <div style="
+            white-space:pre-wrap;
+            overflow-wrap:anywhere;
+            line-height:1.5;
+          ">${esc(item.suggestion)}</div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    box.innerHTML = `
+      <p style="color:#e88;">${esc(error.message)}</p>
+    `;
+  }
+}
+
+
+async function deleteSiteSuggestionUi(id) {
+  if (!confirm('Vuoi eliminare questo suggerimento?')) {
+    return;
+  }
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  try {
+    await api('deleteSiteSuggestion', [id, token]);
+    await loadSiteSuggestionsAdmin();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}  
+  
 async function getShareImageDataUrl(fileId) {
   const token =
     sessionStorage.getItem('mootboxd_admin_token') ||
@@ -10975,6 +11223,7 @@ if (!weeklyThemesLoaded) {
     renderAdminFilms();
     renderAdminThemes();
     loadAwardsAdminUi();
+    loadSiteSuggestionsAdmin();
 
   }
 
