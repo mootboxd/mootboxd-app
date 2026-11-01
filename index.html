@@ -10157,6 +10157,33 @@ async function showLogin() {
     select.disabled = false;
   }
 }
+
+function getMemberToken() {
+  let token = localStorage.getItem('mootboxd_token');
+
+  // Recupera e migra eventuali sessioni precedenti.
+  if (!token) {
+    token = sessionStorage.getItem('mootboxd_token');
+
+    if (token) {
+      localStorage.setItem('mootboxd_token', token);
+      sessionStorage.removeItem('mootboxd_token');
+    }
+  }
+
+  return token;
+}
+
+function setMemberToken(token) {
+  localStorage.setItem('mootboxd_token', token);
+  sessionStorage.removeItem('mootboxd_token');
+}
+
+function clearMemberToken() {
+  localStorage.removeItem('mootboxd_token');
+  sessionStorage.removeItem('mootboxd_token');
+}
+  
   
 async function login() {
 
@@ -10201,10 +10228,7 @@ async function login() {
 
     session = result;
 
-    sessionStorage.setItem(
-      "mootboxd_token",
-      result.token
-    );
+    setMemberToken(result.token);
 
     document.getElementById(
       "loginScreen"
@@ -10450,9 +10474,7 @@ async function logout() {
      ========================= */
 
   const token =
-    sessionStorage.getItem(
-      "mootboxd_token"
-    );
+    getMemberToken();
 
   if (token) {
 
@@ -10477,9 +10499,7 @@ async function logout() {
      PULIZIA SESSIONE
      ========================= */
 
-  sessionStorage.removeItem(
-    "mootboxd_token"
-  );
+  clearMemberToken();
 
   session = null;
 
@@ -10508,9 +10528,7 @@ async function checkSession() {
 }
 
   const token =
-    sessionStorage.getItem(
-      "mootboxd_token"
-    );
+    getMemberToken();
 
   if (!token) {
 
@@ -10541,9 +10559,7 @@ async function checkSession() {
 
     if (!sessionResult) {
 
-      sessionStorage.removeItem(
-        "mootboxd_token"
-      );
+      clearMemberToken();
 
       showLogin();
 
@@ -10580,9 +10596,7 @@ async function checkSession() {
       error
     );
 
-    sessionStorage.removeItem(
-      "mootboxd_token"
-    );
+    clearMemberToken();
 
     session = null;
 
@@ -10634,9 +10648,7 @@ async function load() {
   try {
 
     const token =
-  sessionStorage.getItem(
-    "mootboxd_token"
-  );
+  getMemberToken();
 
 const adminToken =
   sessionStorage.getItem(
@@ -14485,9 +14497,7 @@ async function toggleMyFilm(filmId) {
   }
 
   const token =
-    sessionStorage.getItem(
-      "mootboxd_token"
-    );
+    getMemberToken();
 
   if (!token) {
     showLogin();
@@ -14719,9 +14729,7 @@ async function tog(memberId, filmId) {
         'toggleMyWatched',
         [
           filmId,
-          sessionStorage.getItem(
-            "mootboxd_token"
-          )
+          getMemberToken()
         ]
       );
 
@@ -16252,7 +16260,7 @@ function awardsEsc(value) {
 }
 
 function awardsMemberToken() {
-  return sessionStorage.getItem('mootboxd_token') || '';
+  return getMemberToken() || '';
 }
 
 function awardsAdminToken() {
