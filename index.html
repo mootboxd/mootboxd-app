@@ -983,6 +983,20 @@ input {
   cursor: pointer;
 }
 
+.ranking-item.ranking-draggable {
+  cursor: grab;
+}
+
+.ranking-item.ranking-draggable:active {
+  cursor: grabbing;
+}
+
+.ranking-item.ranking-dragging {
+  opacity: 0.4;
+  border: 1px dashed #d9b36c;
+  background: #1e2230;
+}  
+
 .ranking-item:first-child {
   border-top: 1px solid #2a2f3d;
 }
@@ -10804,9 +10818,78 @@ function populateRankingFilters() {
       : 'club';
 }
   
+let rankingOrderMemberId = null;
+let rankingOrderGroups = [];
 
-function renderRanking() {
+async function loadRankingOrder(memberId) {
+  const token = getMemberToken();
 
+  if (!token || !session || String(session.memberId) !== String(memberId)) {
+    return [];
+  }
+
+  if (String(rankingOrderMemberId) === String(memberId)) {
+    return rankingOrderGroups;
+  }
+
+  try {
+    const groups = await api(
+      'getMemberRankingOrder',
+      [token]
+    );
+
+    rankingOrderGroups = Array.isArray(groups) ? groups : [];
+    rankingOrderMemberId = String(memberId);
+
+    return rankingOrderGroups;
+
+  } catch (error) {
+    console.error('Errore caricamento ordine classifica:', error);
+    return [];
+  }
+}
+
+function getMemberFilmScore(film, member) {
+  const votes = film.voti || {};
+  const name = String(member.name || '').trim().toLowerCase();
+
+  const key = Object.keys(votes).find(function(k) {
+    return k.trim().toLowerCase() === name;
+  });
+
+  const vote = key ? votes[key] : null;
+
+  if (
+    vote == null ||
+    String(vote).trim() === '' ||
+    String(vote).trim() === '/' ||
+    isNaN(Number(String(vote).replace(',', '.')))
+  ) {
+    return null;
+  }
+
+  return Number(String(vote).replace(',', '.'));
+}
+
+function getRankingOrderMap(score) {
+  const group = rankingOrderGroups.find(function(item) {
+    return Number(item.score) === Number(score);
+  });
+
+  const map = new Map();
+
+  if (group && Array.isArray(group.filmIds)) {
+    group.filmIds.forEach(function(id, index) {
+      map.set(String(id), index);
+    });
+  }
+
+  return map;
+}
+
+  
+async function renderRanking() {
+  
   const container =
     document.getElementById('rankingList');
 
@@ -10834,6 +10917,15 @@ const selectedYear =
 
 const selectedMember =
   memberFilter ? memberFilter.value : 'club';
+
+const isMyRanking =
+  !!session &&
+  selectedMember !== 'club' &&
+  String(selectedMember) === String(session.memberId);
+
+if (isMyRanking) {
+  await loadRankingOrder(selectedMember);
+}  
 
 let films =
   (D.films || []).filter(function(film) {
@@ -10921,35 +11013,39 @@ let films =
 
   films.sort(function(a, b) {
 
-    const mediaA =
-      Number(a._rankingScore);
-    
-    const mediaB =
-      Number(b._rankingScore);
+  const scoreA = Number(a._rankingScore);
+  const scoreB = Number(b._rankingScore);
 
-    // 1. Media reale: più alta prima
-    if (mediaA !== mediaB) {
-      return mediaB - mediaA;
-    }
+  if (scoreA !== scoreB) {
+    return scoreB - scoreA;
+  }
 
-    // 2. A parità di media:
-    // più persone lo hanno visto
-    const watchedA =
-      Number(a.vistoDa || 0);
+  // Classifica personale: usa l'ordine personalizzato
+  // esclusivamente tra film con lo stesso voto.
+  if (isMyRanking) {
+    const orderMap = getRankingOrderMap(scoreA);
 
-    const watchedB =
-      Number(b.vistoDa || 0);
+    const indexA = orderMap.has(String(a.id))
+      ? orderMap.get(String(a.id))
+      : a._originalIndex;
 
-    if (watchedA !== watchedB) {
-      return watchedB - watchedA;
-    }
+    const indexB = orderMap.has(String(b.id))
+      ? orderMap.get(String(b.id))
+      : b._originalIndex;
 
-    // 3. Se tutto è identico:
-    // mantiene l'ordine originale
-    return a._originalIndex -
-           b._originalIndex;
+    return indexA - indexB;
+  }
 
-  });
+  // Classifica club e altri membri: ordinamento originale.
+  const watchedA = Number(a.vistoDa || 0);
+  const watchedB = Number(b.vistoDa || 0);
+
+  if (watchedA !== watchedB) {
+    return watchedB - watchedA;
+  }
+
+  return a._originalIndex - b._originalIndex;
+});
 
   // =========================
   // HTML
@@ -10974,10 +11070,22 @@ let films =
       const totalMembers =
         Number(D.totalMembers || D.members.length || 0);
 
+      const sameScoreCount = isMyRanking
+        ? films.filter(function(item) {
+            return Number(item._rankingScore) ===
+                   Number(film._rankingScore);
+          }).length
+        : 0;
+      
+      const draggable = isMyRanking && sameScoreCount > 1;
+
       return `
 
         <div
-          class="ranking-item"
+          class="ranking-item ${draggable ? 'ranking-draggable' : ''}"
+          data-ranking-film-id="${esc(String(film.id))}"
+          data-ranking-score="${film._rankingScore}"
+          ${draggable ? 'draggable="true"' : ''}
           onclick="openFilmModal('${film.id}')"
         >
 
@@ -11056,8 +11164,189 @@ let films =
 
     }).join('');
 
+      if (isMyRanking) {
+      initRankingDragAndDrop();
+    }
+
 }
 
+
+let rankingDraggedElement = null;
+let rankingDragMoved = false;
+
+function initRankingDragAndDrop() {
+  const container = document.getElementById('rankingList');
+  if (!container) return;
+
+  const items = container.querySelectorAll(
+    '.ranking-item[draggable="true"]'
+  );
+
+  items.forEach(function(item) {
+
+    item.addEventListener('dragstart', function(event) {
+      rankingDraggedElement = item;
+      rankingDragMoved = false;
+
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData(
+        'text/plain',
+        item.dataset.rankingFilmId
+      );
+
+      item.classList.add('ranking-dragging');
+    });
+
+    item.addEventListener('dragover', function(event) {
+      if (!rankingDraggedElement || rankingDraggedElement === item) {
+        return;
+      }
+
+      if (
+        rankingDraggedElement.dataset.rankingScore !==
+        item.dataset.rankingScore
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    });
+
+    item.addEventListener('drop', function(event) {
+      event.preventDefault();
+
+      if (!rankingDraggedElement || rankingDraggedElement === item) {
+        return;
+      }
+
+      const sourceId =
+        rankingDraggedElement.dataset.rankingFilmId;
+
+      const targetId =
+        item.dataset.rankingFilmId;
+
+      const score =
+        Number(item.dataset.rankingScore);
+
+      if (
+        rankingDraggedElement.dataset.rankingScore !==
+        item.dataset.rankingScore
+      ) {
+        return;
+      }
+
+      moveRankingFilm(sourceId, targetId, score);
+      rankingDragMoved = true;
+    });
+
+    item.addEventListener('dragend', function() {
+      if (rankingDraggedElement) {
+        rankingDraggedElement.classList.remove('ranking-dragging');
+      }
+
+      rankingDraggedElement = null;
+
+      if (rankingDragMoved) {
+        window.setTimeout(function() {
+          rankingDragMoved = false;
+        }, 100);
+      }
+    });
+  });
+
+  container.querySelectorAll('.ranking-item').forEach(function(item) {
+    item.addEventListener('click', function(event) {
+      if (rankingDragMoved) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+      }
+    }, true);
+  });
+}
+
+async function moveRankingFilm(sourceId, targetId, score) {
+  const member = D.members.find(function(m) {
+    return String(m.id) === String(session.memberId);
+  });
+
+  if (!member) return;
+
+  // Recupera tutti i film con quel voto,
+  // non soltanto quelli eventualmente visibili nel filtro.
+  const tiedFilms = D.films.filter(function(film) {
+    return getMemberFilmScore(film, member) === score;
+  });
+
+  const existingGroup = rankingOrderGroups.find(function(group) {
+    return Number(group.score) === score;
+  });
+
+  let filmIds = existingGroup && Array.isArray(existingGroup.filmIds)
+    ? existingGroup.filmIds.map(String)
+    : tiedFilms.map(function(film) {
+        return String(film.id);
+      });
+
+  // Rimuove eventuali ID non più presenti e aggiunge nuovi film.
+  const validIds = new Set(tiedFilms.map(function(film) {
+    return String(film.id);
+  }));
+
+  filmIds = filmIds.filter(function(id) {
+    return validIds.has(id);
+  });
+
+  tiedFilms.forEach(function(film) {
+    const id = String(film.id);
+    if (!filmIds.includes(id)) filmIds.push(id);
+  });
+
+  const sourceIndex = filmIds.indexOf(String(sourceId));
+  const targetIndex = filmIds.indexOf(String(targetId));
+
+  if (sourceIndex < 0 || targetIndex < 0) return;
+
+  const moved = filmIds.splice(sourceIndex, 1)[0];
+  filmIds.splice(targetIndex, 0, moved);
+
+  const nextGroups = rankingOrderGroups.filter(function(group) {
+    return Number(group.score) !== score;
+  });
+
+  nextGroups.push({
+    score: score,
+    filmIds: filmIds
+  });
+
+  rankingOrderGroups = nextGroups;
+
+  renderRanking();
+
+  try {
+    await api(
+      'saveMemberRankingOrder',
+      [
+        rankingOrderGroups,
+        getMemberToken()
+      ]
+    );
+
+  } catch (error) {
+    console.error('Errore salvataggio ordine classifica:', error);
+
+    alert(
+      'Non è stato possibile salvare il nuovo ordine. ' +
+      'Ricarica la classifica per ripristinare l’ultimo ordine salvato.'
+    );
+
+    rankingOrderMemberId = null;
+    rankingOrderGroups = [];
+
+    renderRanking();
+  }
+}  
+  
 
 function toggleMainMenu() {
 
@@ -15570,6 +15859,15 @@ async function exportRankingImage() {
     return;
   }
 
+  const isMyExport =
+    !!session &&
+    selectedMember !== 'club' &&
+    String(selectedMember) === String(session.memberId);
+  
+  if (isMyExport) {
+    await loadRankingOrder(selectedMember);
+  }
+
   // FILTRI E PUNTEGGI
   const films = (D.films || []).map(function(film, index) {
     let score = null;
@@ -15614,13 +15912,31 @@ async function exportRankingImage() {
   }).filter(Boolean);
 
   films.sort(function(a, b) {
-    if (a.score !== b.score) return b.score - a.score;
-
+    if (a.score !== b.score) {
+      return b.score - a.score;
+    }
+  
+    if (isMyExport) {
+      const orderMap = getRankingOrderMap(a.score);
+  
+      const indexA = orderMap.has(String(a.film.id))
+        ? orderMap.get(String(a.film.id))
+        : a.originalIndex;
+  
+      const indexB = orderMap.has(String(b.film.id))
+        ? orderMap.get(String(b.film.id))
+        : b.originalIndex;
+  
+      return indexA - indexB;
+    }
+  
     const watchedA = Number(a.film.vistoDa || 0);
     const watchedB = Number(b.film.vistoDa || 0);
-
-    if (watchedA !== watchedB) return watchedB - watchedA;
-
+  
+    if (watchedA !== watchedB) {
+      return watchedB - watchedA;
+    }
+  
     return a.originalIndex - b.originalIndex;
   });
 
