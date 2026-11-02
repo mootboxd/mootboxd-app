@@ -16176,6 +16176,7 @@ films.forEach(function(item) {
         ctx.font = `600 ${Math.max(14, titleFontSize - 1)}px Arial, sans-serif`;
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
+    });  
 
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
