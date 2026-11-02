@@ -15672,7 +15672,7 @@ async function exportRankingImage() {
     const cardWidth =
       (width - margin * 2 - gutter * (columns - 1)) / columns;
     
-   const titleFontSize = [0, 29, 25, 22, 20, 19, 18][columns];
+   const titleFontSize = [0, 29, 25, 22, 22, 21, 20][columns];
     const titleLineHeight = titleFontSize + 5;
     
     const badgeSize = [0, 54, 50, 46, 40, 39, 36][columns];
@@ -16094,7 +16094,7 @@ films.forEach(function(item) {
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f1f2f5';
       ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
-
+      
       let titleY = titleStartY;
       
       const availableTitleHeight = cardHeight - (titleY - y) - 25;
@@ -16103,19 +16103,62 @@ films.forEach(function(item) {
         Math.floor(availableTitleHeight / titleLineHeight)
       );
       
-      const visibleLines = item.lines.slice(0, maxVisibleLines);
       const firstLineMaxWidth = cardWidth - 32 - (isNew ? labelWidth + 8 : 0);
+      const fullLineMaxWidth = cardWidth - 32;
+      
+      function wrapNewTitle(text) {
+        const words = String(text || 'Senza titolo').split(/\s+/).filter(Boolean);
+        const lines = [];
+        let line = '';
+        let maxWidth = firstLineMaxWidth;
+      
+        words.forEach(function(word) {
+          const candidate = line ? line + ' ' + word : word;
+      
+          if (ctx.measureText(candidate).width <= maxWidth) {
+            line = candidate;
+            return;
+          }
+      
+          if (line) lines.push(line);
+      
+          line = '';
+          maxWidth = fullLineMaxWidth;
+      
+          let part = '';
+          Array.from(word).forEach(function(char) {
+            if (part && ctx.measureText(part + char).width > maxWidth) {
+              lines.push(part);
+              part = char;
+            } else {
+              part += char;
+            }
+          });
+      
+          line = part;
+        });
+      
+        if (line) lines.push(line);
+        return lines;
+      }
+      
+      const displayLines = isNew ? wrapNewTitle(item.title) : item.lines.slice();
+      const visibleLines = displayLines.slice(0, maxVisibleLines);
       
       visibleLines.forEach(function(line, lineIndex) {
         let displayLine = line;
       
         if (
           lineIndex === visibleLines.length - 1 &&
-          item.lines.length > maxVisibleLines
+          displayLines.length > maxVisibleLines
         ) {
+          const maxWidth = lineIndex === 0 && isNew
+            ? firstLineMaxWidth
+            : fullLineMaxWidth;
+      
           while (
             displayLine.length > 0 &&
-            ctx.measureText(displayLine + '…').width > cardWidth - 32
+            ctx.measureText(displayLine + '…').width > maxWidth
           ) {
             displayLine = displayLine.slice(0, -1);
           }
@@ -16123,21 +16166,6 @@ films.forEach(function(item) {
           displayLine += '…';
         }
       
-        const maxLineWidth = isNew && lineIndex === 0
-          ? firstLineMaxWidth
-          : cardWidth - 32;
-        
-        while (
-          displayLine.length > 0 &&
-          ctx.measureText(displayLine).width > maxLineWidth
-        ) {
-          displayLine = displayLine.slice(0, -1);
-        }
-        
-        if (displayLine !== line) {
-          displayLine = displayLine.trimEnd() + '…';
-        }
-        
         ctx.fillText(displayLine, x + 16, titleY);
         titleY += titleLineHeight;
       });
@@ -16148,8 +16176,6 @@ films.forEach(function(item) {
         ctx.font = `600 ${Math.max(14, titleFontSize - 1)}px Arial, sans-serif`;
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
-
-   });   
 
     // ESPORTAZIONE E CONDIVISIONE
     const blob = await new Promise(function(resolve) {
