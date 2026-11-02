@@ -7099,6 +7099,30 @@ input {
   ></div>
 
 
+    <!-- =========================
+         PROPOSTE VOTI MEMBRI
+         ========================= -->
+    
+    <div class="head" style="margin-top:40px;">
+      <h2>Proposte voti membri</h2>
+    
+      <button
+        class="btn"
+        type="button"
+        onclick="loadRatingProposalsAdminUi()"
+      >
+        Aggiorna
+      </button>
+    </div>
+    
+    <div
+      id="ratingProposalsAdminList"
+      class="list"
+      aria-live="polite"
+    >
+      <p class="muted">Caricamento proposte...</p>
+    </div>
+
   <!-- =========================
        MOOTBOXD AWARDS
        ========================= -->
@@ -7507,6 +7531,221 @@ async function deleteSiteSuggestionUi(id) {
     alert(error.message);
   }
 }  
+
+
+/* =========================================
+   PROPOSTE VOTO — ADMIN
+   ========================================= */
+
+async function loadRatingProposalsAdminUi() {
+  const box = document.getElementById('ratingProposalsAdminList');
+
+  if (!box) return;
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  if (!token) {
+    box.innerHTML =
+      '<p class="muted">Sessione Admin non disponibile.</p>';
+    return;
+  }
+
+  box.innerHTML =
+    '<p class="muted">Caricamento...</p>';
+
+  try {
+    const proposals = await api(
+      'getRatingProposalsAdmin',
+      [token]
+    );
+
+    if (!Array.isArray(proposals) || !proposals.length) {
+      box.innerHTML =
+        '<p class="empty">Non ci sono proposte in attesa.</p>';
+      return;
+    }
+
+    box.innerHTML = proposals.map(function(item) {
+      const filmLabel =
+        item.filmTitle +
+        (item.filmYear ? ' (' + item.filmYear + ')' : '');
+
+      return `
+        <div
+          style="
+            padding:16px 4px;
+            border-bottom:1px solid #2a2f3d;
+          "
+        >
+          <div style="font-weight:800;font-size:16px;">
+            ${esc(filmLabel)}
+          </div>
+
+          <div class="muted" style="margin-top:5px;">
+            Membro: ${esc(item.memberName)}
+          </div>
+
+          <div class="muted" style="margin-top:4px;">
+            Discussione: ${esc(item.dataDiscussione || 'Non impostata')}
+          </div>
+
+          <div class="muted" style="margin-top:4px;">
+            Inviata: ${esc(item.submittedAt)}
+          </div>
+
+          <div class="muted" style="margin-top:4px;">
+            Voto precedente: ${
+              item.previousScore === '' ||
+              item.previousScore == null
+                ? 'Nessuno'
+                : esc(item.previousScore)
+            }
+          </div>
+
+          <div style="margin-top:14px;">
+            <label
+              for="rating-admin-${esc(item.id)}"
+              style="display:block;margin-bottom:6px;"
+            >
+              Voto proposto
+            </label>
+
+            <input
+              id="rating-admin-${esc(item.id)}"
+              type="number"
+              step="any"
+              value="${esc(item.proposedScore)}"
+              style="width:100%;"
+            >
+          </div>
+
+          <div
+            style="
+              display:flex;
+              gap:7px;
+              flex-wrap:wrap;
+              margin-top:12px;
+            "
+          >
+            <button
+              class="btn"
+              type="button"
+              onclick="updateRatingProposalAdminUi('${esc(item.id)}')"
+            >
+              Modifica voto
+            </button>
+
+            <button
+              class="btn primary"
+              type="button"
+              onclick="approveRatingProposalAdminUi('${esc(item.id)}')"
+            >
+              Approva
+            </button>
+
+            <button
+              class="btn"
+              type="button"
+              style="color:#e88;"
+              onclick="rejectRatingProposalAdminUi('${esc(item.id)}')"
+            >
+              Rifiuta
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    box.innerHTML = `
+      <p style="color:#e88;">
+        ${esc(error.message || 'Errore nel caricamento delle proposte.')}
+      </p>
+    `;
+  }
+}
+
+
+async function updateRatingProposalAdminUi(proposalId) {
+  const input = document.getElementById(
+    'rating-admin-' + proposalId
+  );
+
+  if (!input) return;
+
+  const score = input.value.trim();
+
+  if (score === '' || !Number.isFinite(Number(score.replace(',', '.')))) {
+    alert('Inserisci un voto numerico valido.');
+    return;
+  }
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  try {
+    await api(
+      'updateRatingProposalAdmin',
+      [proposalId, score, token]
+    );
+
+    alert('Voto della proposta aggiornato.');
+
+    await loadRatingProposalsAdminUi();
+
+  } catch (error) {
+    alert(error.message || 'Errore durante la modifica.');
+  }
+}
+
+
+async function approveRatingProposalAdminUi(proposalId) {
+  if (!confirm(
+    'Confermi l’approvazione? Il voto verrà scritto nella tabella VALUTAZIONI.'
+  )) {
+    return;
+  }
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  try {
+    await api(
+      'approveRatingProposal',
+      [proposalId, token]
+    );
+
+    alert('Proposta approvata. Voto ufficiale aggiornato.');
+
+    await loadRatingProposalsAdminUi();
+
+  } catch (error) {
+    alert(error.message || 'Errore durante l’approvazione.');
+  }
+}
+
+
+async function rejectRatingProposalAdminUi(proposalId) {
+  const adminNote = prompt(
+    'Motivo del rifiuto (facoltativo):'
+  );
+
+  if (adminNote === null) return;
+
+  const token = sessionStorage.getItem('mootboxd_admin_token');
+
+  try {
+    await api(
+      'rejectRatingProposal',
+      [proposalId, adminNote, token]
+    );
+
+    alert('Proposta rifiutata.');
+
+    await loadRatingProposalsAdminUi();
+
+  } catch (error) {
+    alert(error.message || 'Errore durante il rifiuto.');
+  }
+}
   
 async function getShareImageDataUrl(fileId) {
   const token =
@@ -11523,6 +11762,7 @@ if (!weeklyThemesLoaded) {
     renderAdminThemes();
     loadAwardsAdminUi();
     loadSiteSuggestionsAdmin();
+    loadRatingProposalsAdminUi();
 
   }
 
@@ -15125,6 +15365,9 @@ function openFilmModal(filmId) {
 
   const action =
     document.getElementById("filmModalAction");
+    
+  const ratingProposalBox =
+    document.getElementById('filmRatingProposal');
 
 
   /* =========================
@@ -15266,11 +15509,20 @@ function openFilmModal(filmId) {
      ========================= */
 
   action.innerHTML = "";
+  
+  if (ratingProposalBox) {
+    ratingProposalBox.innerHTML = '';
+  }
 
   if (!session) {
 
     status.textContent =
       "Accedi per vedere il tuo stato.";
+      
+      if (ratingProposalBox) {
+        ratingProposalBox.innerHTML =
+          '<div class="muted">Accedi come membro per proporre un voto.</div>';
+      }
 
     modal.classList.add("open");
 
@@ -15304,8 +15556,185 @@ function openFilmModal(filmId) {
     </button>
   `;
 
+  loadRatingProposalMemberUi(film.id);
 
   modal.classList.add("open");
+}
+
+/* =========================================
+   PROPOSTE VOTO — MEMBRO
+   ========================================= */
+
+async function loadRatingProposalMemberUi(filmId) {
+  const box = document.getElementById('filmRatingProposal');
+
+  if (!box) return;
+
+  const token = getMemberToken();
+
+  if (!token || !session) {
+    box.innerHTML =
+      '<div class="muted">Accedi per proporre un voto.</div>';
+    return;
+  }
+
+  box.innerHTML =
+    '<div class="muted">Caricamento proposta voto...</div>';
+
+  try {
+    const proposal = await api(
+      'getMyRatingProposal',
+      [filmId, token]
+    );
+
+    // Evita di aggiornare il modal se nel frattempo è stato aperto un altro film.
+    const modal = document.getElementById('filmModal');
+    const title = document.getElementById('filmModalTitle');
+
+    const currentFilm = D.films.find(function(f) {
+      return String(f.id) === String(filmId);
+    });
+
+    if (
+      !modal ||
+      !modal.classList.contains('open') ||
+      !currentFilm ||
+      !title ||
+      title.textContent !== currentFilm.title
+    ) {
+      return;
+    }
+
+    if (proposal && proposal.status === 'approved') {
+      box.innerHTML = `
+        <div style="font-weight:700;">
+          Voto ufficiale approvato
+        </div>
+        <div class="muted" style="margin-top:5px;">
+          ${esc(proposal.proposedScore)}
+        </div>
+      `;
+      return;
+    }
+
+    const isPending =
+      proposal && proposal.status === 'pending';
+
+    const isRejected =
+      proposal && proposal.status === 'rejected';
+
+    const currentScore =
+      proposal ? proposal.proposedScore : '';
+
+    box.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;">
+        Proponi il tuo voto
+      </div>
+
+      ${
+        isPending
+          ? '<div class="muted" style="margin-bottom:10px;">La tua proposta è in attesa di approvazione. Puoi aggiornarla.</div>'
+          : ''
+      }
+
+      ${
+        isRejected
+          ? '<div style="color:#e88;margin-bottom:10px;">La proposta precedente è stata rifiutata. Puoi inviarne una nuova.</div>'
+          : ''
+      }
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input
+          id="ratingProposalScore"
+          type="number"
+          step="any"
+          value="${esc(currentScore)}"
+          placeholder="Inserisci il voto"
+          style="flex:1;min-width:0;"
+        >
+
+        <button
+          class="btn primary"
+          type="button"
+          onclick="submitRatingProposalMemberUi('${esc(filmId)}')"
+        >
+          ${isPending ? 'Aggiorna proposta' : 'Invia proposta'}
+        </button>
+      </div>
+
+      <div
+        id="ratingProposalMemberMessage"
+        class="muted"
+        role="status"
+        style="margin-top:9px;"
+      ></div>
+    `;
+
+  } catch (error) {
+    box.innerHTML = `
+      <div style="color:#e88;">
+        ${esc(error.message || 'Errore nel caricamento della proposta.')}
+      </div>
+    `;
+  }
+}
+
+
+async function submitRatingProposalMemberUi(filmId) {
+  const input = document.getElementById('ratingProposalScore');
+  const message = document.getElementById('ratingProposalMemberMessage');
+
+  if (!input || !message) return;
+
+  const score = input.value.trim();
+
+  if (score === '' || !Number.isFinite(Number(score.replace(',', '.')))) {
+    message.textContent = 'Inserisci un voto numerico valido.';
+    message.style.color = '#e88';
+    return;
+  }
+
+  const token = getMemberToken();
+
+  if (!token) {
+    message.textContent = 'Sessione non valida. Accedi nuovamente.';
+    message.style.color = '#e88';
+    return;
+  }
+
+  const button = input.parentElement.querySelector('button');
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Invio...';
+  }
+
+  message.textContent = '';
+
+  try {
+    const result = await api(
+      'submitRatingProposal',
+      [filmId, score, token]
+    );
+
+    message.style.color = '';
+    message.textContent = result.updated
+      ? 'Proposta aggiornata.'
+      : 'Proposta inviata. In attesa di approvazione.';
+
+    await loadRatingProposalMemberUi(filmId);
+
+  } catch (error) {
+    message.textContent =
+      error.message || 'Errore durante l’invio della proposta.';
+
+    message.style.color = '#e88';
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Riprova';
+    }
+  }
 }
 
 function closeFilmModal(event) {
@@ -18129,6 +18558,17 @@ async function removeRouletteHistoryEntry(riga) {
           id="filmModalAction"
           class="film-modal-action">
         </div>
+        
+        <div
+          id="filmRatingProposal"
+          style="
+            margin-top:16px;
+            padding:14px;
+            background:#1e2230;
+            border:1px solid #2a2f3d;
+            border-radius:9px;
+          "
+        ></div>
 
       </div>
 
