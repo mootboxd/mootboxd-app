@@ -15876,8 +15876,17 @@ async function submitRatingProposalMemberUi(filmId) {
 
   const score = input.value.trim();
 
-  if (score === '' || !Number.isFinite(Number(score.replace(',', '.')))) {
-    message.textContent = 'Inserisci un voto numerico valido.';
+  const numericScore = Number(score.replace(',', '.'));
+
+  if (
+    score === '' ||
+    !Number.isFinite(numericScore) ||
+    numericScore < 0 ||
+    numericScore > 10 ||
+    !Number.isInteger(numericScore * 2)
+  ) {
+    message.textContent =
+      'Inserisci un voto da 0 a 10, con incrementi di 0,5.';
     message.style.color = '#e88';
     return;
   }
