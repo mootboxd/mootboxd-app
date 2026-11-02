@@ -15686,7 +15686,7 @@ async function loadRatingProposalMemberUi(filmId) {
 
     box.innerHTML = `
       <div style="font-weight:700;margin-bottom:8px;">
-        Proponi il tuo voto
+        Vota il film
       </div>
 
       ${
@@ -15719,7 +15719,7 @@ async function loadRatingProposalMemberUi(filmId) {
           type="button"
           onclick="submitRatingProposalMemberUi('${esc(filmId)}')"
         >
-          ${isPending ? 'Aggiorna proposta' : 'Invia proposta'}
+          ${isPending ? 'Aggiorna voto' : 'Invia voto'}
         </button>
       </div>
 
