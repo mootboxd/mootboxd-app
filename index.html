@@ -8024,7 +8024,7 @@ async function loadRatingProposalsAdminUi() {
       const memberName = esc(String(proposal.memberName || 'Membro'));
       const filmTitle = esc(String(proposal.filmTitle || 'Film'));
       const proposedScore = esc(String(proposal.proposedScore ?? ''));
-      const status = String(proposal.status || '').toLowerCase();
+      const status = 'pending';
 
       const statusLabel =
         status === 'pending' ? 'In attesa' :
