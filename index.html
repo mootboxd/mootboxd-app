@@ -5502,17 +5502,30 @@ input {
     min-height: 44px;
   }
 
-  #filmRatingProposal input,
+  #filmRatingProposal .rating-proposal-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+  
   #filmRatingProposal .rating-proposal-input {
+    display: block !important;
+    width: 100% !important;
     height: 44px !important;
     min-height: 44px !important;
-    padding: 8px 12px !important;
+    max-height: 44px !important;
+    padding: 6px 12px !important;
     font-size: 18px !important;
     line-height: 1.2 !important;
     box-sizing: border-box !important;
+    margin: 0 !important;
   }
-}  
-
+  
+  #filmRatingProposal .rating-proposal-button {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
 
   
 </style>
