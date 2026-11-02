@@ -16145,7 +16145,7 @@ films.forEach(function(item) {
       // Anno, se disponibile e se rimane spazio
       if (item.year && titleY + 18 <= y + cardHeight - 8) {
         ctx.fillStyle = '#969cab';
-        ctx.font = `${Math.max(11, titleFontSize - 4)}px Arial, sans-serif`;
+        ctx.font = `600 ${Math.max(14, titleFontSize - 1)}px Arial, sans-serif`;
         ctx.fillText(item.year, x + 16, titleY + 2);
       }
 
