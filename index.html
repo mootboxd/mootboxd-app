@@ -7984,6 +7984,137 @@ async function loadRatingProposalMemberUi(filmId) {
   }
 }
 
+async function loadRatingProposalsAdminUi() {
+
+  const container = document.getElementById(
+    'ratingProposalsAdminList'
+  );
+
+  if (!container) return;
+
+  const token = sessionStorage.getItem(
+    'mootboxd_admin_token'
+  );
+
+  if (!token) {
+    container.innerHTML =
+      '<p class="muted">Sessione Admin non valida.</p>';
+    return;
+  }
+
+  container.innerHTML =
+    '<p class="muted">Caricamento proposte...</p>';
+
+  try {
+
+    const proposals = await api(
+      'getRatingProposalsAdmin',
+      [token]
+    );
+
+    if (!Array.isArray(proposals) || !proposals.length) {
+      container.innerHTML =
+        '<p class="muted">Nessuna proposta di voto.</p>';
+      return;
+    }
+
+    container.innerHTML = proposals.map(function(proposal) {
+
+      const proposalId = esc(String(proposal.id));
+      const memberName = esc(String(proposal.memberName || 'Membro'));
+      const filmTitle = esc(String(proposal.filmTitle || 'Film'));
+      const proposedScore = esc(String(proposal.proposedScore ?? ''));
+      const status = String(proposal.status || '').toLowerCase();
+
+      const statusLabel =
+        status === 'pending' ? 'In attesa' :
+        status === 'approved' ? 'Approvata' :
+        status === 'rejected' ? 'Rifiutata' :
+        status;
+
+      return `
+        <div class="card" style="padding:14px;margin-bottom:12px;">
+
+          <div style="font-weight:750;margin-bottom:5px;">
+            ${filmTitle}
+          </div>
+
+          <div class="muted" style="margin-bottom:10px;">
+            Proposta da: ${memberName}
+          </div>
+
+          <div style="margin-bottom:10px;">
+            Stato: <strong>${esc(statusLabel)}</strong>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            Voto proposto:
+          </div>
+
+          <input
+            id="rating-admin-${proposalId}"
+            type="number"
+            min="0"
+            max="10"
+            step="0.5"
+            value="${proposedScore}"
+            style="width:100%;margin-bottom:10px;"
+          >
+
+          ${
+            status === 'pending'
+              ? `
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+                  <button
+                    class="btn primary"
+                    type="button"
+                    onclick="approveRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Approva
+                  </button>
+
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="updateRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Modifica voto
+                  </button>
+
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="rejectRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Rifiuta
+                  </button>
+
+                </div>
+              `
+              : ''
+          }
+
+        </div>
+      `;
+
+    }).join('');
+
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento proposte voti:',
+      error
+    );
+
+    container.innerHTML = `
+      <p style="color:#e88;">
+        ${esc(error.message || 'Errore nel caricamento delle proposte.')}
+      </p>
+    `;
+  }
+}
+  
 
 async function updateRatingProposalAdminUi(proposalId) {
   const input = document.getElementById(
