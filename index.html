@@ -5456,6 +5456,53 @@ input {
   }
 }
 
+/* PROPOSTA VOTO — LAYOUT RESPONSIVE */
+
+#filmRatingProposal {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.rating-proposal-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.rating-proposal-input {
+  flex: 1 1 100px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.rating-proposal-button {
+  flex: 0 0 auto;
+  white-space: normal;
+}
+
+@media screen and (max-width: 600px) {
+  #filmRatingProposal {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-top: 16px;
+  }
+
+  .rating-proposal-controls {
+    flex-direction: column;
+  }
+
+  .rating-proposal-input,
+  .rating-proposal-button {
+    width: 100% !important;
+    max-width: 100%;
+    min-height: 44px;
+  }
+}  
+
   
 </style>
 </head>
@@ -15643,18 +15690,21 @@ async function loadRatingProposalMemberUi(filmId) {
           : ''
       }
 
-      <div style="display:flex;gap:8px;align-items:center;">
+     <div class="rating-proposal-controls">
         <input
           id="ratingProposalScore"
+          class="rating-proposal-input"
           type="number"
-          step="any"
+          min="0"
+          max="10"
+          step="0.5"
+          inputmode="decimal"
           value="${esc(currentScore)}"
-          placeholder="Inserisci il voto"
-          style="flex:1;min-width:0;"
+          placeholder="Voto da 0 a 10"
         >
 
         <button
-          class="btn primary"
+          class="btn primary rating-proposal-button"
           type="button"
           onclick="submitRatingProposalMemberUi('${esc(filmId)}')"
         >
