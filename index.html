@@ -11390,7 +11390,7 @@ let rankingOrderGroups = [];
 async function loadRankingOrder(memberId) {
   const token = getMemberToken();
 
-  if (!token || !session || String(session.memberId) !== String(memberId)) {
+  if (!token) {
     return [];
   }
 
@@ -11401,7 +11401,10 @@ async function loadRankingOrder(memberId) {
   try {
     const groups = await api(
       'getMemberRankingOrder',
-      [token]
+      [
+        token,
+        memberId
+      ]
     );
 
     rankingOrderGroups = Array.isArray(groups) ? groups : [];
@@ -11489,9 +11492,12 @@ const isMyRanking =
   selectedMember !== 'club' &&
   String(selectedMember) === String(session.memberId);
 
-if (isMyRanking) {
+if (selectedMember !== 'club') {
   await loadRankingOrder(selectedMember);
-}  
+} else {
+  rankingOrderMemberId = null;
+  rankingOrderGroups = [];
+}
 
 let films =
   (D.films || []).filter(function(film) {
@@ -11588,7 +11594,7 @@ let films =
 
   // Classifica personale: usa l'ordine personalizzato
   // esclusivamente tra film con lo stesso voto.
-  if (isMyRanking) {
+  if (selectedMember !== 'club') {
     const orderMap = getRankingOrderMap(scoreA);
 
     const indexA = orderMap.has(String(a.id))
