@@ -5531,7 +5531,23 @@ input {
    PANNELLI PAGINA ADMIN
    ========================================================= */
 
+#adminPanel {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+#adminPanel > .head {
+  background: #171a23;
+  border: 1px solid #2a2f3d;
+  border-radius: 13px;
+  margin-bottom: 18px;
+}
+
 #adminPanel .admin-section {
+  display: block;
+  width: 100%;
   background: #1b1f2b;
   border: 1px solid #303647;
   border-radius: 13px;
@@ -5539,7 +5555,6 @@ input {
   margin-top: 18px;
   overflow: hidden;
 }
-
 #adminPanel .admin-section > .head {
   margin: 0 -16px 16px !important;
   padding: 16px;
@@ -5577,6 +5592,21 @@ input {
 
   #adminPanel .admin-section > .head h2 {
     font-size: 17px;
+  }
+
+  #adminPanel {
+    padding: 0 !important;
+  }
+  
+  #adminPanel > .head {
+    padding: 14px 12px;
+    margin-bottom: 14px;
+  }
+  
+  #adminPanel .admin-section {
+    padding: 0 12px 14px;
+    margin-top: 14px;
+    border-radius: 11px;
   }
 
 }  
