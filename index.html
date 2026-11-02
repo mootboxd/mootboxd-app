@@ -7939,13 +7939,15 @@ function renderNotifications() {
     return;
   }
 
-  list.innerHTML = notificationsData.map(function(item) {
+  list.innerHTML = notificationsData.map(function(item, index) {
     const unreadClass = item.read ? '' : ' unread';
 
     return `
       <div
         class="notification-item${unreadClass}"
-        onclick="openNotification('${escapeNotificationHtml(item.id)}')"
+        data-notification-index="${index}"
+        role="button"
+        tabindex="0"
       >
         <div class="notification-item-title">
           ${escapeNotificationHtml(item.title)}
@@ -7962,6 +7964,26 @@ function renderNotifications() {
       </div>
     `;
   }).join('');
+
+  list.querySelectorAll('[data-notification-index]').forEach(function(item) {
+    const open = function() {
+      const index = Number(item.dataset.notificationIndex);
+      const notification = notificationsData[index];
+
+      if (notification) {
+        openNotification(notification.id);
+      }
+    };
+
+    item.addEventListener('click', open);
+
+    item.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
 }
 
 function toggleNotifications() {
@@ -11774,7 +11796,9 @@ async function checkSession() {
     updateProfile();
 
     render();
-
+    
+    await loadNotifications();
+    
     //playOctoberLeaves();
 
   } catch (error) {
