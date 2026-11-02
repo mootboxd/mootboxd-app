@@ -15691,13 +15691,13 @@ async function loadRatingProposalMemberUi(filmId) {
 
       ${
         isPending
-          ? '<div class="muted" style="margin-bottom:10px;">La tua proposta è in attesa di approvazione. Puoi aggiornarla.</div>'
+          ? '<div class="muted" style="margin-bottom:10px;">Il tuo voto è in attesa di approvazione. Puoi aggiornarlo.</div>'
           : ''
       }
 
       ${
         isRejected
-          ? '<div style="color:#e88;margin-bottom:10px;">La proposta precedente è stata rifiutata. Puoi inviarne una nuova.</div>'
+          ? '<div style="color:#e88;margin-bottom:10px;">Il voto precedente è stato rifiutato. Puoi inviarne uno nuovo.</div>'
           : ''
       }
 
@@ -15711,7 +15711,7 @@ async function loadRatingProposalMemberUi(filmId) {
           step="0.5"
           inputmode="decimal"
           value="${esc(currentScore)}"
-          placeholder="Voto da 0 a 10"
+          placeholder="Dai un voto da 0 a 10"
         >
 
         <button
