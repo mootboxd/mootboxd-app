@@ -15750,6 +15750,7 @@ function openFilmModal(filmId) {
    PROPOSTE VOTO — MEMBRO
    ========================================= */
 
+
 async function loadRatingProposalMemberUi(filmId) {
   const box = document.getElementById('filmRatingProposal');
 
@@ -15764,7 +15765,7 @@ async function loadRatingProposalMemberUi(filmId) {
   }
 
   box.innerHTML =
-    '<div class="muted">Caricamento proposta voto...</div>';
+    '<div class="muted">Caricamento voto...</div>';
 
   try {
     const proposal = await api(
@@ -15772,7 +15773,6 @@ async function loadRatingProposalMemberUi(filmId) {
       [filmId, token]
     );
 
-    // Evita di aggiornare il modal se nel frattempo è stato aperto un altro film.
     const modal = document.getElementById('filmModal');
     const title = document.getElementById('filmModalTitle');
 
@@ -15790,17 +15790,14 @@ async function loadRatingProposalMemberUi(filmId) {
       return;
     }
 
-    if (proposal && proposal.status === 'approved') {
-      box.innerHTML = `
-        <div style="font-weight:700;">
-          Voto ufficiale approvato
-        </div>
-        <div class="muted" style="margin-top:5px;">
-          ${esc(proposal.proposedScore)}
-        </div>
-      `;
-      return;
-    }
+    // Recupera il voto ufficiale già presente in VALUTAZIONI.
+    const officialScore = getMemberFilmScore(
+      currentFilm,
+      session
+    );
+
+    const hasOfficialScore = officialScore !== null;
+    const canChange = canChangeOfficialRating_(currentFilm);
 
     const isPending =
       proposal && proposal.status === 'pending';
@@ -15808,6 +15805,75 @@ async function loadRatingProposalMemberUi(filmId) {
     const isRejected =
       proposal && proposal.status === 'rejected';
 
+    // CASO 1: esiste già un voto ufficiale.
+    if (hasOfficialScore) {
+      box.innerHTML = `
+        <div style="font-weight:700;margin-bottom:5px;">
+          Il tuo voto
+        </div>
+
+        <div style="
+          font-size:25px;
+          font-weight:800;
+          color:#d9b36c;
+          margin-bottom:8px;
+        ">
+          ${esc(String(officialScore).replace('.', ','))}
+        </div>
+
+        ${
+          isPending
+            ? '<div class="muted" style="margin-bottom:10px;">La tua richiesta di modifica è in attesa di approvazione.</div>'
+            : ''
+        }
+
+        ${
+          isRejected
+            ? '<div style="color:#e88;margin-bottom:10px;">La richiesta di modifica precedente è stata rifiutata.</div>'
+            : ''
+        }
+
+        ${
+          canChange
+            ? `
+              <button
+                class="btn primary rating-proposal-button"
+                type="button"
+                style="width:100%;"
+                onclick="showRatingChangeInput(
+                  '${esc(filmId)}',
+                  '${esc(isPending ? proposal.proposedScore : officialScore)}'
+                )"
+              >
+                Cambia voto
+              </button>
+            `
+            : '<div class="muted">Non è più possibile modificare il voto.</div>'
+        }
+      `;
+
+      return;
+    }
+
+    // CASO 2: voto approvato ma dati ufficiali non ancora aggiornati.
+    if (proposal && proposal.status === 'approved') {
+      box.innerHTML = `
+        <div style="font-weight:700;">
+          Voto ufficiale approvato
+        </div>
+        <div style="
+          font-size:25px;
+          font-weight:800;
+          color:#d9b36c;
+          margin-top:5px;
+        ">
+          ${esc(String(proposal.proposedScore).replace('.', ','))}
+        </div>
+      `;
+      return;
+    }
+
+    // CASO 3: non esiste ancora un voto ufficiale.
     const currentScore =
       proposal ? proposal.proposedScore : '';
 
@@ -15828,7 +15894,7 @@ async function loadRatingProposalMemberUi(filmId) {
           : ''
       }
 
-     <div class="rating-proposal-controls">
+      <div class="rating-proposal-controls">
         <input
           id="ratingProposalScore"
           class="rating-proposal-input"
@@ -15857,11 +15923,11 @@ async function loadRatingProposalMemberUi(filmId) {
         style="margin-top:9px;"
       ></div>
     `;
-
+    
   } catch (error) {
     box.innerHTML = `
       <div style="color:#e88;">
-        ${esc(error.message || 'Errore nel caricamento della proposta.')}
+        ${esc(error.message || 'Errore nel caricamento del voto.')}
       </div>
     `;
   }
