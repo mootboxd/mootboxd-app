@@ -5527,6 +5527,60 @@ input {
     min-height: 44px !important;
   }
 
+/* =========================================================
+   PANNELLI PAGINA ADMIN
+   ========================================================= */
+
+#adminPanel .admin-section {
+  background: #1b1f2b;
+  border: 1px solid #303647;
+  border-radius: 13px;
+  padding: 0 16px 16px;
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+#adminPanel .admin-section > .head {
+  margin: 0 -16px 16px !important;
+  padding: 16px;
+  border-bottom: 1px solid #303647;
+}
+
+#adminPanel .admin-section > .head h2 {
+  font-size: 18px;
+  font-weight: 750;
+}
+
+#adminPanel .admin-section > .list {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#adminPanel .admin-section > .film-admin-form,
+#adminPanel .admin-section > .form {
+  margin-bottom: 12px;
+}
+
+@media screen and (max-width: 600px) {
+
+  #adminPanel .admin-section {
+    padding: 0 12px 14px;
+    margin-top: 14px;
+    border-radius: 11px;
+  }
+
+  #adminPanel .admin-section > .head {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+    padding: 14px 12px;
+  }
+
+  #adminPanel .admin-section > .head h2 {
+    font-size: 17px;
+  }
+
+}  
+
   
 </style>
 </head>
@@ -6932,7 +6986,8 @@ input {
   <!-- =========================
        FILM
        ========================= -->
-
+  
+<div class="admin-section">
   <div
     class="head"
     style="margin-top:24px;"
@@ -6985,12 +7040,40 @@ input {
     class="list"
     id="filmAdminList"
   ></div>
+  </div>
+
+  <!-- =========================
+         PROPOSTE VOTI MEMBRI
+         ========================= -->
+  
+ <div class="admin-section">   
+    <div class="head" style="margin-top:40px;">
+      <h2>Proposte voti membri</h2>
+    
+      <button
+        class="btn"
+        type="button"
+        onclick="loadRatingProposalsAdminUi()"
+      >
+        Aggiorna
+      </button>
+    </div>
+    
+    <div
+      id="ratingProposalsAdminList"
+      class="list"
+      aria-live="polite"
+    >
+      <p class="muted">Caricamento proposte...</p>
+    </div>
+</div>  
 
 
   <!-- =========================
        CRONOLOGIA ROULETTE - ADMIN
        ========================= -->
 
+<div class="admin-section">  
   <div
     class="head"
     style="margin-top:32px;"
@@ -7093,12 +7176,13 @@ input {
     id="rouletteHistoryAdminList"
     style="margin-top:12px;"
   ></div>
-
+</div>
 
   <!-- =========================
        SETTIMANE A TEMA
        ========================= -->
 
+<div class="admin-section">  
   <div
     class="head"
     style="margin-top:32px;"
@@ -7138,12 +7222,40 @@ input {
     class="list"
     id="themeAdminList"
   ></div>
+</div>  
+
+  <!-- =========================
+     SUGGERIMENTI DEGLI UTENTI
+     ========================= -->
+
+  <div class="admin-section">
+    <div class="head" style="margin-top:32px;">
+      <h2>Suggerimenti degli utenti</h2>
+    
+      <button
+        class="btn"
+        type="button"
+        onclick="loadSiteSuggestionsAdmin()"
+      >
+        Aggiorna
+      </button>
+    </div>
+    
+    <div
+      id="siteSuggestionsAdminList"
+      class="list"
+      aria-live="polite"
+    >
+      <p class="muted">Caricamento suggerimenti...</p>
+    </div>
+  </div>  
 
 
   <!-- =========================
        MEMBRI
        ========================= -->
 
+<div class="admin-section">
   <div class="head" style="margin-top:32px;">
     <h2>Membri</h2>
   </div>
@@ -7168,36 +7280,13 @@ input {
     class="list"
     id="memberList"
   ></div>
-
-
-    <!-- =========================
-         PROPOSTE VOTI MEMBRI
-         ========================= -->
-    
-    <div class="head" style="margin-top:40px;">
-      <h2>Proposte voti membri</h2>
-    
-      <button
-        class="btn"
-        type="button"
-        onclick="loadRatingProposalsAdminUi()"
-      >
-        Aggiorna
-      </button>
-    </div>
-    
-    <div
-      id="ratingProposalsAdminList"
-      class="list"
-      aria-live="polite"
-    >
-      <p class="muted">Caricamento proposte...</p>
-    </div>
+</div>  
 
   <!-- =========================
        MOOTBOXD AWARDS
        ========================= -->
-
+  
+<div class="admin-section">
   <div class="head" style="margin-top:40px;">
     <h2>MOOTBOXD Awards</h2>
   </div>
@@ -7405,30 +7494,7 @@ input {
     ></div>
 
   </div>
-
-  <!-- =========================
-     SUGGERIMENTI DEGLI UTENTI
-     ========================= -->
-
-    <div class="head" style="margin-top:32px;">
-      <h2>Suggerimenti degli utenti</h2>
-    
-      <button
-        class="btn"
-        type="button"
-        onclick="loadSiteSuggestionsAdmin()"
-      >
-        Aggiorna
-      </button>
-    </div>
-    
-    <div
-      id="siteSuggestionsAdminList"
-      class="list"
-      aria-live="polite"
-    >
-      <p class="muted">Caricamento suggerimenti...</p>
-    </div>
+</div>  
 
 </section>
 
