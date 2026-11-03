@@ -11659,6 +11659,9 @@ loadNotifications();
 
 async function checkAdminSession() {
 
+  const startupStart = performance.now();
+console.log("[STARTUP] Avvio controllo Admin");
+
   const token =
     sessionStorage.getItem(
       "mootboxd_admin_token"
@@ -11675,6 +11678,12 @@ async function checkAdminSession() {
         'getAdminSession',
         [token]
       );
+
+    console.log(
+      "[STARTUP] Verifica Admin:",
+      Math.round(performance.now() - startupStart),
+      "ms"
+    );
 
     if (!result) {
 
@@ -11829,6 +11838,9 @@ async function logout() {
 
 async function checkSession() {
 
+  const startupStart = performance.now();
+console.log("[STARTUP] Avvio controllo sessione");
+
   const adminToken =
     sessionStorage.getItem(
       "mootboxd_admin_token"
@@ -11862,6 +11874,12 @@ async function checkSession() {
           [token]
         )
       ]);
+
+    console.log(
+      "[STARTUP] Sessione + dati:",
+      Math.round(performance.now() - startupStart),
+      "ms"
+    );
 
     const sessionResult =
       results[0];
@@ -11900,6 +11918,12 @@ async function checkSession() {
     render();
 
     finishStartup();
+
+    console.log(
+      "[STARTUP] Home visibile:",
+      Math.round(performance.now() - startupStart),
+      "ms"
+    );
 
     await loadNotifications();
     
