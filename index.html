@@ -8676,7 +8676,7 @@ async function updateRatingProposalAdminUi(proposalId) {
     numericScore > 10 ||
     !Number.isInteger(numericScore * 2)
   ) {
-    alert('Inserisci un voto da 0 a 10, con incrementi di 0,5.');
+    alert('Inserisci un voto da 0 a 10, sono ammessi anche i mezzi voti.');
     return;
   }
 
@@ -16150,7 +16150,7 @@ async function submitQuickRatingProposal() {
     !Number.isInteger(numericScore * 2)
   ) {
     message.textContent =
-      'Inserisci un voto da 0 a 10, con incrementi di 0,5.';
+      'Inserisci un voto da 0 a 10, sono ammessi anche i mezzi voti.';
     message.style.color = '#e88';
     return;
   }
@@ -16860,7 +16860,7 @@ async function submitRatingProposalMemberUi(filmId) {
     !Number.isInteger(numericScore * 2)
   ) {
     message.textContent =
-      'Inserisci un voto da 0 a 10, con incrementi di 0,5.';
+      'Inserisci un voto da 0 a 10, sono ammessi anche i mezzi voti.';
     message.style.color = '#e88';
     return;
   }
