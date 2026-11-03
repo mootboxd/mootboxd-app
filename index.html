@@ -5792,7 +5792,49 @@ input {
 </head>
 <body class="seasonal-october">
 
- <div class="october-leaves-animation" id="octoberLeavesAnimation"></div> 
+  <!-- AVVIO APP -->
+  <div
+    id="startupScreen"
+    style="
+      position:fixed;
+      inset:0;
+      z-index:20000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:14px;
+      background:#0f1117;
+      color:#f5f6fa;
+    "
+  >
+    <div style="font-size:30px;font-weight:800;letter-spacing:1px;">
+      MOOTBOXD
+    </div>
+
+    <div
+      style="
+        width:26px;
+        height:26px;
+        border:3px solid #343a4b;
+        border-top-color:#d9b36c;
+        border-radius:50%;
+        animation:mootboxdSpin .8s linear infinite;
+      "
+    ></div>
+
+    <div style="font-size:13px;color:#9ca3b2;">
+      Accesso in corso...
+    </div>
+  </div>
+
+  <style>
+    @keyframes mootboxdSpin {
+      to { transform:rotate(360deg); }
+    }
+  </style>
+
+  <div class="october-leaves-animation" id="octoberLeavesAnimation"></div>
 
   <!-- =========================
        LOGIN MEMBRI
@@ -5805,7 +5847,7 @@ input {
       inset:0;
       background:#0f1117;
       z-index:9999;
-      display:flex;
+      display:none;
       align-items:center;
       justify-content:center;
       padding:20px;
@@ -11301,7 +11343,15 @@ const result =
 
 }
   
-/* =========================
+function finishStartup() {
+  const startup = document.getElementById("startupScreen");
+
+  if (startup) {
+    startup.style.display = "none";
+  }
+}
+  
+  /* =========================
    LOGIN
    ========================= */
 
@@ -11319,9 +11369,11 @@ async function showLogin() {
   const errorBox =
     document.getElementById("loginError");
 
-  /*
-   * Mostra la schermata di login.
+    /*
+   * Mostra il login solo quando serve.
    */
+  finishStartup();
+
   loginScreen.style.display = "flex";
 
   /*
@@ -11659,8 +11711,10 @@ await loadNotifications();
 
 showPage("admin");
 
-await loadRouletteHistoryAdmin();
+finishStartup();
 
+await loadRouletteHistoryAdmin();
+    
 return true;
     
   } catch (error) {
@@ -11842,7 +11896,9 @@ async function checkSession() {
     updateProfile();
 
     render();
-    
+
+    finishStartup();
+
     await loadNotifications();
     
     //playOctoberLeaves();
