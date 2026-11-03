@@ -16049,7 +16049,12 @@ async function toggleMyFilm(filmId, askForRating) {
   D.watched[key] = !previous;
 
   render();
-
+  
+  // Apri immediatamente il modal, senza aspettare il server.
+  if (askForRating === true && !previous) {
+    openQuickRatingModal(filmId);
+  }
+  
   try {
 
     const result = await api(
@@ -16070,15 +16075,6 @@ async function toggleMyFilm(filmId, askForRating) {
       openFilmModal(filmId);
     }
 
-    // Chiede il voto soltanto quando il film
-    // viene segnato come visto dalla lista dedicata.
-    if (
-      askForRating === true &&
-      !previous &&
-      result.watched
-    ) {
-      openQuickRatingModal(filmId);
-    }
 
   } catch (error) {
 
@@ -16089,6 +16085,9 @@ async function toggleMyFilm(filmId, askForRating) {
     }
 
     render();
+    if (askForRating === true) {
+    closeQuickRatingModal();
+  }
 
     alert("Errore: " + error.message);
   }
