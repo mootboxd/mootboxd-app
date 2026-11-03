@@ -7992,22 +7992,67 @@ function toggleNotifications() {
 
   if (!panel) return;
 
-  notificationsOpen = !notificationsOpen;
-
-  panel.style.display = notificationsOpen ? 'block' : 'none';
-
   if (notificationsOpen) {
-    loadNotifications();
+    closeNotifications();
+    return;
   }
+
+  notificationsOpen = true;
+  panel.style.display = 'block';
+
+  loadNotifications();
 }
 
-function closeNotifications() {
+async function closeNotifications() {
   const panel = document.getElementById('notificationPanel');
 
   notificationsOpen = false;
 
   if (panel) {
     panel.style.display = 'none';
+  }
+
+  const token = getNotificationToken();
+
+  if (!token) return;
+
+  const unreadNotifications = notificationsData.filter(function(item) {
+    return !item.read;
+  });
+
+  if (!unreadNotifications.length) return;
+
+  const results = await Promise.allSettled(
+    unreadNotifications.map(function(item) {
+      return api('markNotificationRead', [
+        item.id,
+        token
+      ]);
+    })
+  );
+
+  results.forEach(function(result, index) {
+    if (result.status === 'fulfilled') {
+      unreadNotifications[index].read = true;
+    } else {
+      console.error(
+        'Errore aggiornamento notifica:',
+        result.reason
+      );
+    }
+  });
+
+  renderNotifications();
+
+  const unreadCount = notificationsData.filter(function(item) {
+    return !item.read;
+  }).length;
+
+  const badge = document.getElementById('notificationBadge');
+
+  if (badge) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
   }
 }
 
