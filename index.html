@@ -12995,7 +12995,7 @@ function render() {
               <div class="missing-action">
                 <button
                   class="btn primary"
-                  onclick="toggleMyFilm('${film.id}')">
+                  onclick="toggleMyFilm('${film.id}', true)">
                   Visto
                 </button>
               </div>
@@ -16029,64 +16029,39 @@ async function saveSigla(id) {
 }
 
 
-async function toggleMyFilm(filmId) {
+async function toggleMyFilm(filmId, askForRating) {
 
   if (!session) {
     showLogin();
     return;
   }
 
-  const token =
-    getMemberToken();
+  const token = getMemberToken();
 
   if (!token) {
     showLogin();
     return;
   }
 
-  const key =
-    session.memberId +
-    "|" +
-    filmId;
+  const key = session.memberId + "|" + filmId;
+  const previous = !!D.watched[key];
 
-  const previous =
-    !!D.watched[key];
-
-  /*
-   * Aggiornamento immediato della UI.
-   */
-  D.watched[key] =
-    !previous;
+  D.watched[key] = !previous;
 
   render();
 
   try {
 
-    const result =
-      await api(
-        'toggleMyWatched',
-        [
-          filmId,
-          token
-        ]
-      );
+    const result = await api(
+      'toggleMyWatched',
+      [filmId, token]
+    );
 
-    /*
-     * Sincronizza con il valore
-     * effettivamente salvato dal server.
-     */
     D.watched[
-      result.memberId +
-      "|" +
-      result.filmId
+      result.memberId + "|" + result.filmId
     ] = result.watched;
 
-    /*
-     * Se il modal è aperto, aggiorna
-     * solo il modal.
-     */
-    const filmModal =
-      document.getElementById("filmModal");
+    const filmModal = document.getElementById("filmModal");
 
     if (
       filmModal &&
@@ -16095,12 +16070,18 @@ async function toggleMyFilm(filmId) {
       openFilmModal(filmId);
     }
 
+    // Chiede il voto soltanto quando il film
+    // viene segnato come visto dalla lista dedicata.
+    if (
+      askForRating === true &&
+      !previous &&
+      result.watched
+    ) {
+      openQuickRatingModal(filmId);
+    }
+
   } catch (error) {
 
-    /*
-     * Rollback se il server rifiuta
-     * il cambiamento.
-     */
     if (previous) {
       D.watched[key] = true;
     } else {
@@ -16109,13 +16090,115 @@ async function toggleMyFilm(filmId) {
 
     render();
 
-    alert(
-      "Errore: " +
-      error.message
-    );
-
+    alert("Errore: " + error.message);
   }
 }
+
+let quickRatingFilmId = null;
+
+function openQuickRatingModal(filmId) {
+
+  const film = D.films.find(function(item) {
+    return String(item.id) === String(filmId);
+  });
+
+  if (!film) return;
+
+  quickRatingFilmId = filmId;
+
+  document.getElementById('quickRatingFilmTitle').textContent =
+    film.title + (film.year ? ' (' + film.year + ')' : '');
+
+  document.getElementById('quickRatingScore').value = '';
+  document.getElementById('quickRatingMessage').textContent = '';
+
+  document.getElementById('quickRatingModal').classList.add('open');
+}
+
+function closeQuickRatingModal(event) {
+
+  if (
+    event &&
+    event.target &&
+    event.target.id !== 'quickRatingModal'
+  ) {
+    return;
+  }
+
+  document.getElementById('quickRatingModal').classList.remove('open');
+
+  quickRatingFilmId = null;
+}
+
+async function submitQuickRatingProposal() {
+
+  if (!quickRatingFilmId) return;
+
+  const input = document.getElementById('quickRatingScore');
+  const message = document.getElementById('quickRatingMessage');
+  const button = document.querySelector(
+    '#quickRatingModal button.btn.primary'
+  );
+
+  const score = input.value.trim();
+  const numericScore = Number(score.replace(',', '.'));
+
+  if (
+    score === '' ||
+    !Number.isFinite(numericScore) ||
+    numericScore < 0 ||
+    numericScore > 10 ||
+    !Number.isInteger(numericScore * 2)
+  ) {
+    message.textContent =
+      'Inserisci un voto da 0 a 10, con incrementi di 0,5.';
+    message.style.color = '#e88';
+    return;
+  }
+
+  const token = getMemberToken();
+
+  if (!token) {
+    message.textContent = 'Sessione non valida. Accedi nuovamente.';
+    message.style.color = '#e88';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Invio...';
+
+  message.textContent = '';
+
+  try {
+
+    const result = await api(
+      'submitRatingProposal',
+      [quickRatingFilmId, score, token]
+    );
+
+    message.style.color = '';
+    message.textContent = result.updated
+      ? 'Proposta aggiornata.'
+      : 'Proposta inviata. In attesa di approvazione.';
+
+    button.textContent = 'Proposta inviata';
+
+    setTimeout(function() {
+      closeQuickRatingModal();
+    }, 1200);
+
+  } catch (error) {
+
+    message.textContent =
+      error.message || 'Errore durante l’invio della proposta.';
+
+    message.style.color = '#e88';
+
+    button.disabled = false;
+    button.textContent = 'Riprova';
+
+  }
+}  
 
 async function toggleAdminFilm(memberId, filmId) {
 
@@ -19666,6 +19749,82 @@ async function removeRouletteHistoryEntry(riga) {
   </div>
 
 </div>
+
+<div
+  id="quickRatingModal"
+  class="film-modal"
+  onclick="closeQuickRatingModal(event)"
+>
+  <div class="film-modal-box" style="max-width:420px;">
+
+    <button
+      class="film-modal-close"
+      onclick="closeQuickRatingModal()"
+      aria-label="Chiudi"
+    >
+      ×
+    </button>
+
+    <div style="padding:24px;">
+
+      <h2 style="margin-top:0;">
+        Hai visto questo film!
+      </h2>
+
+      <div
+        id="quickRatingFilmTitle"
+        style="font-size:17px;font-weight:700;margin-bottom:18px;"
+      ></div>
+
+      <label for="quickRatingScore">
+        Che voto dai a questo film?
+      </label>
+
+      <input
+        id="quickRatingScore"
+        class="rating-proposal-input"
+        type="number"
+        min="0"
+        max="10"
+        step="0.5"
+        inputmode="decimal"
+        placeholder="Da 0 a 10"
+        style="width:100%;margin-top:10px;"
+      >
+
+      <button
+        class="btn primary"
+        type="button"
+        style="width:100%;margin-top:14px;"
+        onclick="submitQuickRatingProposal()"
+      >
+        Invia proposta di voto
+      </button>
+
+      <div
+        id="quickRatingMessage"
+        class="muted"
+        role="status"
+        style="margin-top:12px;"
+      ></div>
+
+      <button
+        class="btn"
+        type="button"
+        style="width:100%;margin-top:12px;"
+        onclick="closeQuickRatingModal()"
+      >
+        Magari dopo
+      </button>
+
+      <div class="muted" style="font-size:12px;text-align:center;margin-top:12px;">
+        Il voto sarà sottoposto all'approvazione dell'Admin.
+      </div>
+
+    </div>
+  </div>
+</div>
+    
 <div
   id="filmRatingsModal"
   class="film-modal"
