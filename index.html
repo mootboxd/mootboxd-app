@@ -16952,6 +16952,7 @@ async function loadRatingProposalMemberUi(filmId) {
 }
 
 
+
 async function submitRatingProposalMemberUi(filmId) {
   const input = document.getElementById('ratingProposalScore');
   const message = document.getElementById('ratingProposalMemberMessage');
@@ -16959,7 +16960,6 @@ async function submitRatingProposalMemberUi(filmId) {
   if (!input || !message) return;
 
   const score = input.value.trim();
-
   const numericScore = Number(score.replace(',', '.'));
 
   if (
@@ -16990,6 +16990,7 @@ async function submitRatingProposalMemberUi(filmId) {
     button.textContent = 'Invio...';
   }
 
+  input.disabled = true;
   message.textContent = '';
 
   try {
@@ -16998,14 +16999,36 @@ async function submitRatingProposalMemberUi(filmId) {
       [filmId, score, token]
     );
 
-    message.style.color = '';
-    message.textContent = result.updated
-      ? 'Proposta aggiornata.'
+    const box = document.getElementById('filmRatingProposal');
+
+    if (!box) return;
+
+    const statusMessage = result.updated
+      ? 'Proposta aggiornata. In attesa di approvazione.'
       : 'Proposta inviata. In attesa di approvazione.';
 
-    await loadRatingProposalMemberUi(filmId);
+    box.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;">
+        Voto proposto
+      </div>
+
+      <div style="
+        font-size:25px;
+        font-weight:800;
+        color:#d9b36c;
+        margin-bottom:8px;
+      ">
+        ${esc(String(result.proposedScore).replace('.', ','))}
+      </div>
+
+      <div class="muted" role="status">
+        ${statusMessage}
+      </div>
+    `;
 
   } catch (error) {
+    input.disabled = false;
+
     message.textContent =
       error.message || 'Errore durante l’invio della proposta.';
 
@@ -17017,6 +17040,7 @@ async function submitRatingProposalMemberUi(filmId) {
     }
   }
 }
+
 
 function closeFilmModal(event) {
 
