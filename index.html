@@ -16923,18 +16923,24 @@ async function loadRatingProposalMemberUi(filmId) {
           : ''
       }
 
-      <div class="rating-proposal-controls">
+            <div class="rating-proposal-controls">
         <input
           id="ratingProposalScore"
           class="rating-proposal-input"
-          type="number"
-          min="0"
-          max="10"
-          step="0.5"
+          type="text"
           inputmode="decimal"
-          value="${esc(currentScore)}"
+          value="${esc(String(currentScore).replace('.', ','))}"
           placeholder="Dai un voto da 0 a 10"
         >
+
+        <button
+          class="btn"
+          type="button"
+          onclick="insertHalfVote()"
+          style="min-width:55px;"
+        >
+          + 0,5
+        </button>
 
         <button
           class="btn primary rating-proposal-button"
