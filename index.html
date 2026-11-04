@@ -7840,10 +7840,13 @@ input {
 </section>
 
 <script>
-  const API_URL =
+  
+const API_URL =
   'https://mootboxd-api.manuelrullo2002.workers.dev/';
 
 async function api(action, args = []) {
+
+  const apiStart = performance.now();
 
   const response = await fetch(API_URL, {
     method: 'POST',
@@ -7856,7 +7859,11 @@ async function api(action, args = []) {
     })
   });
 
+  const afterFetch = performance.now();
+
   const text = await response.text();
+
+  const afterText = performance.now();
 
   let result;
 
@@ -7867,6 +7874,20 @@ async function api(action, args = []) {
       'Risposta API non valida: ' + text
     );
   }
+
+  const afterParse = performance.now();
+
+  console.log(
+    '[API PERFORMANCE]',
+    action,
+    {
+      fetch: Math.round(afterFetch - apiStart) + ' ms',
+      responseText: Math.round(afterText - afterFetch) + ' ms',
+      JSONparse: Math.round(afterParse - afterText) + ' ms',
+      totale: Math.round(afterParse - apiStart) + ' ms',
+      bytes: new Blob([text]).size
+    }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -7883,6 +7904,7 @@ async function api(action, args = []) {
 
   return result.data;
 }
+
 
 /* =========================================================
    NOTIFICHE
