@@ -8397,10 +8397,8 @@ function showRatingChangeInput(filmId, score) {
       <input
         id="ratingProposalScore"
         class="rating-proposal-input"
-        type="number"
-        min="0"
-        max="10"
-        step="0.5"
+        type="text"
+        inputmode="decimal"
         inputmode="decimal"
         value="${esc(score)}"
         placeholder="Dai un voto da 0 a 10"
@@ -8555,12 +8553,9 @@ async function loadRatingProposalMemberUi(filmId) {
         <input
           id="ratingProposalScore"
           class="rating-proposal-input"
-          type="number"
-          min="0"
-          max="10"
-          step="0.5"
+          type="text"
           inputmode="decimal"
-          value="${esc(currentScore)}"
+          value="${esc(String(currentScore).replace('.', ','))}"
           placeholder="Dai un voto da 0 a 10"
         >
 
@@ -8659,14 +8654,12 @@ async function loadRatingProposalsAdminUi() {
 
           <input
             id="rating-admin-${proposalId}"
-            type="number"
-            min="0"
-            max="10"
-            step="0.5"
-            value="${proposedScore}"
+            type="text"
+            inputmode="decimal"
+            value="${proposedScore.replace('.', ',')}"
             style="width:100%;margin-bottom:10px;"
           >
-
+          
           ${
             status === 'pending'
               ? `
@@ -8729,18 +8722,17 @@ async function updateRatingProposalAdminUi(proposalId) {
 
   if (!input) return;
 
-  const score = input.value.trim();
-
-  const numericScore = Number(score.replace(',', '.'));
-
+  const score = input.value.trim().replace(',', '.');
+  const numericScore = Number(score);
+  
   if (
     score === '' ||
     !Number.isFinite(numericScore) ||
     numericScore < 0 ||
     numericScore > 10 ||
-    !Number.isInteger(numericScore * 2)
+    !/^(10|[0-9])(\.5)?$/.test(score)
   ) {
-    alert('Inserisci un voto da 0 a 10, sono ammessi anche i mezzi voti.');
+    alert('Inserisci un voto intero da 0 a 10, sono ammessi anche i mezzi voti (es. 7,5).');
     return;
   }
 
@@ -8810,6 +8802,8 @@ async function rejectRatingProposalAdminUi(proposalId) {
     alert(error.message || 'Errore durante il rifiuto.');
   }
 }
+
+  
   
 async function getShareImageDataUrl(fileId) {
   const token =
@@ -16959,18 +16953,18 @@ async function submitRatingProposalMemberUi(filmId) {
 
   if (!input || !message) return;
 
-  const score = input.value.trim();
-  const numericScore = Number(score.replace(',', '.'));
-
+  const score = input.value.trim().replace(',', '.');
+  const numericScore = Number(score);
+  
   if (
     score === '' ||
     !Number.isFinite(numericScore) ||
     numericScore < 0 ||
     numericScore > 10 ||
-    !Number.isInteger(numericScore * 2)
+    !/^(10|[0-9])(\.5)?$/.test(score)
   ) {
     message.textContent =
-      'Inserisci un voto da 0 a 10, sono ammessi anche i mezzi voti.';
+      'Inserisci un voto intero da 0 a 10, sono ammessi anche i mezzi voti (es. 7,5).';
     message.style.color = '#e88';
     return;
   }
