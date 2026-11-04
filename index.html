@@ -8402,6 +8402,15 @@ function showRatingChangeInput(filmId, score) {
         value="${esc(score)}"
         placeholder="Dai un voto da 0 a 10"
       >
+      
+      <button
+        class="btn"
+        type="button"
+        onclick="insertHalfVote()"
+        style="min-width:55px;"
+      >
+        ,5
+      </button>
 
       <button
         class="btn primary rating-proposal-button"
@@ -8557,6 +8566,15 @@ async function loadRatingProposalMemberUi(filmId) {
           value="${esc(String(currentScore).replace('.', ','))}"
           placeholder="Dai un voto da 0 a 10"
         >
+
+        <button
+          class="btn"
+          type="button"
+          onclick="insertHalfVote()"
+          style="min-width:55px;"
+        >
+          ,5
+        </button>
 
         <button
           class="btn primary rating-proposal-button"
@@ -16944,6 +16962,24 @@ async function loadRatingProposalMemberUi(filmId) {
   }
 }
 
+  function insertHalfVote() {
+  const input = document.getElementById('ratingProposalScore');
+
+  if (!input) return;
+
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+
+  const value = input.value;
+
+  input.value =
+    value.slice(0, start) + ',5' + value.slice(end);
+
+  input.focus();
+
+  const position = start + 2;
+  input.setSelectionRange(position, position);
+}
 
 
 async function submitRatingProposalMemberUi(filmId) {
