@@ -5787,6 +5787,39 @@ input {
   }
 }  
 
+.rating-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.rating-stepper button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 22px;
+}
+
+.rating-stepper-value {
+  min-width: 35px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+@media screen and (max-width: 600px) {
+  .rating-stepper {
+    width: 100%;
+  }
+
+  .rating-stepper button {
+    flex: 1;
+  }
+}  
+
   
 </style>
 </head>
@@ -8403,14 +8436,27 @@ function showRatingChangeInput(filmId, score) {
         placeholder="Dai un voto da 0 a 10"
       >
       
-      <button
-      class="btn"
-      type="button"
-      onclick="insertHalfVote()"
-      style="min-width:55px;"
-    >
-      + 0,5
-    </button>
+      <div class="rating-stepper">
+        <button
+          class="btn"
+          type="button"
+          onclick="adjustRatingProposal(-0.5)"
+          aria-label="Diminuisci voto"
+        >
+          −
+        </button>
+      
+        <span class="rating-stepper-value">0,5</span>
+      
+        <button
+          class="btn"
+          type="button"
+          onclick="adjustRatingProposal(0.5)"
+          aria-label="Aumenta voto"
+        >
+          +
+        </button>
+      </div>
 
       <button
         class="btn primary rating-proposal-button"
@@ -16933,14 +16979,27 @@ async function loadRatingProposalMemberUi(filmId) {
           placeholder="Dai un voto da 0 a 10"
         >
 
-        <button
-          class="btn"
-          type="button"
-          onclick="insertHalfVote()"
-          style="min-width:55px;"
-        >
-          + 0,5
-        </button>
+        <div class="rating-stepper">
+          <button
+            class="btn"
+            type="button"
+            onclick="adjustRatingProposal(-0.5)"
+            aria-label="Diminuisci voto"
+          >
+            −
+          </button>
+        
+          <span class="rating-stepper-value">0,5</span>
+        
+          <button
+            class="btn"
+            type="button"
+            onclick="adjustRatingProposal(0.5)"
+            aria-label="Aumenta voto"
+          >
+            +
+          </button>
+        </div>
 
         <button
           class="btn primary rating-proposal-button"
@@ -16986,6 +17045,25 @@ async function loadRatingProposalMemberUi(filmId) {
   const position = start + 2;
   input.setSelectionRange(position, position);
 }
+
+
+function adjustRatingProposal(delta) {
+  const input = document.getElementById('ratingProposalScore');
+
+  if (!input) return;
+
+  const current = input.value.trim().replace(',', '.');
+  let score = current === '' ? 0 : Number(current);
+
+  if (!Number.isFinite(score)) score = 0;
+
+  score = Math.round((score + delta) * 2) / 2;
+  score = Math.max(0, Math.min(10, score));
+
+  input.value = String(score).replace('.', ',');
+
+  input.focus();
+}  
 
 
 async function submitRatingProposalMemberUi(filmId) {
