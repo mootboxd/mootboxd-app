@@ -8398,8 +8398,7 @@ function showRatingChangeInput(filmId, score) {
         id="ratingProposalScore"
         class="rating-proposal-input"
         type="text"
-        inputmode="decimal"
-        inputmode="decimal"
+        inputmode="text"
         value="${esc(score)}"
         placeholder="Dai un voto da 0 a 10"
       >
@@ -8554,7 +8553,7 @@ async function loadRatingProposalMemberUi(filmId) {
           id="ratingProposalScore"
           class="rating-proposal-input"
           type="text"
-          inputmode="decimal"
+          inputmode="text"
           value="${esc(String(currentScore).replace('.', ','))}"
           placeholder="Dai un voto da 0 a 10"
         >
