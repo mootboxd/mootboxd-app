@@ -8720,6 +8720,12 @@ async function loadRatingProposalsAdminUi() {
       const filmTitle = esc(String(proposal.filmTitle || 'Film'));
       const proposedScore = esc(String(proposal.proposedScore ?? ''));
       const status = 'pending';
+      const previousScore = proposal.previousScore;
+
+    const hasPreviousScore =
+      previousScore !== null &&
+      previousScore !== undefined &&
+      String(previousScore).trim() !== '';
 
       const statusLabel =
         status === 'pending' ? 'In attesa' :
@@ -8742,9 +8748,48 @@ async function loadRatingProposalsAdminUi() {
             Stato: <strong>${esc(statusLabel)}</strong>
           </div>
 
-          <div style="margin-bottom:10px;">
-            Voto proposto:
-          </div>
+          ${
+            hasPreviousScore
+              ? `
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  gap:12px;
+                  margin-bottom:12px;
+                ">
+                  <div>
+                    <div class="muted" style="font-size:12px;">
+                      Voto attuale
+                    </div>
+                    <div style="font-size:23px;font-weight:800;">
+                      ${esc(String(previousScore).replace('.', ','))}
+                    </div>
+                  </div>
+          
+                  <div style="font-size:20px;color:var(--muted);">
+                    →
+                  </div>
+          
+                  <div>
+                    <div class="muted" style="font-size:12px;">
+                      Nuovo voto
+                    </div>
+                    <div style="
+                      font-size:23px;
+                      font-weight:800;
+                      color:#d9b36c;
+                    ">
+                      ${proposedScore.replace('.', ',')}
+                    </div>
+                  </div>
+                </div>
+              `
+              : `
+                <div style="margin-bottom:10px;">
+                  Nuovo voto proposto:
+                </div>
+              `
+          }
 
           <input
             id="rating-admin-${proposalId}"
