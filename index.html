@@ -13649,10 +13649,7 @@ async function refreshAppData(force = false) {
 
   try {
 
-    const freshData = await api(
-      'getData',
-      [token]
-    );
+    const freshData = await api('getData', [token, true]);
 
     if (!freshData || !Array.isArray(freshData.films)) {
       throw new Error('Dati aggiornati non validi.');
