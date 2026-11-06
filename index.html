@@ -12852,6 +12852,8 @@ async function moveRankingFilm(sourceId, targetId, score) {
 
   renderRanking();
 
+  rankingOrderSaving = true;
+
   try {
     await api(
       'saveMemberRankingOrder',
@@ -12873,6 +12875,9 @@ async function moveRankingFilm(sourceId, targetId, score) {
     rankingOrderGroups = [];
 
     renderRanking();
+
+    } finally {
+    rankingOrderSaving = false;
   }
 }  
   
@@ -13097,6 +13102,13 @@ if (!weeklyThemesLoaded) {
   });
 
 }
+
+
+let appRefreshInProgress = false;
+let lastAppRefreshAt = 0;
+let rankingOrderSaving = false;
+const APP_REFRESH_INTERVAL = 120000;  
+  
 
 function render() {
 
@@ -13563,6 +13575,116 @@ if (!document.getElementById("clubFilmsResults")) {
 renderClubFilms();
 
 }
+
+async function refreshAppData(force = false) {
+
+  if (appRefreshInProgress) return;
+
+  const token = getMemberToken();
+
+  if (!token && !adminSession) return;
+
+  // Evita aggiornamenti troppo ravvicinati.
+  if (
+    !force &&
+    Date.now() - lastAppRefreshAt < APP_REFRESH_INTERVAL
+  ) {
+    return;
+  }
+
+  // Non aggiornare durante la digitazione.
+  const active = document.activeElement;
+
+  if (
+    active &&
+    (
+      active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.tagName === 'SELECT' ||
+      active.isContentEditable
+    )
+  ) {
+    return;
+  }
+
+  // Non interferire con un riordino in corso.
+  if (rankingOrderSaving) return;
+
+  appRefreshInProgress = true;
+
+  try {
+
+    const freshData = await api(
+      'getData',
+      [token || getAdminToken()]
+    );
+
+    if (!freshData || !Array.isArray(freshData.films)) {
+      throw new Error('Dati aggiornati non validi.');
+    }
+
+    D = freshData;
+
+    lastAppRefreshAt = Date.now();
+
+    // Aggiorna soltanto la pagina attualmente visibile.
+    if (currentPage === 'home') {
+
+      render();
+
+    } else if (currentPage === 'ranking') {
+
+      await renderRanking();
+
+    } else if (currentPage === 'proposals') {
+
+      renderProposalGenres();
+      initProposalRoulette();
+
+    }
+
+    console.log('[APP REFRESH] Dati aggiornati.');
+
+  } catch (error) {
+
+    console.error(
+      '[APP REFRESH] Errore:',
+      error
+    );
+
+  } finally {
+
+    appRefreshInProgress = false;
+
+  }
+}
+
+document.addEventListener(
+  'visibilitychange',
+  function() {
+
+    if (document.visibilityState === 'visible') {
+      refreshAppData();
+    }
+
+  }
+);
+
+window.addEventListener(
+  'pageshow',
+  function() {
+    refreshAppData();
+  }
+);
+
+setInterval(function() {
+
+  if (document.visibilityState === 'visible') {
+    refreshAppData();
+  }
+
+}, APP_REFRESH_INTERVAL);
+  
   
 /* =========================
    FILTRI FILM DEL CLUB
