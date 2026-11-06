@@ -1156,6 +1156,39 @@ input {
   height: 21px;
 }
 
+.refresh-button {
+  width: 42px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #171a23;
+  color: #f5f6fa;
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.refresh-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.refresh-button.refreshing svg {
+  animation: refreshRotation 0.8s linear infinite;
+}
+
+@keyframes refreshRotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+  
 #notificationBadge {
   position: absolute;
   top: -6px;
@@ -6208,6 +6241,26 @@ input {
       />
     </svg>
   </button>
+
+    <button
+      type="button"
+      id="refreshButton"
+      class="refresh-button"
+      onclick="manualRefreshAppData()"
+      aria-label="Aggiorna dati"
+      title="Aggiorna dati"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M20 7v5h-5M4 17v-5h5M5.6 9a7 7 0 0 1 11.6-2L20 12M4 12l2.8 5a7 7 0 0 0 11.6-2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
 
   <button
     type="button"
@@ -13625,6 +13678,22 @@ async function refreshAppData(force = false) {
   }
 }
 
+async function manualRefreshAppData() {
+  const button = document.getElementById('refreshButton');
+
+  if (!button || appRefreshInProgress) return;
+
+  button.disabled = true;
+  button.classList.add('refreshing');
+
+  try {
+    await refreshAppData(true);
+  } finally {
+    button.disabled = false;
+    button.classList.remove('refreshing');
+  }
+}
+  
 document.addEventListener(
   'visibilitychange',
   function() {
