@@ -8005,6 +8005,12 @@ async function loadNotifications() {
 
     notificationsData = Array.isArray(result) ? result : [];
 
+    if (notificationsOpen) {
+      notificationsData.forEach(function(item) {
+        item.read = true;
+      });
+    }
+
     const unreadCount = notificationsData.filter(function(item) {
       return !item.read;
     }).length;
@@ -8084,6 +8090,70 @@ function renderNotifications() {
   });
 }
 
+function markAllNotificationsReadOptimistic() {
+  const token = getNotificationToken();
+
+  if (!token) return;
+
+  const unreadNotifications = notificationsData.filter(function(item) {
+    return !item.read;
+  });
+
+  if (!unreadNotifications.length) return;
+
+  // Aggiornamento immediato dell'interfaccia.
+  unreadNotifications.forEach(function(item) {
+    item.read = true;
+  });
+
+  const badge = document.getElementById('notificationBadge');
+
+  if (badge) {
+    badge.style.display = 'none';
+  }
+
+  renderNotifications();
+
+  // Registrazione sul server in background.
+  Promise.allSettled(
+    unreadNotifications.map(function(item) {
+      return api('markNotificationRead', [
+        item.id,
+        token
+      ]);
+    })
+  ).then(function(results) {
+
+    let failed = false;
+
+    results.forEach(function(result, index) {
+      if (result.status === 'rejected') {
+        failed = true;
+
+        unreadNotifications[index].read = false;
+
+        console.error(
+          'Errore aggiornamento notifica:',
+          result.reason
+        );
+      }
+    });
+
+    if (failed) {
+      renderNotifications();
+
+      const unreadCount = notificationsData.filter(function(item) {
+        return !item.read;
+      }).length;
+
+      if (badge) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+      }
+    }
+  });
+}
+  
 function toggleNotifications() {
   const panel = document.getElementById('notificationPanel');
 
@@ -8097,59 +8167,20 @@ function toggleNotifications() {
   notificationsOpen = true;
   panel.style.display = 'block';
 
+  // Nasconde immediatamente il contatore.
+  markAllNotificationsReadOptimistic();
+
+  // Aggiorna i dati dal server senza bloccare l'interfaccia.
   loadNotifications();
 }
 
-async function closeNotifications() {
+function closeNotifications() {
   const panel = document.getElementById('notificationPanel');
 
   notificationsOpen = false;
 
   if (panel) {
     panel.style.display = 'none';
-  }
-
-  const token = getNotificationToken();
-
-  if (!token) return;
-
-  const unreadNotifications = notificationsData.filter(function(item) {
-    return !item.read;
-  });
-
-  if (!unreadNotifications.length) return;
-
-  const results = await Promise.allSettled(
-    unreadNotifications.map(function(item) {
-      return api('markNotificationRead', [
-        item.id,
-        token
-      ]);
-    })
-  );
-
-  results.forEach(function(result, index) {
-    if (result.status === 'fulfilled') {
-      unreadNotifications[index].read = true;
-    } else {
-      console.error(
-        'Errore aggiornamento notifica:',
-        result.reason
-      );
-    }
-  });
-
-  renderNotifications();
-
-  const unreadCount = notificationsData.filter(function(item) {
-    return !item.read;
-  }).length;
-
-  const badge = document.getElementById('notificationBadge');
-
-  if (badge) {
-    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
   }
 }
 
