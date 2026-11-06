@@ -1130,13 +1130,30 @@ input {
 .header-actions {
   position: relative;
   display: grid;
-  grid-template-columns: 42px 42px;
-  grid-template-rows: 42px 38px;
-  row-gap: 12px;
-  column-gap: 7px;
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  grid-template-rows: auto 38px;
+  column-gap: 10px;
+  row-gap: 14px;
+  align-items: center;
   flex-shrink: 0;
-  align-self: flex-start;
+  min-width: 0;
+}
+
+.header-profile {
+  grid-column: 1;
+  grid-row: 1;
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding-top: 8px;
+}
+
+.header-profile #profileName {
+  font-weight: 700;
+}
+
+.header-profile #profileSigla {
+  font-size: 12px;
 }
 
 .header-actions .main-nav-toggle {
@@ -1150,6 +1167,7 @@ input {
 .header-actions .refresh-button {
   grid-column: 1;
   grid-row: 2;
+  justify-self: end;
 }
 
 .header-actions .notification-bell {
@@ -6239,21 +6257,13 @@ input {
   gap:10px;
 ">
 
-  <div style="text-align:right; padding-top:10px;">
-    <div
-      id="profileName"
-      style="font-weight:700;">
-      —
-    </div>
-
-    <div
-      id="profileSigla"
-      class="muted"
-      style="font-size:12px;">
-    </div>
-  </div>
 
   <div class="header-actions">
+    
+    <div class="header-profile">
+      <div id="profileName">—</div>
+      <div id="profileSigla" class="muted"></div>
+    </div>
 
   <button
     type="button"
