@@ -1131,16 +1131,28 @@ input {
   position: relative;
   display: grid;
   grid-template-columns: 42px 42px;
-  align-items: center;
-  justify-content: center;
+  grid-template-rows: 38px 38px;
   gap: 7px;
   flex-shrink: 0;
   align-self: flex-start;
 }
 
 .header-actions .main-nav-toggle {
-  grid-column: 1 / -1;
+  grid-column: 2;
+  grid-row: 1;
   justify-self: center;
+  width: 42px;
+  height: 38px;
+}
+
+.header-actions .refresh-button {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.header-actions .notification-bell {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .header-actions .refresh-button,
