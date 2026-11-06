@@ -12215,6 +12215,44 @@ const data =
 }
 
 
+let refreshInProgress = false;
+let lastDataRefresh = 0;
+let refreshInterval = null;
+
+async function refreshAppData(force = false) {
+  if (refreshInProgress) return false;
+
+  // Evita aggiornamenti troppo ravvicinati
+  if (!force && Date.now() - lastDataRefresh < 120000) {
+    return false;
+  }
+
+  const adminToken = sessionStorage.getItem('mootboxd_admin_token');
+  const memberToken = getMemberToken();
+  const token = adminToken || memberToken;
+
+  if (!token) return false;
+
+  refreshInProgress = true;
+
+  try {
+    const freshData = await api('getData', [token]);
+
+    if (!freshData) return false;
+
+    D = freshData;
+    lastDataRefresh = Date.now();
+
+    return true;
+  } catch (error) {
+    console.error('Errore aggiornamento dati:', error);
+    return false;
+  } finally {
+    refreshInProgress = false;
+  }
+}
+  
+
 function populateRankingFilters() {
 
   const yearFilter =
