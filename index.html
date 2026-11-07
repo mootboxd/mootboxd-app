@@ -8772,6 +8772,7 @@ async function loadRatingProposalMemberUi(filmId) {
   }
 }
 
+
 async function loadRatingProposalsAdminUi() {
 
   const container = document.getElementById(
@@ -8806,8 +8807,126 @@ async function loadRatingProposalsAdminUi() {
 
     container.innerHTML = proposals.map(function(proposal) {
 
-      // Mantieni qui il codice originale
-      // che costruisce le schede delle proposte.
+      const proposalId = esc(String(proposal.id));
+      const memberName = esc(String(proposal.memberName || 'Membro'));
+      const filmTitle = esc(String(proposal.filmTitle || 'Film'));
+      const proposedScore = esc(String(proposal.proposedScore ?? ''));
+      const status = 'pending';
+      const previousScore = proposal.previousScore;
+
+      const hasPreviousScore =
+        previousScore !== null &&
+        previousScore !== undefined &&
+        String(previousScore).trim() !== '';
+
+      const statusLabel =
+        status === 'pending' ? 'In attesa' :
+        status === 'approved' ? 'Approvata' :
+        status === 'rejected' ? 'Rifiutata' :
+        status;
+
+      return `
+        <div class="card" style="padding:14px;margin-bottom:12px;">
+
+          <div style="font-weight:750;margin-bottom:5px;">
+            ${filmTitle}
+          </div>
+
+          <div class="muted" style="margin-bottom:10px;">
+            Proposta da: ${memberName}
+          </div>
+
+          <div style="margin-bottom:10px;">
+            Stato: <strong>${esc(statusLabel)}</strong>
+          </div>
+
+          ${
+            hasPreviousScore
+              ? `
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  gap:12px;
+                  margin-bottom:12px;
+                ">
+                  <div>
+                    <div class="muted" style="font-size:12px;">
+                      Voto attuale
+                    </div>
+                    <div style="font-size:23px;font-weight:800;">
+                      ${esc(String(previousScore).replace('.', ','))}
+                    </div>
+                  </div>
+
+                  <div style="font-size:20px;color:var(--muted);">
+                    →
+                  </div>
+
+                  <div>
+                    <div class="muted" style="font-size:12px;">
+                      Nuovo voto
+                    </div>
+                    <div style="
+                      font-size:23px;
+                      font-weight:800;
+                      color:#d9b36c;
+                    ">
+                      ${proposedScore.replace('.', ',')}
+                    </div>
+                  </div>
+                </div>
+              `
+              : `
+                <div style="margin-bottom:10px;">
+                  Nuovo voto proposto:
+                </div>
+              `
+          }
+
+          <input
+            id="rating-admin-${proposalId}"
+            type="text"
+            inputmode="decimal"
+            value="${proposedScore.replace('.', ',')}"
+            style="width:100%;margin-bottom:10px;"
+          >
+
+          ${
+            status === 'pending'
+              ? `
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+                  <button
+                    class="btn primary"
+                    type="button"
+                    onclick="approveRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Approva
+                  </button>
+
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="updateRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Modifica voto
+                  </button>
+
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="rejectRatingProposalAdminUi('${proposalId}')"
+                  >
+                    Rifiuta
+                  </button>
+
+                </div>
+              `
+              : ''
+          }
+
+        </div>
+      `;
 
     }).join('');
 
@@ -8825,6 +8944,7 @@ async function loadRatingProposalsAdminUi() {
     `;
   }
 }
+
   
 
 async function updateRatingProposalAdminUi(proposalId) {
