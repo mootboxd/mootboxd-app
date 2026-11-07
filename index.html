@@ -1331,6 +1331,35 @@ input {
   font-size: 11px;
 }
 
+.notification-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-delete-all,
+.notification-delete {
+  border: 0;
+  background: transparent;
+  color: #e58b8b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notification-delete-all:hover,
+.notification-delete:hover {
+  color: #ffb0b0;
+}
+
+.notification-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}  
+
 @media screen and (max-width: 600px) {
   .notification-bell {
     width: 45px;
@@ -6340,12 +6369,23 @@ input {
   >
     <div class="notification-panel-head">
       <strong>Notifiche</strong>
-      <button
-        type="button"
-        class="notification-close"
-        onclick="closeNotifications()"
-        aria-label="Chiudi notifiche"
-      >×</button>
+    
+      <div class="notification-head-actions">
+        <button
+          type="button"
+          class="notification-delete-all"
+          onclick="deleteAllNotifications()"
+        >
+          Elimina tutte
+        </button>
+    
+        <button
+          type="button"
+          class="notification-close"
+          onclick="closeNotifications()"
+          aria-label="Chiudi notifiche"
+        >×</button>
+      </div>
     </div>
 
     <div
@@ -8161,9 +8201,19 @@ function renderNotifications() {
           ${escapeNotificationHtml(item.message)}
         </div>
 
-        <div class="notification-item-date">
-          ${escapeNotificationHtml(formatNotificationDate(item.createdAt))}
-          ${item.read ? '' : ' · Da leggere'}
+        <div class="notification-item-footer">
+          <div class="notification-item-date">
+            ${escapeNotificationHtml(formatNotificationDate(item.createdAt))}
+            ${item.read ? '' : ' · Da leggere'}
+          </div>
+
+          <button
+            type="button"
+            class="notification-delete"
+            data-delete-notification-index="${index}"
+          >
+            Elimina
+          </button>
         </div>
       </div>
     `;
@@ -8182,13 +8232,85 @@ function renderNotifications() {
     item.addEventListener('click', open);
 
     item.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' || event.key === ' ') {
+      if (
+        event.key === 'Enter' &&
+        event.target === item
+      ) {
         event.preventDefault();
         open();
       }
     });
   });
+
+  list.querySelectorAll('[data-delete-notification-index]').forEach(function(button) {
+    button.addEventListener('click', function(event) {
+      event.stopPropagation();
+
+      const index = Number(button.dataset.deleteNotificationIndex);
+      const notification = notificationsData[index];
+
+      if (notification) {
+        deleteNotificationById(notification.id);
+      }
+    });
+  });
 }
+
+async function deleteNotificationById(notificationId) {
+  const token = getNotificationToken();
+
+  if (!token) return;
+
+  try {
+    await api('deleteNotification', [
+      notificationId,
+      token
+    ]);
+
+    notificationsData = notificationsData.filter(function(item) {
+      return String(item.id) !== String(notificationId);
+    });
+
+    renderNotifications();
+
+    await loadNotifications();
+
+  } catch (error) {
+    console.error('Errore eliminazione notifica:', error);
+    alert('Impossibile eliminare la notifica.');
+  }
+}
+
+
+async function deleteAllNotifications() {
+  if (!notificationsData.length) {
+    return;
+  }
+
+  const confirmed = confirm(
+    'Vuoi eliminare tutte le notifiche del tuo account?'
+  );
+
+  if (!confirmed) return;
+
+  const token = getNotificationToken();
+
+  if (!token) return;
+
+  try {
+    await api('deleteAllNotifications', [token]);
+
+    notificationsData = [];
+
+    renderNotifications();
+
+    await loadNotifications();
+
+  } catch (error) {
+    console.error('Errore eliminazione notifiche:', error);
+    alert('Impossibile eliminare le notifiche.');
+  }
+}  
 
 function markAllNotificationsReadOptimistic() {
   const token = getNotificationToken();
