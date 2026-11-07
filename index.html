@@ -12011,12 +12011,11 @@ async function logout() {
     }
 
     localStorage.removeItem("mootboxd_admin_token");
-
     adminSession = null;
 
     document.getElementById("adminPanel").style.display = "none";
 
-    // Ripristina la sessione membro, se presente.
+    // Se esiste una sessione membro, ripristinala
     const memberToken = getMemberToken();
 
     if (memberToken) {
@@ -12038,10 +12037,7 @@ async function logout() {
           return;
         }
       } catch (error) {
-        console.error(
-          "Errore ripristino sessione membro:",
-          error
-        );
+        console.error("Errore ripristino sessione membro:", error);
       }
     }
 
@@ -12067,9 +12063,10 @@ async function logout() {
 
   document.getElementById("adminPanel").style.display = "none";
 
+  // TORNA AL LOGIN
   showLogin();
 }
-
+  
 
 async function checkSession() {
 
