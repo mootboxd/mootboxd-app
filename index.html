@@ -12006,7 +12006,7 @@ async function logout() {
   if (adminSession) {
 
     const token =
-      sessionStorage.getItem(
+      localStorage.getItem(
         "mootboxd_admin_token"
       );
 
@@ -12029,20 +12029,51 @@ async function logout() {
       }
     }
 
-    sessionStorage.removeItem(
+    localStorage.removeItem(
       "mootboxd_admin_token"
     );
 
-    adminSession = null;
+   adminSession = null;
 
     document.getElementById(
       "adminPanel"
     ).style.display = "none";
-
+    
+    const memberToken = getMemberToken();
+    
+    if (memberToken) {
+      try {
+        const memberData = await api(
+          'getSession',
+          [memberToken]
+        );
+    
+        if (memberData) {
+          session = {
+            token: memberToken,
+            memberId: memberData.memberId,
+            name: memberData.name,
+            sigla: memberData.sigla
+          };
+    
+          updateProfile();
+          await load();
+          showPage('home');
+          loadNotifications();
+          return;
+        }
+      } catch (error) {
+        console.error(
+          "Errore ripristino sessione membro:",
+          error
+        );
+      }
+    }
+    
+    session = null;
     showLogin();
-
+    
     return;
-  }
 
 
   /* =========================
@@ -12111,9 +12142,6 @@ if (adminToken) {
 
 // Se non c'è una sessione Admin valida,
 // prosegui con il normale controllo membro.
-
-  const token =
-    getMemberToken();
 
   if (!token) {
 
@@ -13650,7 +13678,7 @@ async function refreshAppData(force = false) {
 
   if (appRefreshInProgress) return;
 
-  const adminToken = sessionStorage.getItem('mootboxd_admin_token');
+  const adminToken = localStorage.getItem('mootboxd_admin_token');
   const memberToken = getMemberToken();
   const token = adminToken || memberToken;
 
