@@ -8046,11 +8046,7 @@ let notificationsData = [];
 let notificationsOpen = false;
 
 function getNotificationToken() {
-  if (adminSession) {
-    return sessionStorage.getItem('mootboxd_admin_token');
-  }
-
-  return getMemberToken();
+  return getManagementToken() || getMemberToken();
 }
 
 function escapeNotificationHtml(value) {
@@ -8322,7 +8318,7 @@ async function openNotification(notificationId) {
 }  
 
 async function publishGeneralNotificationUi() {
-  if (!adminSession) {
+ if (!hasManagementAccess()) {
     alert('Questa funzione è riservata all’Admin.');
     return;
   }
@@ -8346,9 +8342,7 @@ async function publishGeneralNotificationUi() {
   const title = titleInput.value.trim();
   const message = messageInput.value.trim();
 
-  const token = sessionStorage.getItem(
-    'mootboxd_admin_token'
-  );
+  const token = getManagementToken();
 
   if (!token) {
     status.textContent = 'Sessione Admin non disponibile.';
@@ -8974,8 +8968,8 @@ async function updateRatingProposalAdminUi(proposalId) {
     return;
   }
 
-  const token = sessionStorage.getItem('mootboxd_admin_token');
-
+  const token = getManagementToken();
+  
   try {
     await api(
       'updateRatingProposalAdmin',
@@ -8999,8 +8993,8 @@ async function approveRatingProposalAdminUi(proposalId) {
     return;
   }
 
-  const token = sessionStorage.getItem('mootboxd_admin_token');
-
+ const token = getManagementToken();
+  
   try {
     await api(
       'approveRatingProposal',
@@ -9024,7 +9018,7 @@ async function rejectRatingProposalAdminUi(proposalId) {
 
   if (adminNote === null) return;
 
-  const token = sessionStorage.getItem('mootboxd_admin_token');
+  const token = getManagementToken();
 
   try {
     await api(
@@ -9044,9 +9038,7 @@ async function rejectRatingProposalAdminUi(proposalId) {
   
   
 async function getShareImageDataUrl(fileId) {
-  const token =
-    sessionStorage.getItem('mootboxd_admin_token') ||
-    getMemberToken();
+  const token = getManagementToken() || getMemberToken();
 
   if (!token || !fileId) {
     return null;
@@ -9079,8 +9071,8 @@ function hasManagementAccess() {
 }
 
 function getManagementToken() {
-  if (adminSession && getManagementToken()) {
-    return getManagementToken();
+  if (adminSession && adminSession.token) {
+    return adminSession.token;
   }
 
   if (hasManagementAccess() && session && session.token) {
@@ -9088,7 +9080,7 @@ function getManagementToken() {
   }
 
   return '';
-}  
+}
 
 const PROPOSAL_GENRES = [
   {
