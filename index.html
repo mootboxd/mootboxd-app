@@ -11879,11 +11879,11 @@ async function loginAdmin() {
 
     adminSession = result;
 
-    sessionStorage.setItem(
+    localStorage.setItem(
       "mootboxd_admin_token",
       result.token
     );
-
+    
     document.getElementById(
       "adminLoginScreen"
     ).style.display = "none";
@@ -11917,8 +11917,9 @@ async function checkAdminSession() {
 console.log("[STARTUP] Avvio controllo Admin");
 
   const token =
-    sessionStorage.getItem(
-      "mootboxd_admin_token"
+    localStorage.getItem(
+        "mootboxd_admin_token"
+      )
     );
 
   if (!token) {
@@ -11941,9 +11942,9 @@ console.log("[STARTUP] Avvio controllo Admin");
 
     if (!result) {
 
-      sessionStorage.removeItem(
+      localStorage.removeItem(
         "mootboxd_admin_token"
-      );
+      )
 
       adminSession = null;
 
@@ -11984,9 +11985,9 @@ return true;
     
   } catch (error) {
 
-    sessionStorage.removeItem(
+    localStorage.removeItem(
       "mootboxd_admin_token"
-    );
+    )
 
     adminSession = null;
 
@@ -12095,15 +12096,21 @@ async function checkSession() {
   const startupStart = performance.now();
 console.log("[STARTUP] Avvio controllo sessione");
 
-  const adminToken =
-    sessionStorage.getItem(
-      "mootboxd_admin_token"
-    );
+ const adminToken =
+  localStorage.getItem("mootboxd_admin_token");
 
-  if (adminToken) {
-  await checkAdminSession();
-  return;
+const token = getMemberToken();
+
+if (adminToken) {
+  const adminValid = await checkAdminSession();
+
+  if (adminValid) {
+    return;
+  }
 }
+
+// Se non c'è una sessione Admin valida,
+// prosegui con il normale controllo membro.
 
   const token =
     getMemberToken();
