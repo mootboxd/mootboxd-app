@@ -9067,6 +9067,29 @@ let saving = false;
 let session = null;
 let adminSession = null;
 
+const MANUEL_MEMBER_ID =
+  'f6998c14-3453-46f5-9bf0-f27dc2a6e2e8';
+
+function hasManagementAccess() {
+  return !!adminSession ||
+    !!(
+      session &&
+      String(session.memberId) === MANUEL_MEMBER_ID
+    );
+}
+
+function getManagementToken() {
+  if (adminSession && getManagementToken()) {
+    return getManagementToken();
+  }
+
+  if (hasManagementAccess() && session && session.token) {
+    return session.token;
+  }
+
+  return '';
+}  
+
 const PROPOSAL_GENRES = [
   {
     value: 'AZIONE',
@@ -11129,7 +11152,7 @@ if (!session && !adminSession) {
 
     const proposalToken =
   adminSession
-    ? adminSession.token
+    ? getManagementToken()
     : session.token;
 
 const result =
@@ -11484,7 +11507,7 @@ async function submitThemeProposal() {
 
     const proposalToken =
   adminSession
-    ? adminSession.token
+    ? getManagementToken()
     : session.token;
 
 const result =
@@ -13087,7 +13110,7 @@ if (!weeklyThemesLoaded) {
 
   if (page === 'admin') {
 
-    if (!adminSession) {
+    if (!hasManagementAccess()) {
       showLogin();
       return;
     }
@@ -13164,7 +13187,7 @@ function render() {
 
   if (adminNavItem) {
     adminNavItem.style.display =
-      adminSession ? "block" : "none";
+      hasManagementAccess() ? "block" : "none";
   }
 
   document.getElementById("filmsN").textContent = filmsCount;
@@ -14917,11 +14940,11 @@ async function addM() {
     return;
   }
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
-
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
+  
   setSaving(true);
 
   try {
@@ -14931,7 +14954,7 @@ async function addM() {
         'addMember',
         [
           name,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -15002,11 +15025,11 @@ async function addF() {
     return;
   }
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
-
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
+  
   setSaving(true);
 
   try {
@@ -15021,7 +15044,7 @@ async function addF() {
           regista,
           genere,
           dataDiscussione,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -15244,10 +15267,10 @@ function renderAdminFilms() {
 
 function editAdminFilm(filmId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const film =
     D.films.find(function(f) {
@@ -15353,10 +15376,10 @@ function editAdminFilm(filmId) {
 
 async function saveAdminFilm(filmId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const title =
     document.getElementById(
@@ -15408,7 +15431,7 @@ async function saveAdminFilm(filmId) {
           regista,
           genere,
           dataDiscussione,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -15442,10 +15465,10 @@ async function saveAdminFilm(filmId) {
 
 async function deleteAdminFilm(filmId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const film =
     D.films.find(function(f) {
@@ -15478,7 +15501,7 @@ async function deleteAdminFilm(filmId) {
         'removeFilm',
         [
           filmId,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -15702,10 +15725,10 @@ async function renderAdminThemes() {
   box.innerHTML =
     '<div class="empty">Caricamento settimana a tema...</div>';
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   try {
 
@@ -15713,7 +15736,7 @@ async function renderAdminThemes() {
       await api(
         'getAdminThemeWeeks',
         [
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -15914,10 +15937,10 @@ async function renderAdminThemes() {
 
 async function createAdminTheme() {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+ if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const nameInput =
     document.getElementById("themeName");
@@ -15964,7 +15987,7 @@ async function createAdminTheme() {
         nome,
         dataInizio,
         dataFine,
-        adminSession.token
+       getManagementToken()
       ]
     );
 
@@ -15996,11 +16019,11 @@ async function createAdminTheme() {
 
 async function editAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
-
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
+  
   const box =
     document.getElementById(
       "admin-theme-" + themeId
@@ -16101,10 +16124,10 @@ async function editAdminTheme(themeId) {
 
 async function saveAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const nome =
     document.getElementById(
@@ -16149,7 +16172,7 @@ async function saveAdminTheme(themeId) {
         nome,
         dataInizio,
         dataFine,
-        adminSession.token
+        getManagementToken()
       ]
     );
 
@@ -16175,10 +16198,10 @@ async function saveAdminTheme(themeId) {
 
 async function closeAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const confirmed =
     confirm(
@@ -16200,7 +16223,7 @@ async function closeAdminTheme(themeId) {
         'closeThemeWeek',
         [
           themeId,
-          adminSession.token
+         getManagementToken()
         ]
       );
 
@@ -16232,10 +16255,10 @@ async function closeAdminTheme(themeId) {
 
 async function deactivateAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const confirmed =
     confirm(
@@ -16254,7 +16277,7 @@ async function deactivateAdminTheme(themeId) {
       'deactivateThemeWeek',
       [
         themeId,
-        adminSession.token
+       getManagementToken()
       ]
     );
 
@@ -16279,10 +16302,10 @@ async function deactivateAdminTheme(themeId) {
 
 async function reactivateAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const confirmed =
     confirm(
@@ -16301,7 +16324,7 @@ async function reactivateAdminTheme(themeId) {
       'reactivateThemeWeek',
       [
         themeId,
-        adminSession.token
+        getManagementToken()
       ]
     );
 
@@ -16330,10 +16353,10 @@ async function reactivateAdminTheme(themeId) {
 
 async function deleteAdminTheme(themeId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   const confirmed =
     confirm(
@@ -16353,7 +16376,7 @@ async function deleteAdminTheme(themeId) {
       'deleteThemeWeek',
       [
         themeId,
-        adminSession.token
+        getManagementToken()
       ]
     );
 
@@ -16395,10 +16418,10 @@ async function savePin(id) {
     return;
   }
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   setSaving(true);
 
@@ -16409,7 +16432,7 @@ async function savePin(id) {
       [
         id,
         pin,
-        adminSession.token
+        getManagementToken()
       ]
     );
 
@@ -16447,11 +16470,11 @@ async function saveSigla(id) {
       .toUpperCase()
       .substring(0, 2);
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
-
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
+  
   setSaving(true);
 
   try {
@@ -16462,7 +16485,7 @@ async function saveSigla(id) {
         [
           id,
           sigla,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -16663,11 +16686,11 @@ async function submitQuickRatingProposal() {
 
 async function toggleAdminFilm(memberId, filmId) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
-
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
+  
   const key =
     memberId +
     "|" +
@@ -16692,7 +16715,7 @@ async function toggleAdminFilm(memberId, filmId) {
         [
           memberId,
           filmId,
-          adminSession.token
+         getManagementToken()
         ]
       );
 
@@ -16732,10 +16755,10 @@ async function toggleAdminFilm(memberId, filmId) {
 
 async function rmM(id) {
 
-  if (!adminSession) {
-    showLogin();
-    return;
-  }
+  if (!hasManagementAccess()) {
+  showLogin();
+  return;
+}
 
   if (!confirm("Rimuovere questo membro?")) {
     return;
@@ -16750,7 +16773,7 @@ async function rmM(id) {
         'removeMember',
         [
           id,
-          adminSession.token
+          getManagementToken()
         ]
       );
 
@@ -18750,7 +18773,7 @@ function awardsMemberToken() {
 }
 
 function awardsAdminToken() {
-  return sessionStorage.getItem('mootboxd_admin_token') || '';
+  return getManagementToken();
 }
 
 function awardsSetMemberMessage(message, isError) {
@@ -19952,7 +19975,7 @@ function closeRouletteHistoryModal(event) {
 let rouletteHistoryAdminEntries = [];
 
 function rouletteHistoryAdminToken() {
-  return sessionStorage.getItem('mootboxd_admin_token') || '';
+  return getManagementToken();
 }
 
 function rouletteHistoryAdminMessage(message, isError) {
