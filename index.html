@@ -11995,55 +11995,34 @@ return true;
 
 async function logout() {
 
-  /* =========================
-     LOGOUT ADMIN
-     ========================= */
-
+  // LOGOUT ADMIN
   if (adminSession) {
 
-    const token =
-      localStorage.getItem(
-        "mootboxd_admin_token"
-      );
-
-    if (token) {
-
-      try {
-
-        await api(
-          'logoutAdmin',
-          [token]
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Errore logout Admin:",
-          error
-        );
-
-      }
-    }
-
-    localStorage.removeItem(
+    const adminToken = localStorage.getItem(
       "mootboxd_admin_token"
     );
 
-   adminSession = null;
+    if (adminToken) {
+      try {
+        await api('logoutAdmin', [adminToken]);
+      } catch (error) {
+        console.error("Errore logout Admin:", error);
+      }
+    }
 
-    document.getElementById(
-      "adminPanel"
-    ).style.display = "none";
-    
+    localStorage.removeItem("mootboxd_admin_token");
+
+    adminSession = null;
+
+    document.getElementById("adminPanel").style.display = "none";
+
+    // Ripristina la sessione membro, se presente.
     const memberToken = getMemberToken();
-    
+
     if (memberToken) {
       try {
-        const memberData = await api(
-          'getSession',
-          [memberToken]
-        );
-    
+        const memberData = await api('getSession', [memberToken]);
+
         if (memberData) {
           session = {
             token: memberToken,
@@ -12051,7 +12030,7 @@ async function logout() {
             name: memberData.name,
             sigla: memberData.sigla
           };
-    
+
           updateProfile();
           await load();
           showPage('home');
@@ -12065,51 +12044,28 @@ async function logout() {
         );
       }
     }
-    
+
     session = null;
     showLogin();
-    
     return;
+  }
 
-
-  /* =========================
-     LOGOUT MEMBRO
-     ========================= */
+  // LOGOUT MEMBRO
+  const token = getMemberToken();
 
   if (token) {
-
     try {
-
-      await api(
-        'logoutMember',
-        [token]
-      );
-
+      await api('logoutMember', [token]);
     } catch (error) {
-
-      console.error(
-        "Errore logout membro:",
-        error
-      );
-
+      console.error("Errore logout membro:", error);
     }
   }
 
-  /* =========================
-     PULIZIA SESSIONE
-     ========================= */
-
+  // PULIZIA SESSIONE
   clearMemberToken();
-
   session = null;
 
-  document.getElementById(
-    "adminPanel"
-  ).style.display = "none";
-
-  /* =========================
-     TORNA AL LOGIN
-     ========================= */
+  document.getElementById("adminPanel").style.display = "none";
 
   showLogin();
 }
