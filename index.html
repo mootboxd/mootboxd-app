@@ -8431,7 +8431,7 @@ async function loadSiteSuggestionsAdmin() {
 
   if (!box) return;
 
-  const token = sessionStorage.getItem('mootboxd_admin_token');
+  const token = getManagementToken();
 
   if (!token) {
     box.innerHTML = '<p class="muted">Sessione Admin non disponibile.</p>';
@@ -8497,8 +8497,8 @@ async function deleteSiteSuggestionUi(id) {
     return;
   }
 
-  const token = sessionStorage.getItem('mootboxd_admin_token');
-
+  const token = getManagementToken();
+  
   try {
     await api('deleteSiteSuggestion', [id, token]);
     await loadSiteSuggestionsAdmin();
