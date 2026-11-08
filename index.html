@@ -13025,8 +13025,33 @@ async function moveRankingFilm(sourceId, targetId, score) {
   const moved = filmIds.splice(sourceIndex, 1)[0];
   filmIds.splice(targetIndex, 0, moved);
 
-  const nextGroups = rankingOrderGroups.filter(function(group) {
-    return Number(group.score) !== score;
+  // Elimina dai gruppi salvati i film che nel frattempo
+// hanno ricevuto un voto diverso o non hanno più un voto.
+const nextGroups = rankingOrderGroups
+  .map(function(group) {
+    const groupScore = Number(group.score);
+
+    const validFilmIds = (group.filmIds || []).filter(function(id) {
+      const film = D.films.find(function(item) {
+        return String(item.id) === String(id);
+      });
+
+      return (
+        film &&
+        getMemberFilmScore(film, member) === groupScore
+      );
+    });
+
+    return {
+      score: groupScore,
+      filmIds: validFilmIds
+    };
+  })
+  .filter(function(group) {
+    return (
+      group.score !== score &&
+      group.filmIds.length >= 2
+    );
   });
 
   nextGroups.push({
