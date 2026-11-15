@@ -7613,6 +7613,40 @@ input {
       placeholder="Note (es. Settimana a tema thriller)"
     ></textarea>
 
+  <div style="margin-top:16px;">
+
+  <label for="rouletteHistoryVoters1">
+    Votanti – Primo film
+  </label>
+
+  <textarea
+    id="rouletteHistoryVoters1"
+    rows="3"
+    placeholder="Inserisci un nome per riga"
+  ></textarea>
+
+  <label for="rouletteHistoryVoters2">
+    Votanti – Secondo film
+  </label>
+
+  <textarea
+    id="rouletteHistoryVoters2"
+    rows="3"
+    placeholder="Inserisci un nome per riga"
+  ></textarea>
+
+  <label for="rouletteHistoryVoters3">
+    Votanti – Terzo film
+  </label>
+
+  <textarea
+    id="rouletteHistoryVoters3"
+    rows="3"
+    placeholder="Inserisci un nome per riga"
+  ></textarea>
+
+</div>
+
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button
         class="btn primary"
@@ -20031,7 +20065,20 @@ async function openRouletteHistoryModal() {
       }
 
       content.innerHTML = filtered.map(function(entry) {
-        const films = [entry.film1, entry.film2, entry.film3];
+        const films = [
+          {
+            nome: entry.film1,
+            votanti: entry.votanti_film1
+          },
+          {
+            nome: entry.film2,
+            votanti: entry.votanti_film2
+          },
+          {
+            nome: entry.film3,
+            votanti: entry.votanti_film3
+          }
+        ];
 
         return `
           <div class="roulette-history-entry"
@@ -20062,11 +20109,19 @@ async function openRouletteHistoryModal() {
 
             <div style="display:grid;gap:6px;">
               ${films.map(function(film) {
-                const isWinner =
-                  String(film || '').trim() !== '' &&
-                  String(film || '').trim().toLowerCase() ===
-                  String(entry.vincitore || '').trim().toLowerCase();
 
+                const isWinner =
+                  String(film.nome || '').trim() !== '' &&
+                  String(film.nome || '').trim().toLowerCase() ===
+                  String(entry.vincitore || '').trim().toLowerCase();
+              
+                const votanti = String(film.votanti || '')
+                  .split(/[\n,;]+/)
+                  .map(function(nome) {
+                    return nome.trim();
+                  })
+                  .filter(Boolean);
+              
                 return `
                   <div style="
                     padding:8px 10px;
@@ -20075,17 +20130,30 @@ async function openRouletteHistoryModal() {
                       ? 'font-weight:700;color:#7ee0a1;background:rgba(60,180,100,0.12);'
                       : ''}
                   ">
+              
                     ${isWinner ? '★ ' : ''}
-                    ${escapeHtml(film)}
+                    ${escapeHtml(film.nome)}
                     ${isWinner ? ' — VINCITORE' : ''}
+              
+                    ${votanti.length ? `
+                      <div style="
+                        margin-top:5px;
+                        font-size:12px;
+                        font-weight:400;
+                        opacity:0.8;
+                        line-height:1.5;
+                      ">
+                        ${votanti.length} ${votanti.length === 1 ? 'votante' : 'votanti'}:
+                        ${votanti.map(function(nome) {
+                          return escapeHtml(nome);
+                        }).join(', ')}
+                      </div>
+                    ` : ''}
+              
                   </div>
                 `;
               }).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+                  }
 
     // Evita di registrare più volte gli stessi listener se il modal viene riaperto.
     if (yearSelect.dataset.historyListener !== 'true') {
@@ -20163,6 +20231,9 @@ function resetRouletteHistoryForm() {
   document.getElementById('rouletteHistoryNotes').value = '';
   document.getElementById('rouletteHistoryCancelled').checked = false;
   document.getElementById('rouletteHistoryWeek').value = '';
+  document.getElementById('rouletteHistoryVoters1').value = '';
+  document.getElementById('rouletteHistoryVoters2').value = '';
+  document.getElementById('rouletteHistoryVoters3').value = '';
 
   updateRouletteHistoryWinnerOptions('');
 
@@ -20203,6 +20274,18 @@ async function loadRouletteHistoryAdmin() {
           ${entry.annullata ? '<span style="color:#e57373;font-weight:800;margin-left:8px;">ANNULLATA</span>' : ''}
           ${entry.settimana_ufficiale ? `<div style="font-size:11px;font-weight:800;letter-spacing:1px;margin-top:4px;">SETTIMANA ${esc(entry.settimana_ufficiale)}</div>` : ''}
             <div>${esc(entry.film1)} · ${esc(entry.film2)} · ${esc(entry.film3)}</div>
+            <div class="muted" style="font-size:12px;">
+                Votanti:
+                ${[entry.votanti_film1, entry.votanti_film2, entry.votanti_film3]
+                  .map(function(elenco) {
+                    return String(elenco || '')
+                      .split(/[\n,;]+/)
+                      .map(function(nome) {
+                        return nome.trim();
+                      })
+                      .filter(Boolean).length;
+                  }).join(' · ')}
+              </div>
           <div style="color:#7ee0a1;font-weight:700;">
             Vincitore: ${esc(entry.vincitore)}
           </div>
@@ -20240,6 +20323,14 @@ function editRouletteHistoryEntry(riga) {
   document.getElementById('rouletteHistoryFilm1').value = entry.film1;
   document.getElementById('rouletteHistoryFilm2').value = entry.film2;
   document.getElementById('rouletteHistoryFilm3').value = entry.film3;
+  document.getElementById('rouletteHistoryVoters1').value =
+    entry.votanti_film1 || '';
+
+  document.getElementById('rouletteHistoryVoters2').value =
+    entry.votanti_film2 || '';
+  
+  document.getElementById('rouletteHistoryVoters3').value =
+    entry.votanti_film3 || '';     
   document.getElementById('rouletteHistoryNotes').value = entry.note;
   document.getElementById('rouletteHistoryCancelled').checked = entry.annullata === true;
   document.getElementById('rouletteHistoryWeek').value = entry.settimana_ufficiale || '';
@@ -20281,6 +20372,15 @@ async function saveRouletteHistoryEntry() {
   const annullata = document.getElementById('rouletteHistoryCancelled').checked;
   const settimanaUfficiale = document.getElementById('rouletteHistoryWeek').value.trim();
 
+  const votantiFilm1 =
+    document.getElementById('rouletteHistoryVoters1').value.trim();
+  
+  const votantiFilm2 =
+    document.getElementById('rouletteHistoryVoters2').value.trim();
+  
+  const votantiFilm3 =
+    document.getElementById('rouletteHistoryVoters3').value.trim();
+
   if (!data || !film1 || !film2 || !film3 || !vincitore) {
     rouletteHistoryAdminMessage('Inserisci data, tre film e vincitore.', true);
     return;
@@ -20308,6 +20408,9 @@ async function saveRouletteHistoryEntry() {
         note,
         annullata,
         settimanaUfficiale,
+        votantiFilm1,
+        votantiFilm2,
+        votantiFilm3,
         token
       ]);
     } else {
@@ -20320,6 +20423,9 @@ async function saveRouletteHistoryEntry() {
         note,
         annullata,
         settimanaUfficiale,
+        votantiFilm1,
+        votantiFilm2,
+        votantiFilm3,
         token
       ]);
     }
