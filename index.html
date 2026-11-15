@@ -7613,39 +7613,70 @@ input {
       placeholder="Note (es. Settimana a tema thriller)"
     ></textarea>
 
-  <div style="margin-top:16px;">
+  
+<div style="
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+">
 
-  <label for="rouletteHistoryVoters1">
-    Voti – Primo film
-  </label>
+  <div style="
+    padding:14px;
+    border:1px solid var(--border-color,#444);
+    border-radius:10px;
+    background:rgba(128,128,128,0.06);
+  ">
+    <label for="rouletteHistoryVoters1"
+      style="display:block;margin-bottom:8px;font-weight:700;">
+      Voti – Primo film
+    </label>
+    <textarea
+      id="rouletteHistoryVoters1"
+      rows="4"
+      placeholder="Inserisci un nome per riga"
+      style="width:100%;box-sizing:border-box;"
+    ></textarea>
+  </div>
 
-  <textarea
-    id="rouletteHistoryVoters1"
-    rows="3"
-    placeholder="Inserisci un nome per riga"
-  ></textarea>
+  <div style="
+    padding:14px;
+    border:1px solid var(--border-color,#444);
+    border-radius:10px;
+    background:rgba(128,128,128,0.06);
+  ">
+    <label for="rouletteHistoryVoters2"
+      style="display:block;margin-bottom:8px;font-weight:700;">
+      Voti – Secondo film
+    </label>
+    <textarea
+      id="rouletteHistoryVoters2"
+      rows="4"
+      placeholder="Inserisci un nome per riga"
+      style="width:100%;box-sizing:border-box;"
+    ></textarea>
+  </div>
 
-  <label for="rouletteHistoryVoters2">
-    Voti – Secondo film
-  </label>
-
-  <textarea
-    id="rouletteHistoryVoters2"
-    rows="3"
-    placeholder="Inserisci un nome per riga"
-  ></textarea>
-
-  <label for="rouletteHistoryVoters3">
-    Voti – Terzo film
-  </label>
-
-  <textarea
-    id="rouletteHistoryVoters3"
-    rows="3"
-    placeholder="Inserisci un nome per riga"
-  ></textarea>
+  <div style="
+    padding:14px;
+    border:1px solid var(--border-color,#444);
+    border-radius:10px;
+    background:rgba(128,128,128,0.06);
+  ">
+    <label for="rouletteHistoryVoters3"
+      style="display:block;margin-bottom:8px;font-weight:700;">
+      Voti – Terzo film
+    </label>
+    <textarea
+      id="rouletteHistoryVoters3"
+      rows="4"
+      placeholder="Inserisci un nome per riga"
+      style="width:100%;box-sizing:border-box;"
+    ></textarea>
+  </div>
 
 </div>
+
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button
@@ -7899,6 +7930,16 @@ input {
       <div
         id="awardsBuilderQuestionList"
         aria-live="polite"
+        style="
+          max-height:420px;
+          overflow-y:auto;
+          overflow-x:hidden;
+          padding:12px;
+          margin-top:10px;
+          border:1px solid var(--border-color,#444);
+          border-radius:10px;
+          background:rgba(128,128,128,0.06);
+        "
       >
         <p class="muted">
           Carica la configurazione per visualizzare le domande.
