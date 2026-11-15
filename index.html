@@ -7616,7 +7616,7 @@ input {
   <div style="margin-top:16px;">
 
   <label for="rouletteHistoryVoters1">
-    Votanti – Primo film
+    Voti – Primo film
   </label>
 
   <textarea
@@ -7626,7 +7626,7 @@ input {
   ></textarea>
 
   <label for="rouletteHistoryVoters2">
-    Votanti – Secondo film
+    Voti – Secondo film
   </label>
 
   <textarea
@@ -7636,7 +7636,7 @@ input {
   ></textarea>
 
   <label for="rouletteHistoryVoters3">
-    Votanti – Terzo film
+    Voti – Terzo film
   </label>
 
   <textarea
@@ -20137,20 +20137,17 @@ async function openRouletteHistoryModal() {
                     ${escapeHtml(film.nome)}
                     ${isWinner ? ' — VINCITORE' : ''}
               
-                    ${votanti.length ? `
-                      <div style="
-                        margin-top:5px;
-                        font-size:12px;
-                        font-weight:400;
-                        opacity:0.8;
-                        line-height:1.5;
-                      ">
-                        ${votanti.length} ${votanti.length === 1 ? 'votante' : 'votanti'}:
-                        ${votanti.map(function(nome) {
-                          return escapeHtml(nome);
-                        }).join(', ')}
-                      </div>
-                    ` : ''}
+                    <div style="
+                      margin-top:5px;
+                      font-size:12px;
+                      font-weight:400;
+                      opacity:0.8;
+                      line-height:1.5;
+                    ">
+                      ${votanti.length} ${votanti.length === 1 ? 'voto' : 'voti'}${votanti.length ? ': ' + votanti.map(function(nome) {
+                        return escapeHtml(nome);
+                      }).join(', ') : ''}
+                    </div>
               
                   </div>
                 `;
@@ -20281,7 +20278,7 @@ async function loadRouletteHistoryAdmin() {
           ${entry.settimana_ufficiale ? `<div style="font-size:11px;font-weight:800;letter-spacing:1px;margin-top:4px;">SETTIMANA ${esc(entry.settimana_ufficiale)}</div>` : ''}
             <div>${esc(entry.film1)} · ${esc(entry.film2)} · ${esc(entry.film3)}</div>
             <div class="muted" style="font-size:12px;">
-                Votanti:
+                Voti:
                 ${[entry.votanti_film1, entry.votanti_film2, entry.votanti_film3]
                   .map(function(elenco) {
                     return String(elenco || '')
