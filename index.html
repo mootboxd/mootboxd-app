@@ -7950,15 +7950,29 @@ input {
 
       <h3 id="awardsBuilderFormTitle">Aggiungi una domanda</h3>
 
-      <label for="awardsBuilderQuestionTitle">
-        Testo della domanda
-      </label>
+      
+      <div style="
+        margin-top:16px;
+        padding:14px;
+        border:1px solid var(--border-color,#444);
+        border-radius:10px;
+        background:rgba(128,128,128,0.06);
+      ">
+        <label
+          for="awardsBuilderQuestionTitle"
+          style="display:block;margin-bottom:8px;font-weight:700;"
+        >
+          Testo della domanda
+        </label>
+      
+        <textarea
+          id="awardsBuilderQuestionTitle"
+          rows="4"
+          placeholder="Scrivi il testo della domanda"
+          style="width:100%;box-sizing:border-box;"
+        ></textarea>
+      </div>
 
-      <textarea
-        id="awardsBuilderQuestionTitle"
-        rows="3"
-        placeholder="Scrivi il testo della domanda"
-      ></textarea>
 
       <label for="awardsBuilderQuestionType">
         Modalità di risposta
@@ -7998,7 +8012,13 @@ input {
         Risposta obbligatoria
       </label>
 
-      <div id="awardsBuilderOptionsArea" style="margin-top:12px;">
+      <div id="awardsBuilderOptionsArea" style="
+          margin-top:16px;
+          padding:14px;
+          border:1px solid var(--border-color,#444);
+          border-radius:10px;
+          background:rgba(128,128,128,0.06);
+        ">
         <label for="awardsBuilderOptions">
           Opzioni personalizzate
         </label>
@@ -8007,6 +8027,7 @@ input {
           id="awardsBuilderOptions"
           rows="4"
           placeholder="Una opzione per riga"
+          style="width:100%;box-sizing:border-box;"
         ></textarea>
 
         <p class="muted">
