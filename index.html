@@ -20152,8 +20152,11 @@ async function openRouletteHistoryModal() {
               
                   </div>
                 `;
-              }).join('')
-                  }
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
 
     // Evita di registrare più volte gli stessi listener se il modal viene riaperto.
     if (yearSelect.dataset.historyListener !== 'true') {
