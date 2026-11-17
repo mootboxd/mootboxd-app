@@ -7814,6 +7814,31 @@ input {
   </div>
 
   <div
+  class="film-admin-form"
+  style="margin-top:12px;"
+>
+
+  <input
+    id="historicalThemeName"
+    placeholder="Nome della settimana storica"
+  >
+
+  <input
+    id="historicalThemeStart"
+    type="date"
+    title="Primo giorno effettivo della settimana"
+  >
+
+  <button
+    class="btn film-admin-submit"
+    onclick="createAdminHistoricalTheme()"
+  >
+    Inserisci settimana storica
+  </button>
+
+</div>
+
+  <div
     class="list"
     id="themeAdminList"
   ></div>
@@ -15585,7 +15610,7 @@ function renderAdminFilms() {
    MODIFICA FILM — ADMIN
    ========================= */
 
-function editAdminFilm(filmId) {
+async function editAdminFilm(filmId) {
 
   if (!hasManagementAccess()) {
   showLogin();
@@ -15601,6 +15626,35 @@ function editAdminFilm(filmId) {
     alert("Film non trovato.");
     return;
   }
+
+    let themeWeeks = [];
+
+  try {
+    themeWeeks = await api('getThemeWeeks', []);
+  } catch (error) {
+    alert('Impossibile caricare le settimane a tema: ' + error.message);
+    return;
+  }
+
+  const currentTheme =
+    themeWeeks.find(function(theme) {
+      return String(theme.filmId) === String(filmId);
+    });
+
+  const availableThemes =
+    themeWeeks.filter(function(theme) {
+
+      const status =
+        String(theme.stato || '').toUpperCase();
+
+      const linkedFilmId =
+        String(theme.filmId || '');
+
+      return (
+        (status === 'CHIUSA' || status === 'ARCHIVIATA') &&
+        (!linkedFilmId || linkedFilmId === String(filmId))
+      );
+    });
 
   const box =
     document.getElementById(
@@ -15650,6 +15704,41 @@ function editAdminFilm(filmId) {
         value="${esc(film.dataDiscussione || "")}"
         placeholder="Data discussione"
       >
+
+            <select
+        id="edit-film-theme-${filmId}"
+        style="grid-column:1 / -1;"
+      >
+
+        <option value="">
+          Nessuna settimana associata
+        </option>
+
+        ${availableThemes.map(function(theme) {
+
+          const selected =
+            currentTheme &&
+            String(currentTheme.id) === String(theme.id)
+              ? 'selected'
+              : '';
+
+          const statusLabel =
+            String(theme.stato).toUpperCase() === 'ARCHIVIATA'
+              ? ' (storica)'
+              : '';
+
+          return `
+            <option
+              value="${esc(theme.id)}"
+              ${selected}
+            >
+              ${esc(theme.nome)}${statusLabel}
+            </option>
+          `;
+
+        }).join('')}
+
+      </select>  
 
       <textarea
         id="edit-film-sinossi-${filmId}"
@@ -15736,6 +15825,11 @@ async function saveAdminFilm(filmId) {
     return;
   }
 
+    const themeId =
+    document.getElementById(
+      "edit-film-theme-" + filmId
+    ).value;
+
   setSaving(true);
 
   try {
@@ -15751,7 +15845,8 @@ async function saveAdminFilm(filmId) {
           regista,
           genere,
           dataDiscussione,
-          getManagementToken()
+          getManagementToken(),
+          themeId
         ]
       );
 
@@ -16358,6 +16453,60 @@ async function createAdminTheme() {
     setSaving(false);
   }
 }
+
+async function createAdminHistoricalTheme() {
+
+  if (!hasManagementAccess()) {
+    showLogin();
+    return;
+  }
+
+  const nameInput =
+    document.getElementById('historicalThemeName');
+
+  const startInput =
+    document.getElementById('historicalThemeStart');
+
+  const nome = nameInput.value.trim();
+  const dataInizio = startInput.value.trim();
+
+  if (!nome || !dataInizio) {
+    alert('Inserisci il nome e la data di inizio.');
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+
+    await api(
+      'createHistoricalThemeWeek',
+      [
+        nome,
+        dataInizio,
+        getManagementToken()
+      ]
+    );
+
+    nameInput.value = '';
+    startInput.value = '';
+
+    await loadAdminThemeWeeks();
+
+    alert('Settimana storica inserita.');
+
+  } catch (error) {
+
+    alert(
+      'Errore durante l’inserimento: ' +
+      error.message
+    );
+
+  } finally {
+
+    setSaving(false);
+  }
+}  
 
 
 /* =========================
