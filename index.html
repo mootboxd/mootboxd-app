@@ -16027,6 +16027,15 @@ function renderAdminThemeWeeks(weeks) {
         statoLabel = 'DISATTIVA';
       }
 
+      if (stato === 'ARCHIVIATA') {
+        statoLabel = 'ARCHIVIATA';
+      }
+      
+      const dateLabel =
+        stato === 'ARCHIVIATA'
+          ? 'Settimana dal ' + theme.dataInizio
+          : theme.dataInizio + ' → ' + theme.dataFine;
+
       return `
         <div
           class="item"
