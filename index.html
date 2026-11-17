@@ -17220,6 +17220,237 @@ function esc(value) {
 
 checkSession();
 
+/* =========================================
+   CALENDARIO MOOTBOXD
+   ========================================= */
+
+function parseCalendarDate(value) {
+
+  const text = String(value || '').trim();
+
+  if (!text) return null;
+
+  // Formato: 2026-04-30
+  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  if (match) {
+    return new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3])
+    );
+  }
+
+  // Formato: 30/04/2026
+  match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+  if (match) {
+    return new Date(
+      Number(match[3]),
+      Number(match[2]) - 1,
+      Number(match[1])
+    );
+  }
+
+  // Formato: Giovedì 30 Aprile 2026 - 21:30
+  const months = {
+    gennaio: 0,
+    febbraio: 1,
+    marzo: 2,
+    aprile: 3,
+    maggio: 4,
+    giugno: 5,
+    luglio: 6,
+    agosto: 7,
+    settembre: 8,
+    ottobre: 9,
+    novembre: 10,
+    dicembre: 11
+  };
+
+  match = text.match(
+    /(\d{1,2})\s+([a-zàèéìòù]+)\s+(\d{4})/i
+  );
+
+  if (match) {
+
+    const month = months[match[2].toLowerCase()];
+
+    if (month === undefined) return null;
+
+    const timeMatch = text.match(/(\d{1,2}):(\d{2})/);
+
+    return new Date(
+      Number(match[3]),
+      month,
+      Number(match[1]),
+      timeMatch ? Number(timeMatch[1]) : 0,
+      timeMatch ? Number(timeMatch[2]) : 0
+    );
+  }
+
+  return null;
+}
+
+
+function formatCalendarDate(date) {
+
+  return date.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+
+async function openCalendarModal() {
+
+  const modal = document.getElementById('calendarModal');
+  const content = document.getElementById('calendarContent');
+
+  if (!modal || !content) return;
+
+  modal.classList.add('open');
+  document.body.classList.add('modal-open');
+
+  content.innerHTML =
+    '<div class="muted">Caricamento eventi...</div>';
+
+  try {
+
+    const themeWeeks = await api('getThemeWeeks', []);
+
+    const events = [];
+
+    // Discussioni dei film
+    (D.films || []).forEach(function(film) {
+
+      const date = parseCalendarDate(film.dataDiscussione);
+
+      if (!date || isNaN(date.getTime())) return;
+
+      events.push({
+        date: date,
+        type: 'film',
+        title: film.title,
+        detail: 'Discussione del film',
+        filmId: film.id
+      });
+
+    });
+
+    // Settimane a tema
+    (Array.isArray(themeWeeks) ? themeWeeks : []).forEach(function(theme) {
+
+      const date = parseCalendarDate(theme.dataInizio);
+
+      if (!date || isNaN(date.getTime())) return;
+
+      if (
+        String(theme.stato || '').toUpperCase() === 'DISATTIVA'
+      ) return;
+
+      events.push({
+        date: date,
+        type: 'theme',
+        title: theme.nome,
+        detail: 'Settimana a tema · fino al ' + theme.dataFine
+      });
+
+    });
+
+    events.sort(function(a, b) {
+      return a.date - b.date;
+    });
+
+    renderCalendarEvents(events);
+
+  } catch (error) {
+
+    console.error('Errore caricamento calendario:', error);
+
+    content.innerHTML =
+      '<div class="empty">Errore durante il caricamento degli eventi.</div>';
+
+  }
+}
+
+
+function renderCalendarEvents(events) {
+
+  const content = document.getElementById('calendarContent');
+
+  if (!content) return;
+
+  if (!events.length) {
+
+    content.innerHTML =
+      '<div class="empty">Non ci sono eventi in calendario.</div>';
+
+    return;
+  }
+
+  content.innerHTML = events.map(function(event) {
+
+    return `
+      <div
+        class="item"
+        style="margin-bottom:10px;"
+      >
+
+        <div style="font-size:13px;color:#9ca3b2;margin-bottom:5px;">
+          ${formatCalendarDate(event.date)}
+        </div>
+
+        <div style="font-weight:700;">
+          ${esc(event.title)}
+        </div>
+
+        <div class="muted" style="font-size:13px;margin-top:4px;">
+          ${esc(event.detail)}
+        </div>
+
+        ${
+          event.type === 'film'
+            ? `
+              <button
+                class="btn"
+                type="button"
+                style="margin-top:10px;"
+                onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
+              >
+                Scheda film
+              </button>
+            `
+            : ''
+        }
+
+      </div>
+    `;
+
+  }).join('');
+
+}
+
+
+function closeCalendarModal(event) {
+
+  if (
+    event &&
+    event.target !== event.currentTarget
+  ) return;
+
+  const modal = document.getElementById('calendarModal');
+
+  if (!modal) return;
+
+  modal.classList.remove('open');
+
+  document.body.classList.remove('modal-open');
+
+}  
+
 function openFilmModal(filmId) {
 
   const film = D.films.find(function(f) {
