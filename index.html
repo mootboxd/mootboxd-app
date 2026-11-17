@@ -7548,6 +7548,10 @@ input {
       placeholder="Data discussione"
     >
 
+    <select id="filmThemeWeek">
+      <option value="">Nessuna settimana a tema</option>
+    </select>
+
     <textarea
       id="fs"
       placeholder="Sinossi"
@@ -15331,6 +15335,9 @@ async function addF() {
   const sinossi =
     sinossiInput.value.trim();
 
+  const themeId =
+    document.getElementById('filmThemeWeek').value;
+
   if (!title) {
     alert("Inserisci un titolo.");
     return;
@@ -15355,7 +15362,8 @@ async function addF() {
           regista,
           genere,
           dataDiscussione,
-          getManagementToken()
+          getManagementToken(),
+          themeId
         ]
       );
 
@@ -16051,6 +16059,33 @@ async function renderAdminThemes() {
         ]
       );
 
+  const themeSelect =
+  document.getElementById('filmThemeWeek');
+
+if (themeSelect) {
+
+  const availableThemes = themes.filter(function(theme) {
+
+    return (
+      String(theme.stato || '').toUpperCase() === 'CHIUSA' &&
+      !String(theme.filmId || '').trim()
+    );
+
+  });
+
+  themeSelect.innerHTML =
+    '<option value="">Nessuna settimana a tema</option>' +
+    availableThemes.map(function(theme) {
+
+      return `
+        <option value="${esc(theme.id)}">
+          ${esc(theme.nome)}
+        </option>
+      `;
+
+    }).join('');
+}
+
     console.log(
       'TEMI ADMIN RICEVUTI DAL BACKEND:',
       themes
@@ -16146,7 +16181,7 @@ async function renderAdminThemes() {
               class="danger"
               onclick="deleteAdminTheme('${esc(theme.id)}')"
             >
-              Elimina
+              Archivia
             </button>
           `;
 
@@ -16671,7 +16706,7 @@ async function deleteAdminTheme(themeId) {
 
   const confirmed =
     confirm(
-      "Vuoi eliminare definitivamente questo tema?\n\n" +
+      "Vuoi archiviare definitivamente questo tema?\n\n" +
       "L'operazione non può essere annullata."
     );
 
@@ -16694,13 +16729,13 @@ async function deleteAdminTheme(themeId) {
     await renderAdminThemes();
 
     alert(
-      "Tema eliminato."
+      "Tema archiviato"
     );
 
   } catch (error) {
 
     alert(
-      "Errore durante l'eliminazione del tema: " +
+      "Errore durante l'archiviazione del tema: " +
       error.message
     );
 
@@ -17340,25 +17375,53 @@ async function openCalendarModal() {
 
     });
 
-    // Settimane a tema
-    (Array.isArray(themeWeeks) ? themeWeeks : []).forEach(function(theme) {
+    // Settimane a tema: periodo effettivo
+(Array.isArray(themeWeeks) ? themeWeeks : []).forEach(function(theme) {
 
-      const date = parseCalendarDate(theme.dataInizio);
+  const stato =
+    String(theme.stato || '').toUpperCase();
 
-      if (!date || isNaN(date.getTime())) return;
+  if (stato === 'DISATTIVA') return;
 
-      if (
-        String(theme.stato || '').toUpperCase() === 'DISATTIVA'
-      ) return;
+  // La settimana inizia il giorno successivo
+  // alla chiusura delle proposte.
+  const startDate = parseCalendarDate(theme.dataFine);
 
-      events.push({
-        date: date,
-        type: 'theme',
-        title: theme.nome,
-        detail: 'Settimana a tema · fino al ' + theme.dataFine
-      });
+  if (!startDate || isNaN(startDate.getTime())) return;
 
-    });
+  startDate.setDate(startDate.getDate() + 1);
+
+  // Recupera il film associato tramite filmId.
+  const associatedFilm = (D.films || []).find(function(film) {
+    return String(film.id) === String(theme.filmId || '');
+  });
+
+  // La settimana termina il giorno della discussione.
+  const endDate = associatedFilm
+    ? parseCalendarDate(associatedFilm.dataDiscussione)
+    : null;
+
+  let detail = 'Settimana a tema';
+
+  if (endDate && !isNaN(endDate.getTime())) {
+    detail +=
+      ' · dal ' +
+      startDate.toLocaleDateString('it-IT') +
+      ' al ' +
+      endDate.toLocaleDateString('it-IT');
+  } else {
+    detail += ' · in attesa della data di discussione';
+  }
+
+  events.push({
+    date: startDate,
+    type: 'theme',
+    title: theme.nome,
+    detail: detail,
+    filmId: theme.filmId || ''
+  });
+
+});
 
     events.sort(function(a, b) {
       return a.date - b.date;
