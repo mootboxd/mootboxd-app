@@ -5965,6 +5965,29 @@ input {
   }
 }  
 
+@media (max-width: 600px) {
+
+  #calendarModal .film-modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 94vh !important;
+    padding: 0 !important;
+    border-radius: 12px;
+  }
+
+  #calendarModal #calendarContent {
+    padding: 12px !important;
+    overflow-x: auto;
+  }
+
+  #calendarModal #calendarDaysGrid {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+    min-width: 490px;
+  }
+
+}  
+
   
 </style>
 </head>
@@ -17643,7 +17666,7 @@ function renderCalendarEvents(events) {
         onclick="changeCalendarMonth(1)">›</button>
     </div>
 
-    <div style="
+    <div id="calendarDaysGrid" style="
       display:grid;
       grid-template-columns:repeat(7,minmax(0,1fr));
       gap:8px;
