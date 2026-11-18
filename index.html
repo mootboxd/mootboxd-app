@@ -17560,7 +17560,6 @@ async function openCalendarModal() {
         date: date,
         type: 'film',
         title: film.title,
-        detail: 'Discussione del film',
         filmId: film.id
       });
 
@@ -17592,23 +17591,10 @@ async function openCalendarModal() {
     ? parseCalendarDate(associatedFilm.dataDiscussione)
     : null;
 
-  let detail = 'Settimana a tema';
-
-  if (endDate && !isNaN(endDate.getTime())) {
-    detail +=
-      ' · dal ' +
-      startDate.toLocaleDateString('it-IT') +
-      ' al ' +
-      endDate.toLocaleDateString('it-IT');
-  } else {
-    detail += ' · in attesa della data di discussione';
-  }
-
   events.push({
     date: startDate,
     type: 'theme',
     title: theme.nome,
-    detail: detail,
     filmId: theme.filmId || ''
   });
 
@@ -17639,8 +17625,7 @@ async function openCalendarModal() {
   events.push({
     date: date,
     type: 'birthday',
-    title: 'Compleanno di ' + member.name,
-    detail: 'Compleanno di ' + member.name
+    title: 'Compleanno di' + member.name
   });
 
 });
@@ -18078,6 +18063,93 @@ function formatCalendarDateISO(date) {
 }
 
 
+function chooseCalendarColor(initialColor) {
+
+  return new Promise(function(resolve) {
+
+    const overlay = document.createElement('div');
+
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:100000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,0.75);
+    `;
+
+    overlay.innerHTML = `
+      <div style="
+        width:100%;
+        max-width:340px;
+        padding:22px;
+        background:#202431;
+        border:1px solid #363d4d;
+        border-radius:12px;
+        color:#f5f6fa;
+        text-align:center;
+      ">
+        <h3 style="margin:0 0 18px;">
+          Scegli il colore dell'evento
+        </h3>
+
+        <input
+          type="color"
+          value="${/^#[0-9A-Fa-f]{6}$/.test(initialColor || '') ? initialColor : '#eab308'}"
+          style="
+            width:100%;
+            height:65px;
+            border:0;
+            background:transparent;
+            cursor:pointer;
+          "
+        >
+
+        <div style="
+          display:flex;
+          gap:10px;
+          margin-top:20px;
+        ">
+          <button type="button" class="btn"
+            data-action="cancel"
+            style="flex:1;">
+            Annulla
+          </button>
+
+          <button type="button" class="btn primary"
+            data-action="confirm"
+            style="flex:1;">
+            Conferma
+          </button>
+        </div>
+      </div>
+    `;
+
+    const input = overlay.querySelector('input[type="color"]');
+
+    function close(value) {
+      overlay.remove();
+      resolve(value);
+    }
+
+    overlay.querySelector('[data-action="cancel"]')
+      .addEventListener('click', function() {
+        close(null);
+      });
+
+    overlay.querySelector('[data-action="confirm"]')
+      .addEventListener('click', function() {
+        close(input.value);
+      });
+
+    document.body.appendChild(overlay);
+
+  });
+}  
+
+
 // AGGIUNGI EVENTO
 async function addCalendarEventUi() {
 
@@ -18106,10 +18178,7 @@ async function addCalendarEventUi() {
   const detail = prompt('Descrizione dell’evento:', '');
   if (detail === null) return;
 
-  const color = prompt(
-  'Colore dell’evento (codice HEX, es. #eab308):',
-  '#eab308'
-);
+  const color = await chooseCalendarColor('#eab308');
 
 if (color === null) return;
 
@@ -18176,8 +18245,7 @@ async function editCalendarEventUi(index) {
 
   if (detail === null) return;
 
-  const color = prompt(
-  'Colore dell’evento (codice HEX, es. #ff6600):',
+  const color = await chooseCalendarColor(
   event.color || '#eab308'
 );
 
