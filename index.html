@@ -17539,6 +17539,14 @@ async function openCalendarModal() {
 
     const themeWeeks = await api('getThemeWeeks', []);
 
+    const calendarToken =
+      getManagementToken() || getMemberToken();
+    
+    const customEvents = await api(
+      'getCalendarEvents',
+      [calendarToken]
+    );
+    
     const events = [];
 
     // Discussioni dei film
@@ -17605,6 +17613,57 @@ async function openCalendarModal() {
   });
 
 });
+
+  // COMPLEANNI DEI MEMBRI
+(D.members || []).forEach(function(member) {
+
+  const birthday = String(member.birthday || '').trim();
+
+  const match = birthday.match(/^(\d{1,2})\/(\d{1,2})$/);
+
+  if (!match) return;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+
+  const year = calendarCurrentDate.getFullYear();
+
+  const date = new Date(year, month - 1, day);
+
+  // Verifica che la data sia valida.
+  if (
+    date.getDate() !== day ||
+    date.getMonth() !== month - 1
+  ) return;
+
+  events.push({
+    date: date,
+    type: 'birthday',
+    title: 'Compleanno di ' + member.name,
+    detail: 'Compleanno di ' + member.name
+  });
+
+});
+
+
+// EVENTI PERSONALIZZATI
+(Array.isArray(customEvents) ? customEvents : [])
+  .forEach(function(customEvent) {
+
+    const date = parseCalendarDate(customEvent.date);
+
+    if (!date || isNaN(date.getTime())) return;
+
+    events.push({
+      id: customEvent.id,
+      date: date,
+      type: 'custom',
+      title: customEvent.title,
+      detail: customEvent.detail || '',
+      customEventId: customEvent.id
+    });
+
+  });
 
     events.sort(function(a, b) {
       return a.date - b.date;
