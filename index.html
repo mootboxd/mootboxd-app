@@ -17680,14 +17680,35 @@ function renderCalendarEvents(events) {
       groupedEvents[day].push(item);
     });
 
-    let mobileHtml = `
-      <div style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        margin-bottom:18px;
-      ">
+    
+      let mobileHtml = `
+        <!-- LEGENDA MOBILE -->
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:9px 12px;
+          margin-bottom:18px;
+          padding:12px;
+          background:#171a23;
+          border:1px solid #2a2f3d;
+          border-radius:9px;
+          font-size:12px;
+        ">
+          <span style="color:#a78bfa;">● Discussioni</span>
+          <span style="color:#0ea5e9;">● Settimane a tema</span>
+          <span style="color:#ec4899;">● Compleanni</span>
+          <span style="color:#eab308;">● Eventi</span>
+        </div>
+      
+        <!-- SELETTORE MESE -->
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          margin-bottom:18px;
+        ">
+
         <button class="btn" type="button"
           onclick="changeCalendarMonth(-1)">‹</button>
 
