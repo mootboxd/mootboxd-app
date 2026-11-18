@@ -17831,48 +17831,56 @@ function renderCalendarEvents(events) {
 
       groupedEvents[day].forEach(item => {
 
-        const event = item.event;
-        const color = typeColors[event.type] || '#9ca3b2';
-        const label = typeLabels[event.type] || 'Evento';
+  const event = item.event;
+  const color = typeColors[event.type] || '#9ca3b2';
+  const label = typeLabels[event.type] || 'Evento';
 
-        mobileHtml += `
-          <button type="button"
-            onclick="openCalendarEvent(${item.index})"
-            style="
-              display:block;
-              width:100%;
-              box-sizing:border-box;
-              text-align:left;
-              padding:11px 12px;
-              margin-top:7px;
-              border:1px solid ${color};
-              border-left:4px solid ${color};
-              border-radius:8px;
-              background:#171a23;
-              color:#f5f6fa;
-              cursor:pointer;
-            "
-          >
-            <div style="
-              color:${color};
-              font-size:11px;
-              font-weight:700;
-              margin-bottom:4px;
-            ">
-              ${label}
-            </div>
+  mobileHtml += `
+    <div style="
+      display:block;
+      width:100%;
+      box-sizing:border-box;
+      padding:11px 12px;
+      margin-top:7px;
+      border:1px solid ${color};
+      border-left:4px solid ${color};
+      border-radius:8px;
+      background:#171a23;
+      color:#f5f6fa;
+    ">
+      <div style="
+        color:${color};
+        font-size:11px;
+        font-weight:700;
+        margin-bottom:4px;
+      ">
+        ${label}
+      </div>
 
-            <div style="
-              font-size:14px;
-              line-height:1.4;
-              font-weight:600;
-              overflow-wrap:anywhere;
-            ">
-              ${esc(event.title)}
-            </div>
-          </button>
-        `;
-      });
+      <div style="
+        font-size:14px;
+        line-height:1.4;
+        font-weight:600;
+        overflow-wrap:anywhere;
+      ">
+        ${esc(event.title)}
+      </div>
+
+      ${event.detail ? `
+        <div style="
+          margin-top:5px;
+          color:#c8ccd6;
+          font-size:12px;
+          line-height:1.45;
+          overflow-wrap:anywhere;
+          white-space:pre-wrap;
+        ">
+          ${esc(event.detail)}
+        </div>
+      ` : ''}
+    </div>
+  `;
+});
 
       mobileHtml += `
         </div>
