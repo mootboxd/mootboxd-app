@@ -17641,6 +17641,166 @@ function renderCalendarEvents(events) {
     year: 'numeric'
   });
 
+  
+  // VERSIONE MOBILE: elenco cronologico degli eventi
+  if (window.matchMedia('(max-width: 600px)').matches) {
+
+    const mobileEvents = calendarEvents
+      .map((event, index) => ({ event, index }))
+      .filter(item =>
+        item.event.date.getFullYear() === year &&
+        item.event.date.getMonth() === month
+      )
+      .sort((a, b) => a.event.date - b.event.date);
+
+    const typeLabels = {
+      film: 'Discussione',
+      theme: 'Settimana a tema',
+      birthday: 'Compleanno',
+      custom: 'Evento'
+    };
+
+    const typeColors = {
+      film: '#8b5cf6',
+      theme: '#0ea5e9',
+      birthday: '#ec4899',
+      custom: '#eab308'
+    };
+
+    // Raggruppa gli eventi per giorno
+    const groupedEvents = {};
+
+    mobileEvents.forEach(item => {
+      const day = item.event.date.getDate();
+
+      if (!groupedEvents[day]) {
+        groupedEvents[day] = [];
+      }
+
+      groupedEvents[day].push(item);
+    });
+
+    let mobileHtml = `
+      <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:18px;
+      ">
+        <button class="btn" type="button"
+          onclick="changeCalendarMonth(-1)">‹</button>
+
+        <h3 style="margin:0;text-transform:capitalize;">
+          ${monthTitle}
+        </h3>
+
+        <button class="btn" type="button"
+          onclick="changeCalendarMonth(1)">›</button>
+      </div>
+    `;
+
+    const days = Object.keys(groupedEvents)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    if (days.length === 0) {
+      mobileHtml += `
+        <div class="muted" style="
+          text-align:center;
+          padding:32px 12px;
+        ">
+          Nessun evento previsto per questo mese.
+        </div>
+      `;
+    }
+
+    days.forEach(day => {
+
+      const date = new Date(year, month, day);
+
+      const dayLabel = date.toLocaleDateString('it-IT', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+
+      mobileHtml += `
+        <div style="
+          margin-bottom:18px;
+          padding-bottom:14px;
+          border-bottom:1px solid #2a2f3d;
+        ">
+          <div style="
+            font-size:14px;
+            font-weight:700;
+            text-transform:capitalize;
+            color:#f5f6fa;
+            margin-bottom:10px;
+          ">
+            ${dayLabel}
+          </div>
+      `;
+
+      groupedEvents[day].forEach(item => {
+
+        const event = item.event;
+        const color = typeColors[event.type] || '#9ca3b2';
+        const label = typeLabels[event.type] || 'Evento';
+
+        mobileHtml += `
+          <button type="button"
+            onclick="openCalendarEvent(${item.index})"
+            style="
+              display:block;
+              width:100%;
+              box-sizing:border-box;
+              text-align:left;
+              padding:11px 12px;
+              margin-top:7px;
+              border:1px solid ${color};
+              border-left:4px solid ${color};
+              border-radius:8px;
+              background:#171a23;
+              color:#f5f6fa;
+              cursor:pointer;
+            "
+          >
+            <div style="
+              color:${color};
+              font-size:11px;
+              font-weight:700;
+              margin-bottom:4px;
+            ">
+              ${label}
+            </div>
+
+            <div style="
+              font-size:14px;
+              line-height:1.4;
+              font-weight:600;
+              overflow-wrap:anywhere;
+            ">
+              ${esc(event.title)}
+            </div>
+          </button>
+        `;
+      });
+
+      mobileHtml += `
+        </div>
+      `;
+    });
+
+    mobileHtml += `
+      <div id="calendarEventDetail" style="margin-top:16px;"></div>
+    `;
+
+    content.innerHTML = mobileHtml;
+    return;
+  }
+
+
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
