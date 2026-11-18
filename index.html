@@ -17416,6 +17416,9 @@ checkSession();
    CALENDARIO MOOTBOXD
    ========================================= */
 
+let calendarEvents = [];
+let calendarCurrentDate = new Date();  
+
 function parseCalendarDate(value) {
 
   const text = String(value || '').trim();
@@ -17597,60 +17600,206 @@ async function openCalendarModal() {
 }
 
 
+
 function renderCalendarEvents(events) {
 
   const content = document.getElementById('calendarContent');
-
   if (!content) return;
 
-  if (!events.length) {
+  if (Array.isArray(events)) {
+    calendarEvents = events;
+  }
 
-    content.innerHTML =
-      '<div class="empty">Non ci sono eventi in calendario.</div>';
+  const year = calendarCurrentDate.getFullYear();
+  const month = calendarCurrentDate.getMonth();
 
+  const monthTitle = calendarCurrentDate.toLocaleDateString('it-IT', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // La settimana inizia da lunedì.
+  const startOffset = (firstDay.getDay() + 6) % 7;
+
+  let html = `
+    <div style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    ">
+      <button class="btn" type="button"
+        onclick="changeCalendarMonth(-1)">‹</button>
+
+      <h3 style="margin:0;text-transform:capitalize;">
+        ${monthTitle}
+      </h3>
+
+      <button class="btn" type="button"
+        onclick="changeCalendarMonth(1)">›</button>
+    </div>
+
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:5px;
+      text-align:center;
+      margin-bottom:6px;
+    ">
+      ${['L','M','M','G','V','S','D'].map(day =>
+        `<div class="muted" style="font-size:12px;font-weight:700;padding:6px 0;">${day}</div>`
+      ).join('')}
+    </div>
+
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:5px;
+    ">
+  `;
+
+  for (let i = 0; i < startOffset; i++) {
+    html += `<div></div>`;
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+
+    const dateKey =
+      year + '-' +
+      String(month + 1).padStart(2, '0') + '-' +
+      String(day).padStart(2, '0');
+
+    const dayEvents = calendarEvents
+      .map((event, index) => ({ event, index }))
+      .filter(item => {
+        const d = item.event.date;
+        return d.getFullYear() === year &&
+          d.getMonth() === month &&
+          d.getDate() === day;
+      });
+
+    const markers = dayEvents.map(item => {
+      const colors = {
+        film: '#8b5cf6',
+        theme: '#0ea5e9',
+        birthday: '#ec4899',
+        custom: '#eab308'
+      };
+
+      const color = colors[item.event.type] || '#9ca3b2';
+
+      return `
+        <button type="button"
+          onclick="openCalendarEvent(${item.index})"
+          title="${esc(item.event.title)}"
+          style="
+            display:block;
+            width:100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            border:0;
+            border-radius:4px;
+            padding:3px 2px;
+            margin-top:3px;
+            background:${color};
+            color:#fff;
+            font-size:10px;
+            cursor:pointer;
+          ">
+          ${esc(item.event.title)}
+        </button>
+      `;
+    }).join('');
+
+    html += `
+      <div style="
+        min-height:82px;
+        padding:5px;
+        background:#171a23;
+        border:1px solid #2a2f3d;
+        border-radius:7px;
+        text-align:left;
+        overflow:hidden;
+      ">
+        <div style="
+          font-size:12px;
+          font-weight:700;
+          color:#f5f6fa;
+        ">${day}</div>
+
+        ${markers}
+      </div>
+    `;
+  }
+
+  html += `
+    </div>
+
+    <div style="
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      margin-top:18px;
+      font-size:12px;
+      color:#9ca3b2;
+    ">
+      <span>● Discussioni</span>
+      <span style="color:#0ea5e9;">● Settimane a tema</span>
+      <span style="color:#ec4899;">● Compleanni</span>
+      <span style="color:#eab308;">● Eventi</span>
+    </div>
+
+    <div id="calendarEventDetail" style="margin-top:16px;"></div>
+  `;
+
+  content.innerHTML = html;
+}
+
+
+function changeCalendarMonth(offset) {
+
+  calendarCurrentDate = new Date(
+    calendarCurrentDate.getFullYear(),
+    calendarCurrentDate.getMonth() + offset,
+    1
+  );
+
+  renderCalendarEvents();
+}
+
+
+function openCalendarEvent(index) {
+
+  const event = calendarEvents[index];
+  if (!event) return;
+
+  if (event.type === 'film' && event.filmId) {
+    closeCalendarModal();
+    openFilmModal(event.filmId);
     return;
   }
 
-  content.innerHTML = events.map(function(event) {
+  const detail = document.getElementById('calendarEventDetail');
+  if (!detail) return;
 
-    return `
-      <div
-        class="item"
-        style="margin-bottom:10px;"
-      >
-
-        <div style="font-size:13px;color:#9ca3b2;margin-bottom:5px;">
-          ${formatCalendarDate(event.date)}
-        </div>
-
-        <div style="font-weight:700;">
-          ${esc(event.title)}
-        </div>
-
-        <div class="muted" style="font-size:13px;margin-top:4px;">
-          ${esc(event.detail)}
-        </div>
-
-        ${
-          event.type === 'film'
-            ? `
-              <button
-                class="btn"
-                type="button"
-                style="margin-top:10px;"
-                onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
-              >
-                Scheda film
-              </button>
-            `
-            : ''
-        }
-
+  detail.innerHTML = `
+    <div class="item">
+      <div style="font-weight:700;margin-bottom:6px;">
+        ${esc(event.title)}
       </div>
-    `;
-
-  }).join('');
-
+      <div class="muted">
+        ${formatCalendarDate(event.date)}
+      </div>
+      <div style="margin-top:8px;">
+        ${esc(event.detail || '')}
+      </div>
+    </div>
+  `;
 }
 
 
