@@ -17774,6 +17774,13 @@ function renderCalendarEvents(events) {
         <h3 style="margin:0;text-transform:capitalize;">
           ${monthTitle}
         </h3>
+        
+        ${hasManagementAccess() ? `
+          <button class="btn primary" type="button"
+            onclick="addCalendarEventUi()">
+            + Evento
+          </button>
+        ` : ''}
 
         <button class="btn" type="button"
           onclick="changeCalendarMonth(1)">›</button>
@@ -17901,6 +17908,13 @@ function renderCalendarEvents(events) {
       <h3 style="margin:0;text-transform:capitalize;">
         ${monthTitle}
       </h3>
+      
+      ${hasManagementAccess() ? `
+        <button class="btn primary" type="button"
+          onclick="addCalendarEventUi()">
+          + Evento
+        </button>
+      ` : ''}
 
       <button class="btn" type="button"
         onclick="changeCalendarMonth(1)">›</button>
@@ -18044,6 +18058,154 @@ function changeCalendarMonth(offset) {
 }
 
 
+function formatCalendarDateISO(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+}
+
+
+// AGGIUNGI EVENTO
+async function addCalendarEventUi() {
+
+  if (!hasManagementAccess()) return;
+
+  const title = prompt('Titolo dell’evento:');
+  if (title === null) return;
+
+  if (!title.trim()) {
+    alert('Inserisci un titolo.');
+    return;
+  }
+
+  const date = prompt(
+    'Data dell’evento (AAAA-MM-GG):',
+    formatCalendarDateISO(calendarCurrentDate)
+  );
+
+  if (date === null) return;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    alert('Formato data non valido. Usa AAAA-MM-GG.');
+    return;
+  }
+
+  const detail = prompt('Descrizione dell’evento:', '');
+  if (detail === null) return;
+
+  try {
+
+    await api('addCalendarEvent', [
+      title.trim(),
+      date,
+      detail.trim(),
+      getManagementToken()
+    ]);
+
+    alert('Evento aggiunto.');
+
+    await openCalendarModal();
+
+  } catch (error) {
+
+    alert('Errore durante l’inserimento: ' + error.message);
+
+  }
+}
+
+
+// MODIFICA EVENTO
+async function editCalendarEventUi(index) {
+
+  if (!hasManagementAccess()) return;
+
+  const event = calendarEvents[index];
+
+  if (!event || event.type !== 'custom') return;
+
+  const title = prompt('Titolo dell’evento:', event.title);
+  if (title === null) return;
+
+  if (!title.trim()) {
+    alert('Inserisci un titolo.');
+    return;
+  }
+
+  const date = prompt(
+    'Data dell’evento (AAAA-MM-GG):',
+    formatCalendarDateISO(event.date)
+  );
+
+  if (date === null) return;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    alert('Formato data non valido. Usa AAAA-MM-GG.');
+    return;
+  }
+
+  const detail = prompt(
+    'Descrizione dell’evento:',
+    event.detail || ''
+  );
+
+  if (detail === null) return;
+
+  try {
+
+    await api('updateCalendarEvent', [
+      event.customEventId,
+      title.trim(),
+      date,
+      detail.trim(),
+      getManagementToken()
+    ]);
+
+    alert('Evento modificato.');
+
+    await openCalendarModal();
+
+  } catch (error) {
+
+    alert('Errore durante la modifica: ' + error.message);
+
+  }
+}
+
+
+// ELIMINA EVENTO
+async function deleteCalendarEventUi(index) {
+
+  if (!hasManagementAccess()) return;
+
+  const event = calendarEvents[index];
+
+  if (!event || event.type !== 'custom') return;
+
+  if (!confirm(
+    'Vuoi eliminare definitivamente questo evento?'
+  )) return;
+
+  try {
+
+    await api('deleteCalendarEvent', [
+      event.customEventId,
+      getManagementToken()
+    ]);
+
+    alert('Evento eliminato.');
+
+    await openCalendarModal();
+
+  } catch (error) {
+
+    alert('Errore durante l’eliminazione: ' + error.message);
+
+  }
+}
+
+  
 function openCalendarEvent(index) {
 
   const event = calendarEvents[index];
@@ -18058,19 +18220,42 @@ function openCalendarEvent(index) {
   const detail = document.getElementById('calendarEventDetail');
   if (!detail) return;
 
+  
   detail.innerHTML = `
     <div class="item">
       <div style="font-weight:700;margin-bottom:6px;">
         ${esc(event.title)}
       </div>
+
       <div class="muted">
         ${formatCalendarDate(event.date)}
       </div>
+
       <div style="margin-top:8px;">
         ${esc(event.detail || '')}
       </div>
+
+      ${event.type === 'custom' && hasManagementAccess() ? `
+        <div style="
+          display:flex;
+          gap:8px;
+          flex-wrap:wrap;
+          margin-top:14px;
+        ">
+          <button class="btn primary" type="button"
+            onclick="editCalendarEventUi(${index})">
+            Modifica
+          </button>
+
+          <button class="btn" type="button"
+            onclick="deleteCalendarEventUi(${index})">
+            Elimina
+          </button>
+        </div>
+      ` : ''}
     </div>
   `;
+
 }
 
 
