@@ -17660,6 +17660,7 @@ async function openCalendarModal() {
       type: 'custom',
       title: customEvent.title,
       detail: customEvent.detail || '',
+      color: customEvent.color || '#eab308',
       customEventId: customEvent.id
     });
 
@@ -17832,7 +17833,9 @@ function renderCalendarEvents(events) {
       groupedEvents[day].forEach(item => {
 
   const event = item.event;
-  const color = typeColors[event.type] || '#9ca3b2';
+  const color = event.type === 'custom'
+  ? (event.color || '#eab308')
+  : (typeColors[event.type] || '#9ca3b2');
   const label = typeLabels[event.type] || 'Evento';
 
   mobileHtml += `
@@ -18103,13 +18106,26 @@ async function addCalendarEventUi() {
   const detail = prompt('Descrizione dell’evento:', '');
   if (detail === null) return;
 
+  const color = prompt(
+  'Colore dell’evento (codice HEX, es. #eab308):',
+  '#eab308'
+);
+
+if (color === null) return;
+
+if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
+  alert('Colore non valido. Usa il formato #RRGGBB.');
+  return;
+}
+
   try {
 
     await api('addCalendarEvent', [
       title.trim(),
       date,
       detail.trim(),
-      getManagementToken()
+      getManagementToken(),
+      color.trim()
     ]);
 
     alert('Evento aggiunto.');
@@ -18160,6 +18176,18 @@ async function editCalendarEventUi(index) {
 
   if (detail === null) return;
 
+  const color = prompt(
+  'Colore dell’evento (codice HEX, es. #ff6600):',
+  event.color || '#eab308'
+);
+
+if (color === null) return;
+
+if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
+  alert('Colore non valido. Usa il formato #RRGGBB.');
+  return;
+}
+
   try {
 
     await api('updateCalendarEvent', [
@@ -18167,7 +18195,8 @@ async function editCalendarEventUi(index) {
       title.trim(),
       date,
       detail.trim(),
-      getManagementToken()
+      getManagementToken(),
+      color.trim()
     ]);
 
     alert('Evento modificato.');
