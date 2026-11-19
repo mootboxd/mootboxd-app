@@ -6508,6 +6508,14 @@ input {
 
     <button
       class="main-nav-item"
+      data-page="library"
+      onclick="showPage('library')"
+    >
+      Approfondimenti
+    </button>
+
+    <button
+      class="main-nav-item"
       type="button"
       onclick="
         document.getElementById('mainNavMenu').classList.remove('open');
@@ -6547,6 +6555,121 @@ input {
   </div>
 
 </div>
+
+<!-- =====================================
+     APPROFONDIMENTI
+     ===================================== -->
+
+<section
+  id="libraryPage"
+  style="display:none;"
+>
+
+  <div class="panel">
+
+    <div class="ranking-header">
+
+      <div>
+        <div class="ranking-title">
+          Approfondimenti
+        </div>
+
+        <div class="ranking-subtitle">
+          Video, articoli e contenuti sui film del club
+        </div>
+      </div>
+
+      <button
+        class="btn primary"
+        type="button"
+        onclick="openLibraryAddModal()"
+      >
+        + Aggiungi un contenuto
+      </button>
+
+    </div>
+
+    <div style="margin-top:24px;">
+
+      <input
+        type="search"
+        id="librarySearch"
+        placeholder="Cerca un contenuto..."
+        style="width:100%;"
+      >
+
+    </div>
+
+    <div
+      id="libraryFilters"
+      style="
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:14px;
+      "
+    >
+
+      <button class="btn primary" type="button">
+        Tutti
+      </button>
+
+      <button class="btn" type="button">
+        Video
+      </button>
+
+      <button class="btn" type="button">
+        Shorts
+      </button>
+
+      <button class="btn" type="button">
+        Articoli
+      </button>
+
+      <button class="btn" type="button">
+        Trailer
+      </button>
+
+      <button class="btn" type="button">
+        Fan edit
+      </button>
+
+    </div>
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:20px;
+      "
+    >
+
+      <select id="librarySort" class="btn">
+        <option value="recent">Più recenti</option>
+        <option value="likes">Più apprezzati</option>
+      </select>
+
+    </div>
+
+    <div
+      id="libraryContentGrid"
+      style="
+        display:grid;
+        grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+        gap:18px;
+        margin-top:20px;
+      "
+    >
+
+      <div class="muted">
+        I contenuti aggiunti dai membri appariranno qui.
+      </div>
+
+    </div>
+
+  </div>
+
+</section>    
 
 <section
   id="rankingPage"
@@ -13339,6 +13462,9 @@ function showPage(page) {
   const proposalsPage =
   document.getElementById('proposalsPage');
 
+ const libraryPage =
+  document.getElementById('libraryPage'); 
+
   const adminPage =
     document.getElementById('adminPanel');
     
@@ -13364,6 +13490,10 @@ function showPage(page) {
   if (proposalsPage) {
     proposalsPage.style.display = 'none';
   }  
+
+  if (libraryPage) {
+    libraryPage.style.display = 'none';
+  }
   
   if (adminPage) {
     adminPage.style.display = 'none';
@@ -13446,6 +13576,22 @@ if (!weeklyThemesLoaded) {
   
 }
 
+/* =========================
+   APPROFONDIMENTI
+   ========================= */
+
+if (page === 'library') {
+
+  if (!session && !adminSession) {
+    showLogin();
+    return;
+  }
+
+  if (libraryPage) {
+    libraryPage.style.display = 'block';
+  }
+
+}  
 
   /* =========================
      MOOTBOXD AWARDS
