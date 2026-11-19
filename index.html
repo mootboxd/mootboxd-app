@@ -21991,11 +21991,69 @@ function openLibraryAddModal() {
   if (!modal) return;
 
   document.getElementById('libraryAddForm').reset();
+  libraryEditingId = '';
+document.getElementById('libraryAddEditId').value = '';
+document.getElementById('libraryAddSubmit').textContent =
+  'Pubblica contenuto';
+  
     populateLibraryFilmSelects();
 
   modal.classList.add('open');
   document.body.classList.add('modal-open');
 
+}
+
+let libraryEditingId = '';
+
+function editLibraryContent(contentId) {
+  if (!hasManagementAccess()) return;
+
+  const item = libraryContents.find(function(content) {
+    return String(content.id) === String(contentId);
+  });
+
+  if (!item) return;
+
+  openLibraryAddModal();
+
+  libraryEditingId = String(item.id);
+
+  document.getElementById('libraryAddEditId').value = item.id;
+  document.getElementById('libraryAddTitle').value = item.title || '';
+  document.getElementById('libraryAddCategory').value = item.category || '';
+  document.getElementById('libraryAddUrl').value = item.url || '';
+  document.getElementById('libraryAddDescription').value =
+    item.description || '';
+
+  document.getElementById('libraryAddFilm').value =
+    item.filmId || '';
+
+  document.getElementById('libraryAddSubmit').textContent =
+    'Salva modifiche';
+}
+
+async function deleteLibraryContent(contentId) {
+  if (!hasManagementAccess()) return;
+
+  if (!confirm('Vuoi eliminare definitivamente questo contenuto?')) {
+    return;
+  }
+
+  const token = getLibraryToken();
+
+  try {
+    await api('deleteSharedContentAdmin', [
+      contentId,
+      token
+    ]);
+
+    await loadLibraryContent();
+
+    alert('Contenuto eliminato.');
+
+  } catch (error) {
+    alert('Errore durante l’eliminazione: ' + error.message);
+  }
 }
 
 function populateLibraryFilmSelects() {
@@ -22473,6 +22531,30 @@ const durationLabel = durationSeconds > 0
           >
             Apri contenuto
           </a>
+          
+          ${
+            hasManagementAccess()
+              ? `
+                <div style="display:flex; gap:8px;">
+                  <button
+                    type="button"
+                    class="btn"
+                    onclick="editLibraryContent('${esc(item.id)}')"
+                  >
+                    Modifica
+                  </button>
+          
+                  <button
+                    type="button"
+                    class="btn"
+                    onclick="deleteLibraryContent('${esc(item.id)}')"
+                  >
+                    Elimina
+                  </button>
+                </div>
+              `
+              : ''
+          }
 
           <button
             type="button"
@@ -22497,7 +22579,6 @@ const durationLabel = durationSeconds > 0
 /* SALVATAGGIO NUOVO CONTENUTO */
 
 async function saveLibraryContent(event) {
-
   event.preventDefault();
 
   const title =
@@ -22506,7 +22587,7 @@ async function saveLibraryContent(event) {
   const category =
     document.getElementById('libraryAddCategory').value;
 
-  const url =
+  let url =
     document.getElementById('libraryAddUrl').value.trim();
 
   const description =
@@ -22514,6 +22595,12 @@ async function saveLibraryContent(event) {
 
   const filmId =
     document.getElementById('libraryAddFilm').value;
+
+  const videoInput =
+    document.getElementById('libraryAddVideo');
+
+  const videoFile =
+    videoInput.files[0];
 
   const button =
     document.getElementById('libraryAddSubmit');
@@ -22525,35 +22612,107 @@ async function saveLibraryContent(event) {
     return;
   }
 
+  const editingId =
+    document.getElementById('libraryAddEditId').value.trim();
+
+  if (editingId && !hasManagementAccess()) {
+    alert('Operazione non autorizzata.');
+    return;
+  }
+
+  if (!url && !videoFile) {
+    alert('Inserisci un link oppure seleziona un video.');
+    return;
+  }
+
   button.disabled = true;
   button.textContent = 'Pubblicazione in corso...';
 
   try {
 
-    await api(
-      'addSharedContent',
-      [
+    // Caricamento video su Drive
+    if (videoFile) {
+
+      if (!hasManagementAccess()) {
+        throw new Error('Solo l’Admin può caricare video.');
+      }
+
+      if (videoFile.size > 15 * 1024 * 1024) {
+        throw new Error('Il video supera il limite di 15 MB.');
+      }
+
+      const allowedTypes = [
+        'video/mp4',
+        'video/webm',
+        'video/quicktime'
+      ];
+
+      if (!allowedTypes.includes(videoFile.type)) {
+        throw new Error('Formato video non supportato.');
+      }
+
+      const base64 = await new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+
+        reader.onload = function() {
+          resolve(String(reader.result).split(',')[1]);
+        };
+
+        reader.onerror = function() {
+          reject(new Error('Impossibile leggere il video.'));
+        };
+
+        reader.readAsDataURL(videoFile);
+      });
+
+      button.textContent = 'Caricamento video...';
+
+      const uploaded = await api('uploadSharedVideoAdmin', [
+        base64,
+        videoFile.name,
+        videoFile.type,
+        token
+      ]);
+
+      url = uploaded.url;
+    }
+
+    if (editingId) {
+
+      await api('updateSharedContentAdmin', [
+        editingId,
+        title,
+        description,
+        category,
+        url,
+        filmId,
+        token
+      ]);
+
+    } else {
+
+      await api('addSharedContent', [
         title,
         description,
         category,
         url,
         token,
         filmId
-      ]
-    );
+      ]);
+
+    }
 
     closeLibraryAddModal();
 
     await loadLibraryContent();
 
-    alert('Contenuto pubblicato.');
+    alert(editingId
+      ? 'Contenuto modificato.'
+      : 'Contenuto pubblicato.');
 
   } catch (error) {
 
-    alert(
-      'Errore durante la pubblicazione: ' +
-      error.message
-    );
+    alert('Errore durante il salvataggio: ' + error.message);
 
   } finally {
 
@@ -22561,7 +22720,6 @@ async function saveLibraryContent(event) {
     button.textContent = 'Pubblica contenuto';
 
   }
-
 }
 
 
@@ -23065,6 +23223,21 @@ async function toggleLibraryLike(contentId) {
       id="libraryAddForm"
       onsubmit="saveLibraryContent(event)"
       style="display:grid;gap:14px;"
+      <input
+        type="hidden"
+        id="libraryAddEditId"
+        value=""
+      >
+      
+      <div class="form-group">
+        <label for="libraryAddVideo">Carica un video dal dispositivo</label>
+        <input
+          type="file"
+          id="libraryAddVideo"
+          accept="video/mp4,video/webm,video/quicktime"
+        >
+        <small>Formati MP4, WebM o MOV. Massimo 15 MB.</small>
+      </div>
     >
 
       <div>
@@ -23118,7 +23291,6 @@ async function toggleLibraryLike(contentId) {
         <input
           id="libraryAddUrl"
           type="url"
-          required
           placeholder="https://..."
           style="width:100%;margin-top:6px;"
         >
