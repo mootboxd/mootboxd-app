@@ -22366,6 +22366,14 @@ function renderLibraryContent() {
         thumbnail: item.previewThumbnail
       }
     : getLibraryVideoPreview(item.url);
+    
+const driveVideoMatch = String(item.url || '').match(
+  /drive\.google\.com\/file\/d\/([^/]+)/
+);
+
+const driveVideoId = driveVideoMatch
+  ? driveVideoMatch[1]
+  : '';
 
 const durationSeconds = Number(item.durationSeconds || 0);
 
@@ -22405,60 +22413,75 @@ const durationLabel = durationSeconds > 0
         </div>
 
   ${
-  videoPreview
+  driveVideoId
     ? `
-      <a
-        href="${esc(item.url)}"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="
-          display:block;
-          position:relative;
-          margin-top:14px;
-          border-radius:9px;
-          overflow:hidden;
-          aspect-ratio:16/9;
-          background:#111;
-        "
-      >
-
-        <img
-          src="${esc(videoPreview.thumbnail)}"
-          alt="Anteprima video"
-          loading="lazy"
+      <div style="
+        margin-top:14px;
+        aspect-ratio:16/9;
+        border-radius:9px;
+        overflow:hidden;
+        background:#111;
+      ">
+        <iframe
+          src="https://drive.google.com/file/d/${esc(driveVideoId)}/preview"
+          style="width:100%;height:100%;border:0;"
+          allow="autoplay"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `
+    : videoPreview
+      ? `
+        <a
+          href="${esc(item.url)}"
+          target="_blank"
+          rel="noopener noreferrer"
           style="
-            width:100%;
-            height:100%;
-            object-fit:cover;
             display:block;
+            position:relative;
+            margin-top:14px;
+            border-radius:9px;
+            overflow:hidden;
+            aspect-ratio:16/9;
+            background:#111;
           "
-          onerror="this.parentElement.style.display='none';"
         >
+          <img
+            src="${esc(videoPreview.thumbnail)}"
+            alt="Anteprima video"
+            loading="lazy"
+            style="
+              width:100%;
+              height:100%;
+              object-fit:cover;
+              display:block;
+            "
+            onerror="this.parentElement.style.display='none';"
+          >
 
-        <div style="
-          position:absolute;
-          inset:0;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          background:rgba(0,0,0,.15);
-        ">
-          <span style="
-            width:48px;
-            height:48px;
-            border-radius:50%;
-            background:rgba(0,0,0,.75);
-            color:white;
+          <div style="
+            position:absolute;
+            inset:0;
             display:flex;
             align-items:center;
             justify-content:center;
-            font-size:22px;
-          ">▶</span>
-        </div>
-
-      </a>
-    `
-    : ''
+            background:rgba(0,0,0,.15);
+          ">
+            <span style="
+              width:48px;
+              height:48px;
+              border-radius:50%;
+              background:rgba(0,0,0,.75);
+              color:white;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:22px;
+            ">▶</span>
+          </div>
+        </a>
+      `
+      : ''
 }
 
   ${
