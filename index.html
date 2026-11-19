@@ -13528,12 +13528,8 @@ function showPage(page) {
   }  
 
   if (libraryPage) {
-    libraryPage.style.display = 'block';
+    libraryPage.style.display = 'none';
   }
-  
-  loadLibraryContent();
-
-}
   
   if (adminPage) {
     adminPage.style.display = 'none';
@@ -13631,6 +13627,8 @@ if (page === 'library') {
     libraryPage.style.display = 'block';
   }
 
+  loadLibraryContent();  
+        
 }  
 
   /* =========================
