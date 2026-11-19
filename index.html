@@ -6623,12 +6623,6 @@ input {
   </button>
 
   <button class="btn" type="button"
-    data-category="Shorts"
-    onclick="setLibraryCategory('Shorts')">
-    Shorts
-  </button>
-
-  <button class="btn" type="button"
     data-category="Articoli"
     onclick="setLibraryCategory('Articoli')">
     Articoli
@@ -6641,9 +6635,9 @@ input {
   </button>
 
   <button class="btn" type="button"
-    data-category="Fan edit"
+    data-category="Edit"
     onclick="setLibraryCategory('Fan edit')">
-    Fan edit
+    Edit
   </button>
 
   <button class="btn" type="button"
@@ -6675,21 +6669,21 @@ input {
         <div
       style="
         display:flex;
-        flex-wrap:wrap;
+        flex-wrap:nowrap;
         justify-content:flex-end;
         gap:10px;
         margin-top:20px;
       "
     >
 
-      <select id="libraryFilmFilter" class="btn">
+      <select id="libraryFilmFilter" class="btn" style="width:180px;max-width:calc(50% - 5px);flex:1 1 0;min-width:0;">
         <option value="TUTTI">Tutti i film</option>
         <option value="MISTI">Misti</option>
         <option value="ALTRI">Altri</option>
         <option value="NON_ASSOCIATO">Non associati</option>
       </select>
 
-      <select id="librarySort" class="btn">
+      <select id="librarySort" class="btn" style="width:180px;max-width:calc(50% - 5px);flex:1 1 0;min-width:0;">
         <option value="recent">Più recenti</option>
         <option value="likes">Più apprezzati</option>
       </select>
@@ -22950,10 +22944,9 @@ async function toggleLibraryLike(contentId) {
         >
           <option value="">Seleziona una categoria</option>
           <option>Video</option>
-          <option>Shorts</option>
           <option>Articoli</option>
           <option>Trailer</option>
-          <option>Fan edit</option>
+          <option>Edit</option>
           <option>Recensioni</option>
           <option>Interviste</option>
           <option>Retroscena</option>
