@@ -22301,7 +22301,20 @@ function renderLibraryContent() {
 
      const filmLabel = getLibraryFilmLabel(item.filmId);
 
-  const videoPreview = getLibraryVideoPreview(item.url);
+  const videoPreview =
+  item.previewThumbnail
+    ? {
+        type: item.previewType,
+        thumbnail: item.previewThumbnail
+      }
+    : getLibraryVideoPreview(item.url);
+
+const durationSeconds = Number(item.durationSeconds || 0);
+
+const durationLabel = durationSeconds > 0
+  ? Math.floor(durationSeconds / 60) + ':' +
+    String(durationSeconds % 60).padStart(2, '0')
+  : '';
 
     return `
 
@@ -22386,6 +22399,20 @@ function renderLibraryContent() {
         </div>
 
       </a>
+    `
+    : ''
+}
+
+  ${
+  durationLabel
+    ? `
+      <div style="
+        color:#9ca3b2;
+        font-size:12px;
+        margin-top:6px;
+      ">
+        Durata: ${esc(durationLabel)}
+      </div>
     `
     : ''
 }
