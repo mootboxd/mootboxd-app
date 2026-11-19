@@ -6672,13 +6672,22 @@ input {
 
 </div>
     
-    <div
+        <div
       style="
         display:flex;
+        flex-wrap:wrap;
         justify-content:flex-end;
+        gap:10px;
         margin-top:20px;
       "
     >
+
+      <select id="libraryFilmFilter" class="btn">
+        <option value="TUTTI">Tutti i film</option>
+        <option value="MISTI">Misti</option>
+        <option value="ALTRI">Altri</option>
+        <option value="NON_ASSOCIATO">Non associati</option>
+      </select>
 
       <select id="librarySort" class="btn">
         <option value="recent">Più recenti</option>
@@ -21969,6 +21978,10 @@ document.getElementById('librarySort').addEventListener('change', function() {
   renderLibraryContent();
 });  
 
+document.getElementById('libraryFilmFilter').addEventListener('change', function() {
+  renderLibraryContent();
+});  
+
 
 function getLibraryToken() {
   return getManagementToken() || getMemberToken();
@@ -21984,11 +21997,66 @@ function openLibraryAddModal() {
   if (!modal) return;
 
   document.getElementById('libraryAddForm').reset();
+    populateLibraryFilmSelects();
 
   modal.classList.add('open');
   document.body.classList.add('modal-open');
 
 }
+
+function populateLibraryFilmSelects() {
+
+  const addSelect =
+    document.getElementById('libraryAddFilm');
+
+  const filterSelect =
+    document.getElementById('libraryFilmFilter');
+
+  const films = Array.isArray(D.films)
+    ? D.films.slice().sort(function(a, b) {
+        return String(a.title || '').localeCompare(
+          String(b.title || ''),
+          'it'
+        );
+      })
+    : [];
+
+  const filmOptions = films.map(function(film) {
+    return `
+      <option value="${esc(film.id)}">
+        ${esc(film.title)}${film.year ? ' (' + esc(film.year) + ')' : ''}
+      </option>
+    `;
+  }).join('');
+
+  if (addSelect) {
+    addSelect.innerHTML =
+      '<option value="">Seleziona un film</option>' +
+      '<option value="MISTI">Misti (più film)</option>' +
+      '<option value="ALTRI">Altri</option>' +
+      filmOptions;
+  }
+
+  if (filterSelect) {
+    const currentValue = filterSelect.value;
+
+    filterSelect.innerHTML =
+      '<option value="TUTTI">Tutti i film</option>' +
+      '<option value="MISTI">Misti</option>' +
+      '<option value="ALTRI">Altri</option>' +
+      '<option value="NON_ASSOCIATO">Non associati</option>' +
+      filmOptions;
+
+    if (
+      Array.from(filterSelect.options).some(function(option) {
+        return option.value === currentValue;
+      })
+    ) {
+      filterSelect.value = currentValue;
+    }
+  }
+
+}  
 
 
 function closeLibraryAddModal(event) {
@@ -22091,11 +22159,22 @@ function renderLibraryContent() {
   const sort =
     document.getElementById('librarySort')?.value || 'recent';
 
+  const selectedFilm =
+    document.getElementById('libraryFilmFilter')?.value || 'TUTTI';
+
   let contents = libraryContents.filter(function(item) {
 
     const matchesCategory =
       libraryActiveCategory === 'Tutti' ||
       item.category === libraryActiveCategory;
+
+    const matchesFilm =
+      selectedFilm === 'TUTTI' ||
+      (
+        selectedFilm === 'NON_ASSOCIATO' &&
+        !item.filmId
+      ) ||
+      String(item.filmId || '') === selectedFilm;
 
     const searchableText = [
       item.title,
@@ -22107,7 +22186,7 @@ function renderLibraryContent() {
     const matchesSearch =
       !search || searchableText.includes(search);
 
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesSearch && matchesFilm;
 
   });
 
@@ -22264,6 +22343,9 @@ async function saveLibraryContent(event) {
   const description =
     document.getElementById('libraryAddDescription').value.trim();
 
+  const filmId =
+    document.getElementById('libraryAddFilm').value;
+
   const button =
     document.getElementById('libraryAddSubmit');
 
@@ -22286,7 +22368,8 @@ async function saveLibraryContent(event) {
         description,
         category,
         url,
-        token
+        token,
+        filmId
       ]
     );
 
@@ -22845,6 +22928,20 @@ async function toggleLibraryLike(contentId) {
           <option>Interviste</option>
           <option>Retroscena</option>
           <option>Altro</option>
+        </select>
+      </div>
+
+        <div>
+        <label for="libraryAddFilm">Film associato</label>
+        <select
+          id="libraryAddFilm"
+          required
+          class="btn"
+          style="width:100%;margin-top:6px;"
+        >
+          <option value="">Seleziona un film</option>
+          <option value="MISTI">Misti (più film)</option>
+          <option value="ALTRI">Altri</option>
         </select>
       </div>
 
