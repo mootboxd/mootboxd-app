@@ -6601,46 +6601,77 @@ input {
     </div>
 
     <div
-      id="libraryFilters"
-      style="
-        display:flex;
-        flex-wrap:wrap;
-        gap:8px;
-        margin-top:14px;
-      "
-    >
+  id="libraryFilters"
+  style="
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  "
+>
 
-      <button class="btn primary" type="button">
-        Tutti
-      </button>
+  <button class="btn primary" type="button"
+    data-category="Tutti"
+    onclick="setLibraryCategory('Tutti')">
+    Tutti
+  </button>
 
-      <button class="btn" type="button">
-        Video
-      </button>
+  <button class="btn" type="button"
+    data-category="Video"
+    onclick="setLibraryCategory('Video')">
+    Video
+  </button>
 
-      <button class="btn" type="button">
-        Shorts
-      </button>
+  <button class="btn" type="button"
+    data-category="Shorts"
+    onclick="setLibraryCategory('Shorts')">
+    Shorts
+  </button>
 
-      <button class="btn" type="button">
-        Articoli
-      </button>
+  <button class="btn" type="button"
+    data-category="Articoli"
+    onclick="setLibraryCategory('Articoli')">
+    Articoli
+  </button>
 
-      <button class="btn" type="button">
-        Trailer
-      </button>
+  <button class="btn" type="button"
+    data-category="Trailer"
+    onclick="setLibraryCategory('Trailer')">
+    Trailer
+  </button>
 
-      <button class="btn" type="button">
-        Fan edit
-      </button>
+  <button class="btn" type="button"
+    data-category="Fan edit"
+    onclick="setLibraryCategory('Fan edit')">
+    Fan edit
+  </button>
 
-      <button class="btn" type="button">Recensioni</button>
-      <button class="btn" type="button">Interviste</button>
-      <button class="btn" type="button">Retroscena</button>
-      <button class="btn" type="button">Altro</button>
+  <button class="btn" type="button"
+    data-category="Recensioni"
+    onclick="setLibraryCategory('Recensioni')">
+    Recensioni
+  </button>
 
-    </div>
+  <button class="btn" type="button"
+    data-category="Interviste"
+    onclick="setLibraryCategory('Interviste')">
+    Interviste
+  </button>
 
+  <button class="btn" type="button"
+    data-category="Retroscena"
+    onclick="setLibraryCategory('Dietro le quinte')">
+    Dietro le quinte
+  </button>
+
+  <button class="btn" type="button"
+    data-category="Altro"
+    onclick="setLibraryCategory('Altro')">
+    Altro
+  </button>
+
+</div>
+    
     <div
       style="
         display:flex;
@@ -13497,8 +13528,12 @@ function showPage(page) {
   }  
 
   if (libraryPage) {
-    libraryPage.style.display = 'none';
+    libraryPage.style.display = 'block';
   }
+  
+  loadLibraryContent();
+
+}
   
   if (adminPage) {
     adminPage.style.display = 'none';
@@ -21921,7 +21956,401 @@ async function removeRouletteHistoryEntry(riga) {
   });
 });
   
+/* =========================================================
+   CONTENUTI CONDIVISI
+   ========================================================= */
 
+let libraryContents = [];
+let libraryActiveCategory = 'Tutti';
+
+
+function getLibraryToken() {
+  return getManagementToken() || getMemberToken();
+}
+
+
+/* APERTURA E CHIUSURA MODAL */
+
+function openLibraryAddModal() {
+
+  const modal = document.getElementById('libraryAddModal');
+
+  if (!modal) return;
+
+  document.getElementById('libraryAddForm').reset();
+
+  modal.classList.add('open');
+  document.body.classList.add('modal-open');
+
+}
+
+
+function closeLibraryAddModal(event) {
+
+  if (
+    event &&
+    event.target !== event.currentTarget
+  ) return;
+
+  const modal = document.getElementById('libraryAddModal');
+
+  if (modal) {
+    modal.classList.remove('open');
+  }
+
+  document.body.classList.remove('modal-open');
+
+}
+
+
+/* CARICAMENTO CONTENUTI */
+
+async function loadLibraryContent() {
+
+  const grid = document.getElementById('libraryContentGrid');
+
+  if (!grid) return;
+
+  grid.innerHTML =
+    '<div class="muted">Caricamento contenuti...</div>';
+
+  try {
+
+    const token = getLibraryToken();
+
+    if (!token) {
+      throw new Error('Sessione non valida.');
+    }
+
+    const result = await api(
+      'getSharedContent',
+      [token]
+    );
+
+    libraryContents = Array.isArray(result)
+      ? result
+      : [];
+
+    renderLibraryContent();
+
+  } catch (error) {
+
+    console.error('Errore caricamento contenuti:', error);
+
+    grid.innerHTML =
+      '<div class="muted">Errore nel caricamento: ' +
+      esc(error.message) +
+      '</div>';
+
+  }
+
+}
+
+
+/* FILTRO CATEGORIA */
+
+function setLibraryCategory(category) {
+
+  libraryActiveCategory = category;
+
+  document
+    .querySelectorAll('#libraryFilters button')
+    .forEach(function(button) {
+
+      const active =
+        button.dataset.category === category;
+
+      button.classList.toggle('primary', active);
+
+    });
+
+  renderLibraryContent();
+
+}
+
+
+/* RENDER CONTENUTI */
+
+function renderLibraryContent() {
+
+  const grid = document.getElementById('libraryContentGrid');
+
+  if (!grid) return;
+
+  const search =
+    String(
+      document.getElementById('librarySearch')?.value || ''
+    ).trim().toLowerCase();
+
+  const sort =
+    document.getElementById('librarySort')?.value || 'recent';
+
+  let contents = libraryContents.filter(function(item) {
+
+    const matchesCategory =
+      libraryActiveCategory === 'Tutti' ||
+      item.category === libraryActiveCategory;
+
+    const searchableText = [
+      item.title,
+      item.description,
+      item.category,
+      item.authorName
+    ].join(' ').toLowerCase();
+
+    const matchesSearch =
+      !search || searchableText.includes(search);
+
+    return matchesCategory && matchesSearch;
+
+  });
+
+  if (sort === 'likes') {
+
+    contents.sort(function(a, b) {
+      return Number(b.likesCount || 0) -
+             Number(a.likesCount || 0);
+    });
+
+  } else {
+
+    contents.sort(function(a, b) {
+      return new Date(b.submittedAt || 0) -
+             new Date(a.submittedAt || 0);
+    });
+
+  }
+
+  if (!contents.length) {
+
+    grid.innerHTML =
+      '<div class="muted">Nessun contenuto trovato.</div>';
+
+    return;
+
+  }
+
+  grid.innerHTML = contents.map(function(item) {
+
+    const date = item.submittedAt
+      ? new Date(item.submittedAt)
+      : null;
+
+    const dateLabel =
+      date && !isNaN(date.getTime())
+        ? date.toLocaleDateString('it-IT')
+        : '';
+
+    return `
+
+      <article style="
+        background:#1e2230;
+        border:1px solid #2a2f3d;
+        border-radius:12px;
+        padding:16px;
+        display:flex;
+        flex-direction:column;
+        min-width:0;
+      ">
+
+        <div style="
+          color:#d9b36c;
+          font-size:12px;
+          font-weight:750;
+          text-transform:uppercase;
+          letter-spacing:.5px;
+        ">
+          ${esc(item.category)}
+        </div>
+
+        <div style="
+          font-size:18px;
+          font-weight:800;
+          margin-top:9px;
+          overflow-wrap:anywhere;
+        ">
+          ${esc(item.title)}
+        </div>
+
+        ${
+          item.description
+            ? `
+              <div style="
+                color:#c8ccd6;
+                font-size:14px;
+                line-height:1.5;
+                margin-top:9px;
+                white-space:pre-wrap;
+                overflow-wrap:anywhere;
+              ">
+                ${esc(item.description)}
+              </div>
+            `
+            : ''
+        }
+
+        <div style="
+          color:#9ca3b2;
+          font-size:12px;
+          margin-top:12px;
+        ">
+          Inserito da ${esc(item.authorName || 'Membro')}
+          ${dateLabel ? ' · ' + dateLabel : ''}
+        </div>
+
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:10px;
+          margin-top:auto;
+          padding-top:18px;
+        ">
+
+          <a
+            href="${esc(item.url)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn primary"
+            style="
+              text-decoration:none;
+              text-align:center;
+            "
+          >
+            Apri contenuto
+          </a>
+
+          <button
+            type="button"
+            class="btn"
+            onclick="toggleLibraryLike('${esc(item.id)}')"
+          >
+            ${item.likedByMe ? '♥' : '♡'}
+            ${Number(item.likesCount || 0)}
+          </button>
+
+        </div>
+
+      </article>
+
+    `;
+
+  }).join('');
+
+}
+
+
+/* SALVATAGGIO NUOVO CONTENUTO */
+
+async function saveLibraryContent(event) {
+
+  event.preventDefault();
+
+  const title =
+    document.getElementById('libraryAddTitle').value.trim();
+
+  const category =
+    document.getElementById('libraryAddCategory').value;
+
+  const url =
+    document.getElementById('libraryAddUrl').value.trim();
+
+  const description =
+    document.getElementById('libraryAddDescription').value.trim();
+
+  const button =
+    document.getElementById('libraryAddSubmit');
+
+  const token = getLibraryToken();
+
+  if (!token) {
+    alert('Sessione non valida. Effettua nuovamente l’accesso.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Pubblicazione in corso...';
+
+  try {
+
+    await api(
+      'addSharedContent',
+      [
+        title,
+        description,
+        category,
+        url,
+        token
+      ]
+    );
+
+    closeLibraryAddModal();
+
+    await loadLibraryContent();
+
+    alert('Contenuto pubblicato.');
+
+  } catch (error) {
+
+    alert(
+      'Errore durante la pubblicazione: ' +
+      error.message
+    );
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = 'Pubblica contenuto';
+
+  }
+
+}
+
+
+/* MI PIACE */
+
+async function toggleLibraryLike(contentId) {
+
+  const token = getLibraryToken();
+
+  if (!token) {
+    alert('Sessione non valida.');
+    return;
+  }
+
+  const item = libraryContents.find(function(content) {
+    return String(content.id) === String(contentId);
+  });
+
+  if (!item) return;
+
+  try {
+
+    const result = await api(
+      'toggleSharedContentLike',
+      [contentId, token]
+    );
+
+    item.likedByMe = !!result.liked;
+
+    item.likesCount = Math.max(
+      0,
+      Number(item.likesCount || 0) +
+      (result.liked ? 1 : -1)
+    );
+
+    renderLibraryContent();
+
+  } catch (error) {
+
+    alert(
+      'Errore durante l’aggiornamento del Mi piace: ' +
+      error.message
+    );
+
+  }
+
+}
   
 </script>
 <div id="filmModal" class="film-modal" onclick="closeFilmModal(event)">
@@ -22349,6 +22778,116 @@ async function removeRouletteHistoryEntry(riga) {
     </div>
 
   </div>
+</div>
+
+<!-- MODAL AGGIUNTA CONTENUTO -->
+
+<div
+  id="libraryAddModal"
+  class="film-modal"
+  onclick="closeLibraryAddModal(event)"
+>
+
+  <div class="film-modal-box" style="max-width:560px;">
+
+    <button
+      type="button"
+      class="film-modal-close"
+      onclick="closeLibraryAddModal()"
+      aria-label="Chiudi"
+    >
+      ×
+    </button>
+
+    <h2 style="margin-top:0;">
+      Aggiungi un contenuto
+    </h2>
+
+    <form
+      id="libraryAddForm"
+      onsubmit="saveLibraryContent(event)"
+      style="display:grid;gap:14px;"
+    >
+
+      <div>
+        <label for="libraryAddTitle">Titolo</label>
+        <input
+          id="libraryAddTitle"
+          type="text"
+          maxlength="120"
+          required
+          placeholder="Titolo del contenuto"
+          style="width:100%;margin-top:6px;"
+        >
+      </div>
+
+      <div>
+        <label for="libraryAddCategory">Categoria</label>
+        <select
+          id="libraryAddCategory"
+          required
+          class="btn"
+          style="width:100%;margin-top:6px;"
+        >
+          <option value="">Seleziona una categoria</option>
+          <option>Video</option>
+          <option>Shorts</option>
+          <option>Articoli</option>
+          <option>Trailer</option>
+          <option>Fan edit</option>
+          <option>Recensioni</option>
+          <option>Interviste</option>
+          <option>Dietro le quinte</option>
+          <option>Altro</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="libraryAddUrl">Link</label>
+        <input
+          id="libraryAddUrl"
+          type="url"
+          required
+          placeholder="https://..."
+          style="width:100%;margin-top:6px;"
+        >
+      </div>
+
+      <div>
+        <label for="libraryAddDescription">
+          Descrizione (facoltativa)
+        </label>
+        <textarea
+          id="libraryAddDescription"
+          maxlength="1000"
+          rows="4"
+          placeholder="Aggiungi una breve descrizione..."
+          style="
+            width:100%;
+            margin-top:6px;
+            padding:10px;
+            border-radius:8px;
+            background:#1e2230;
+            color:white;
+            border:1px solid #2a2f3d;
+            font:inherit;
+            resize:vertical;
+          "
+        ></textarea>
+      </div>
+
+      <button
+        id="libraryAddSubmit"
+        type="submit"
+        class="btn primary"
+      >
+        Pubblica contenuto
+      </button>
+
+    </form>
+
+  </div>
+
 </div>    
     
 </body>
