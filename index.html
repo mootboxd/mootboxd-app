@@ -6660,8 +6660,8 @@ input {
 
   <button class="btn" type="button"
     data-category="Retroscena"
-    onclick="setLibraryCategory('Dietro le quinte')">
-    Dietro le quinte
+    onclick="setLibraryCategory('Retroscena')">
+    Retroscena
   </button>
 
   <button class="btn" type="button"
@@ -21961,6 +21961,14 @@ async function removeRouletteHistoryEntry(riga) {
 let libraryContents = [];
 let libraryActiveCategory = 'Tutti';
 
+document.getElementById('librarySearch').addEventListener('input', function() {
+  renderLibraryContent();
+});  
+
+document.getElementById('librarySort').addEventListener('change', function() {
+  renderLibraryContent();
+});  
+
 
 function getLibraryToken() {
   return getManagementToken() || getMemberToken();
@@ -22835,7 +22843,7 @@ async function toggleLibraryLike(contentId) {
           <option>Fan edit</option>
           <option>Recensioni</option>
           <option>Interviste</option>
-          <option>Dietro le quinte</option>
+          <option>Retroscena</option>
           <option>Altro</option>
         </select>
       </div>
