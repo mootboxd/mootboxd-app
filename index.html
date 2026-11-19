@@ -22156,6 +22156,65 @@ function setLibraryCategory(category) {
 
 }
 
+function getLibraryVideoPreview(url) {
+
+  try {
+
+    const parsedUrl = new URL(String(url || ''));
+    const host = parsedUrl.hostname.toLowerCase();
+
+    let videoId = '';
+
+    if (
+      host === 'youtu.be' ||
+      host === 'www.youtu.be'
+    ) {
+
+      videoId = parsedUrl.pathname
+        .split('/')
+        .filter(Boolean)[0] || '';
+
+    } else if (
+      host === 'youtube.com' ||
+      host === 'www.youtube.com' ||
+      host === 'm.youtube.com'
+    ) {
+
+      videoId = parsedUrl.searchParams.get('v') || '';
+
+      if (!videoId) {
+
+        const match = parsedUrl.pathname.match(
+          /^\/(?:shorts|embed|live)\/([^/]+)/
+        );
+
+        if (match) {
+          videoId = match[1];
+        }
+
+      }
+
+    }
+
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return null;
+    }
+
+    return {
+      type: 'youtube',
+      thumbnail:
+        'https://i.ytimg.com/vi/' +
+        videoId +
+        '/hqdefault.jpg'
+    };
+
+  } catch (error) {
+
+    return null;
+
+  }
+
+}    
 
 /* RENDER CONTENUTI */
 
@@ -22240,7 +22299,9 @@ function renderLibraryContent() {
         ? date.toLocaleDateString('it-IT')
         : '';
 
-     const filmLabel = getLibraryFilmLabel(item.filmId); 
+     const filmLabel = getLibraryFilmLabel(item.filmId);
+
+  const videoPreview = getLibraryVideoPreview(item.url);
 
     return `
 
@@ -22271,6 +22332,63 @@ function renderLibraryContent() {
         ">
           Film: ${esc(filmLabel)}
         </div>
+
+  ${
+  videoPreview
+    ? `
+      <a
+        href="${esc(item.url)}"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="
+          display:block;
+          position:relative;
+          margin-top:14px;
+          border-radius:9px;
+          overflow:hidden;
+          aspect-ratio:16/9;
+          background:#111;
+        "
+      >
+
+        <img
+          src="${esc(videoPreview.thumbnail)}"
+          alt="Anteprima video"
+          loading="lazy"
+          style="
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+          "
+          onerror="this.parentElement.style.display='none';"
+        >
+
+        <div style="
+          position:absolute;
+          inset:0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:rgba(0,0,0,.15);
+        ">
+          <span style="
+            width:48px;
+            height:48px;
+            border-radius:50%;
+            background:rgba(0,0,0,.75);
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+          ">▶</span>
+        </div>
+
+      </a>
+    `
+    : ''
+}
 
         <div style="
           font-size:18px;
