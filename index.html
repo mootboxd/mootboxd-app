@@ -22076,6 +22076,25 @@ function closeLibraryAddModal(event) {
 
 }
 
+function getLibraryFilmLabel(filmId) {
+
+  const id = String(filmId || '');
+
+  if (!id) return 'Non associato';
+  if (id === 'MISTI') return 'Misti';
+  if (id === 'ALTRI') return 'Altri';
+
+  const film = Array.isArray(D.films)
+    ? D.films.find(function(item) {
+        return String(item.id) === id;
+      })
+    : null;
+
+  if (!film) return 'Film non disponibile';
+
+  return film.title + (film.year ? ' (' + film.year + ')' : '');
+
+}    
 
 /* CARICAMENTO CONTENUTI */
 
@@ -22104,7 +22123,8 @@ async function loadLibraryContent() {
     libraryContents = Array.isArray(result)
       ? result
       : [];
-
+  
+    populateLibraryFilmSelects();
     renderLibraryContent();
 
   } catch (error) {
@@ -22226,6 +22246,8 @@ function renderLibraryContent() {
         ? date.toLocaleDateString('it-IT')
         : '';
 
+     const filmLabel = getLibraryFilmLabel(item.filmId); 
+
     return `
 
       <article style="
@@ -22246,6 +22268,14 @@ function renderLibraryContent() {
           letter-spacing:.5px;
         ">
           ${esc(item.category)}
+        </div>
+
+        <div style="
+          color:#9ca3b2;
+          font-size:12px;
+          margin-top:5px;
+        ">
+          Film: ${esc(filmLabel)}
         </div>
 
         <div style="
