@@ -18041,17 +18041,20 @@ function renderCalendarEvents(events) {
         ${esc(event.title)}
       </div>
 
-      ${event.detail ? `
+            ${event.detail ? `
         <div style="
-          margin-top:5px;
+          display:block;
+          width:100%;
+          box-sizing:border-box;
+          margin:5px 0 0;
+          padding:0;
           color:#c8ccd6;
           font-size:12px;
           line-height:1.45;
+          text-align:left;
           overflow-wrap:anywhere;
           white-space:pre-wrap;
-        ">
-          ${esc(event.detail)}
-        </div>
+        ">${esc(String(event.detail).trim())}</div>
       ` : ''}
     </div>
   `;
