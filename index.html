@@ -22708,11 +22708,6 @@ async function saveLibraryContent(event) {
           videoFile.type
         );
 
-        xhr.setRequestHeader(
-          'Content-Range',
-          'bytes 0-' + (videoFile.size - 1) + '/' + videoFile.size
-        );
-
         xhr.upload.addEventListener('progress', function(event) {
 
           if (event.lengthComputable) {
