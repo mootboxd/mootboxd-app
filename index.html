@@ -18514,8 +18514,12 @@ function openCalendarEvent(index) {
 
   
   detail.innerHTML = `
-    <div class="item">
-      <div style="font-weight:700;margin-bottom:6px;">
+  <div class="item" style="
+    display:block;
+    text-align:left;
+    padding:14px;
+    border-bottom:0;
+  ">
         ${esc(event.title)}
       </div>
 
@@ -18523,9 +18527,17 @@ function openCalendarEvent(index) {
         ${formatCalendarDate(event.date)}
       </div>
 
-      <div style="margin-top:8px;">
-        ${esc(event.detail || '')}
-      </div>
+     <div style="
+  display:block;
+  width:100%;
+  margin-top:8px;
+  text-align:left;
+  line-height:1.45;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+">
+  ${esc(event.detail || '')}
+</div>
 
       ${event.type === 'custom' && hasManagementAccess() ? `
         <div style="
@@ -21990,6 +22002,14 @@ function openLibraryAddModal() {
 
   if (!modal) return;
 
+  const videoUploadGroup =
+  document.getElementById('libraryVideoUploadGroup');
+
+if (videoUploadGroup) {
+  videoUploadGroup.style.display =
+    hasManagementAccess() ? 'block' : 'none';
+}
+
   document.getElementById('libraryAddForm').reset();
   libraryEditingId = '';
 document.getElementById('libraryAddEditId').value = '';
@@ -22511,10 +22531,18 @@ const durationLabel = durationSeconds > 0
           item.description
             ? `
               <div style="
+                display:block;
+                flex:0 0 auto;
+                align-self:stretch;
+                width:100%;
+                box-sizing:border-box;
                 color:#c8ccd6;
                 font-size:14px;
-                line-height:1.5;
-                margin-top:9px;
+                line-height:1.4;
+                text-align:left;
+                margin:7px 0 0;
+                padding:0;
+                min-height:0;
                 white-space:pre-wrap;
                 overflow-wrap:anywhere;
               ">
@@ -23339,15 +23367,23 @@ async function toggleLibraryLike(contentId) {
         value=""
       >
       
-      <div class="form-group">
-        <label for="libraryAddVideo">Carica un video dal dispositivo</label>
-        <input
-          type="file"
-          id="libraryAddVideo"
-          accept="video/mp4,video/webm,video/quicktime"
-        >
-        <small>Formati MP4, WebM o MOV. Massimo 15 MB.</small>
-      </div>
+      <div id="libraryVideoUploadGroup">
+  <div class="form-group">
+    <label for="libraryAddVideo">
+      Carica un video dal dispositivo
+    </label>
+
+    <input
+      type="file"
+      id="libraryAddVideo"
+      accept="video/mp4,video/webm,video/quicktime"
+    >
+
+    <small>
+      Formati MP4, WebM o MOV. Dimensione massima: 100 MB.
+    </small>
+  </div>
+</div>
 
       <div>
         <label for="libraryAddTitle">Titolo</label>
