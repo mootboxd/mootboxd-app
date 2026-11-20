@@ -22601,6 +22601,7 @@ const durationLabel = durationSeconds > 0
 
 /* SALVATAGGIO NUOVO CONTENUTO */
 
+
 async function saveLibraryContent(event) {
   event.preventDefault();
 
@@ -22653,15 +22654,17 @@ async function saveLibraryContent(event) {
 
   try {
 
-    // Caricamento video su Drive
+    // Caricamento diretto del video su Google Drive
     if (videoFile) {
 
       if (!hasManagementAccess()) {
         throw new Error('Solo l’Admin può caricare video.');
       }
 
-      if (videoFile.size > 15 * 1024 * 1024) {
-        throw new Error('Il video supera il limite di 15 MB.');
+      const maxSize = 100 * 1024 * 1024;
+
+      if (videoFile.size <= 0 || videoFile.size > maxSize) {
+        throw new Error('Il video deve avere una dimensione massima di 100 MB.');
       }
 
       const allowedTypes = [
@@ -22674,31 +22677,118 @@ async function saveLibraryContent(event) {
         throw new Error('Formato video non supportato.');
       }
 
-      const base64 = await new Promise(function(resolve, reject) {
-        const reader = new FileReader();
+      // 1. Crea la sessione di caricamento
+      button.textContent = 'Preparazione caricamento...';
 
-        reader.onload = function() {
-          resolve(String(reader.result).split(',')[1]);
+      const session = await api(
+        'createSharedVideoUploadSessionAdmin',
+        [
+          videoFile.name,
+          videoFile.type,
+          videoFile.size,
+          token
+        ]
+      );
+
+      if (!session || !session.uploadUrl) {
+        throw new Error('Impossibile creare la sessione di caricamento.');
+      }
+
+      // 2. Invia il file direttamente a Google Drive
+      button.textContent = 'Caricamento video: 0%';
+
+      const driveFile = await new Promise(function(resolve, reject) {
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.open('PUT', session.uploadUrl, true);
+
+        xhr.setRequestHeader(
+          'Content-Type',
+          videoFile.type
+        );
+
+        xhr.setRequestHeader(
+          'Content-Range',
+          'bytes 0-' + (videoFile.size - 1) + '/' + videoFile.size
+        );
+
+        xhr.upload.addEventListener('progress', function(event) {
+
+          if (event.lengthComputable) {
+            const percent = Math.round(
+              (event.loaded / event.total) * 100
+            );
+
+            button.textContent =
+              'Caricamento video: ' + percent + '%';
+          }
+
+        });
+
+        xhr.onload = function() {
+
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(
+              new Error(
+                'Google Drive ha rifiutato il caricamento. HTTP ' +
+                xhr.status
+              )
+            );
+            return;
+          }
+
+          try {
+            const result = JSON.parse(xhr.responseText);
+
+            if (!result.id) {
+              throw new Error('ID del video non restituito da Google Drive.');
+            }
+
+            resolve(result);
+
+          } catch (error) {
+            reject(error);
+          }
+
         };
 
-        reader.onerror = function() {
-          reject(new Error('Impossibile leggere il video.'));
+        xhr.onerror = function() {
+          reject(
+            new Error(
+              'Errore di rete durante il caricamento. Verifica anche le autorizzazioni CORS di Google Drive.'
+            )
+          );
         };
 
-        reader.readAsDataURL(videoFile);
+        xhr.onabort = function() {
+          reject(new Error('Caricamento del video interrotto.'));
+        };
+
+        xhr.send(videoFile);
+
       });
 
-      button.textContent = 'Caricamento video...';
+      // 3. Finalizza il caricamento tramite il backend
+      button.textContent = 'Finalizzazione video...';
 
-      const uploaded = await api('uploadSharedVideoAdmin', [
-        base64,
-        videoFile.name,
-        videoFile.type,
-        token
-      ]);
+      const uploaded = await api(
+        'finalizeSharedVideoUploadAdmin',
+        [
+          driveFile.id,
+          token
+        ]
+      );
+
+      if (!uploaded || !uploaded.url) {
+        throw new Error('Impossibile finalizzare il video.');
+      }
 
       url = uploaded.url;
     }
+
+    // 4. Salva o aggiorna il contenuto
+    button.textContent = 'Salvataggio contenuto...';
 
     if (editingId) {
 
@@ -22729,9 +22819,11 @@ async function saveLibraryContent(event) {
 
     await loadLibraryContent();
 
-    alert(editingId
-      ? 'Contenuto modificato.'
-      : 'Contenuto pubblicato.');
+    alert(
+      editingId
+        ? 'Contenuto modificato.'
+        : 'Contenuto pubblicato.'
+    );
 
   } catch (error) {
 
@@ -22744,7 +22836,6 @@ async function saveLibraryContent(event) {
 
   }
 }
-
 
 /* MI PIACE */
 
