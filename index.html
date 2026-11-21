@@ -553,12 +553,23 @@ input {
   line-height: 1.6;
 }
 
+.weekly-film-trailer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}  
+
 .weekly-film-date {
   margin-top: 22px;
   padding-top: 17px;
   border-top: 1px solid #2a2f3d;
   color: #9ca3b2;
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .weekly-film-date strong {
@@ -1842,7 +1853,7 @@ input {
 
   #weeklyFilm .weekly-film-poster-wrap {
     grid-column: 1 !important;
-    grid-row: 1 / 5 !important;
+    grid-row: 1 / 6 !important;
     width: 115px !important;
     min-width: 115px !important;
     max-width: 115px !important;
@@ -1903,20 +1914,30 @@ input {
     line-height: 1.15 !important;
   }
 
+  #weeklyFilm .weekly-film-trailer {
+  grid-column: 2 !important;
+  grid-row: 4 !important;
+  justify-self: start !important;
+  margin-top: 5px !important;
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+
   #weeklyFilm .weekly-film-date {
     grid-column: 2 !important;
-    grid-row: 4 !important;
+    grid-row: 5 !important;
     width: 100% !important;
     margin: 4px 0 0 0 !important;
     padding: 0 !important;
     border-top: none !important;
-    font-size: 15px !important;
+    font-size: 12px !important;
     line-height: 1.25 !important;
   }
 
   #weeklyFilm .weekly-film-synopsis {
     grid-column: 1 / -1 !important;
-    grid-row: 5 !important;
+    grid-row: 6 !important;
     width: 100% !important;
     margin: 12px 0 0 0 !important;
     padding: 0 !important;
@@ -7731,6 +7752,12 @@ input {
     <input
       id="fd"
       placeholder="Data discussione"
+    >
+
+    <input
+      id="ftrailer"
+      type="url"
+      placeholder="Link YouTube del trailer (facoltativo)"
     >
 
     <select id="filmThemeWeek">
@@ -14030,6 +14057,21 @@ function render() {
 
           </div>
 
+              ${
+            getSafeYoutubeTrailerUrl(film.trailer)
+              ? `
+                <a
+                  class="btn weekly-film-trailer"
+                  href="${esc(getSafeYoutubeTrailerUrl(film.trailer))}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Trailer
+                </a>
+              `
+              : ''
+          }
+
           ${
             film.sinossi
               ? `
@@ -15549,6 +15591,9 @@ async function addF() {
   const dataDiscussioneInput =
     document.getElementById("fd");
 
+  const trailerInput =
+    document.getElementById("ftrailer");
+
   const sinossiInput =
     document.getElementById("fs");
 
@@ -15566,6 +15611,9 @@ async function addF() {
 
   const dataDiscussione =
     dataDiscussioneInput.value.trim();
+
+  const trailer =
+    trailerInput.value.trim();
 
   const sinossi =
     sinossiInput.value.trim();
@@ -15598,7 +15646,8 @@ async function addF() {
           genere,
           dataDiscussione,
           getManagementToken(),
-          themeId
+          themeId,
+          trailer
         ]
       );
 
@@ -15611,6 +15660,7 @@ async function addF() {
     dataDiscussioneInput.value = "";
     sinossiInput.value = "";
     document.getElementById('filmThemeWeek').value = '';
+    trailerInput.value = "";
 
     renderAdminFilms();
 
@@ -15915,6 +15965,14 @@ async function editAdminFilm(filmId) {
         placeholder="Data discussione"
       >
 
+      <input
+        id="edit-film-trailer-${filmId}"
+        type="url"
+        value="${esc(film.trailer || "")}"
+        placeholder="Link YouTube del trailer (facoltativo)"
+        style="grid-column:1 / -1;"
+      >
+
             <select
         id="edit-film-theme-${filmId}"
         style="grid-column:1 / -1;"
@@ -16025,6 +16083,11 @@ async function saveAdminFilm(filmId) {
       "edit-film-data-" + filmId
     ).value.trim();
 
+  const trailer =
+    document.getElementById(
+      "edit-film-trailer-" + filmId
+    ).value.trim();
+
   const sinossi =
     document.getElementById(
       "edit-film-sinossi-" + filmId
@@ -16056,7 +16119,8 @@ async function saveAdminFilm(filmId) {
           genere,
           dataDiscussione,
           getManagementToken(),
-          themeId
+          themeId,
+          trailer
         ]
       );
 
@@ -18610,6 +18674,9 @@ function openFilmModal(filmId) {
   const year =
     document.getElementById("filmModalYear");
 
+ const trailerBox =
+    document.getElementById("filmModalTrailer"); 
+
   const details =
     document.getElementById("filmModalDetails");
 
@@ -18638,6 +18705,23 @@ function openFilmModal(filmId) {
 
   year.textContent =
     film.year || "";
+
+  const trailerUrl =
+    getSafeYoutubeTrailerUrl(film.trailer);
+  
+  trailerBox.innerHTML = trailerUrl
+    ? `
+        <a
+          class="btn primary"
+          href="${esc(trailerUrl)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="display:inline-block;text-decoration:none;"
+        >
+          Guarda il trailer
+        </a>
+      `
+    : "";
 
 
   /* =========================
@@ -18819,6 +18903,38 @@ function openFilmModal(filmId) {
   
   loadRatingProposalMemberUi(film.id);
 }
+
+function getSafeYoutubeTrailerUrl(value) {
+
+  try {
+
+    const url = new URL(
+      String(value || "").trim()
+    );
+
+    const allowedHosts = [
+      "youtube.com",
+      "www.youtube.com",
+      "m.youtube.com",
+      "youtu.be",
+      "www.youtu.be"
+    ];
+
+    if (
+      url.protocol !== "https:" ||
+      !allowedHosts.includes(url.hostname.toLowerCase())
+    ) {
+      return "";
+    }
+
+    return url.href;
+
+  } catch (error) {
+
+    return "";
+
+  }
+}  
 
   
 /* =========================================
@@ -22943,6 +23059,11 @@ async function toggleLibraryLike(contentId) {
           id="filmModalYear"
           class="film-modal-year">
         </div>
+
+        <div
+          id="filmModalTrailer"
+          style="margin-top:12px;"
+        ></div>
 
         <div
           id="filmModalDetails"
