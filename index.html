@@ -18929,6 +18929,52 @@ async function deleteCalendarEventUi(index) {
    ========================================================= */
 
 let dashboardAttendanceRecords = null;
+let dashboardAttendancePromise = null;
+let dashboardAttendanceToken = null;
+
+async function getDashboardAttendanceData() {
+
+  const token = getLibraryToken();
+
+  if (!token) {
+    throw new Error('Sessione non valida.');
+  }
+
+  // Se cambia sessione, non riutilizza i dati precedenti.
+  if (dashboardAttendanceToken !== token) {
+    dashboardAttendanceToken = token;
+    dashboardAttendanceRecords = null;
+    dashboardAttendancePromise = null;
+  }
+
+  // Dati già caricati: nessuna nuova richiesta.
+  if (dashboardAttendanceRecords !== null) {
+    return dashboardAttendanceRecords;
+  }
+
+  // Se una richiesta è già in corso, attende quella.
+  if (!dashboardAttendancePromise) {
+
+    dashboardAttendancePromise =
+      api('getAttendanceData', [token])
+        .then(function(records) {
+
+          dashboardAttendanceRecords =
+            Array.isArray(records) ? records : [];
+
+          return dashboardAttendanceRecords;
+
+        })
+        .finally(function() {
+
+          dashboardAttendancePromise = null;
+
+        });
+
+  }
+
+  return dashboardAttendancePromise;
+}
 
 
 /* ---------------------------------------------------------
@@ -18997,8 +19043,8 @@ async function loadAttendanceStatistics() {
       throw new Error('Sessione non valida.');
     }
 
-    dashboardAttendanceRecords =
-      await api('getAttendanceData', [token]);
+   dashboardAttendanceRecords =
+  await getDashboardAttendanceData();
 
     const records =
       dashboardAttendanceRecords || [];
@@ -19199,13 +19245,9 @@ async function openMemberAttendanceModal(memberId) {
       throw new Error('Sessione non valida.');
     }
 
-    if (!dashboardAttendanceRecords) {
-
-      dashboardAttendanceRecords =
-        await api('getAttendanceData', [token]);
-
-    }
-
+    dashboardAttendanceRecords =
+  await getDashboardAttendanceData();
+    
     const records =
       dashboardAttendanceRecords || [];
 
@@ -19424,7 +19466,7 @@ async function loadAttendanceRegister(event) {
       throw new Error('Sessione non valida.');
     }
 
-    const records = await api('getAttendanceData', [token]);
+    const records = await getDashboardAttendanceData();
 
     const eventId = 'film:' + String(event.filmId);
 
@@ -19621,13 +19663,31 @@ async function saveAttendanceUi(eventId, memberId, status) {
 
   try {
 
-    await api('saveAttendance', [
-      eventId,
-      memberId,
-      status,
-      getManagementToken()
-    ]);
+    const savedRecord = await api('saveAttendance', [
+  eventId,
+  memberId,
+  status,
+  getManagementToken()
+]);
 
+// Aggiorna subito i dati in memoria.
+if (Array.isArray(dashboardAttendanceRecords)) {
+
+  const index = dashboardAttendanceRecords.findIndex(function(record) {
+    return (
+      String(record.eventId) === String(eventId) &&
+      String(record.memberId) === String(memberId)
+    );
+  });
+
+  if (index >= 0) {
+    dashboardAttendanceRecords[index] = savedRecord;
+  } else {
+    dashboardAttendanceRecords.push(savedRecord);
+  }
+
+}
+    
     const event = {
       filmId: eventId.replace('film:', '')
     };
