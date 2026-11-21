@@ -564,6 +564,12 @@ input {
   white-space: nowrap;
 }  
 
+@media (min-width: 601px) {
+  #weeklyFilm .weekly-film-trailer {
+    margin-top: 16px !important;
+  }
+}  
+
 .weekly-film-date {
   margin-top: 22px;
   padding-top: 17px;
@@ -2386,6 +2392,21 @@ input {
     padding: 0 !important;
   }
 
+    #filmModalTrailer {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+    width: 100% !important;
+    margin: 14px 0 0 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #filmModalTrailer .btn {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+
   .film-modal-detail {
     font-size: 11px !important;
     line-height: 1.15 !important;
@@ -2418,6 +2439,14 @@ input {
     grid-row: 8 !important;
     width: 100% !important;
     margin-top: 8px !important;
+  }
+
+    #filmRatingProposal {
+    grid-column: 1 / -1 !important;
+    grid-row: 9 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-top: 12px !important;
   }
 
   .film-modal-poster-wrap {
@@ -14061,12 +14090,12 @@ function render() {
             getSafeYoutubeTrailerUrl(film.trailer)
               ? `
                 <a
-                  class="btn weekly-film-trailer"
+                  class="btn primary weekly-film-trailer"
                   href="${esc(getSafeYoutubeTrailerUrl(film.trailer))}"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Trailer
+                  ▶ Trailer
                 </a>
               `
               : ''
