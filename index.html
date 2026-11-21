@@ -18109,18 +18109,22 @@ function renderCalendarEvents(events) {
   const label = typeLabels[event.type] || 'Evento';
 
   mobileHtml += `
-    <div style="
-      display:block;
-      width:100%;
-      box-sizing:border-box;
-      padding:11px 12px;
-      margin-top:7px;
-      border:1px solid ${color};
-      border-left:4px solid ${color};
-      border-radius:8px;
-      background:#171a23;
-      color:#f5f6fa;
-    ">
+    <div
+      ${event.type === 'film' ? `onclick="openCalendarEvent(${item.index})" role="button" tabindex="0"` : ''}
+      style="
+        display:block;
+        width:100%;
+        box-sizing:border-box;
+        padding:11px 12px;
+        margin-top:7px;
+        border:1px solid ${color};
+        border-left:4px solid ${color};
+        border-radius:8px;
+        background:#171a23;
+        color:#f5f6fa;
+        ${event.type === 'film' ? 'cursor:pointer;' : ''}
+      "
+    >
       <div style="
         color:${color};
         font-size:11px;
