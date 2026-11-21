@@ -18598,23 +18598,259 @@ async function deleteCalendarEventUi(index) {
   }
 }
 
+
+/* =========================================================
+   REGISTRO PRESENZE - CALENDARIO
+   ========================================================= */
+
+async function loadAttendanceRegister(event) {
+
+  const container = document.getElementById('attendanceRegister');
+  if (!container || !event || !event.filmId) return;
+
+  container.innerHTML =
+    '<div class="muted">Caricamento presenze...</div>';
+
+  try {
+
+    const token = getLibraryToken();
+
+    if (!token) {
+      throw new Error('Sessione non valida.');
+    }
+
+    const records = await api('getAttendanceData', [token]);
+
+    const eventId = 'film:' + String(event.filmId);
+
+    const attendanceMap = {};
+
+    (records || []).forEach(function(record) {
+      if (String(record.eventId) === eventId) {
+        attendanceMap[String(record.memberId)] = record.status;
+      }
+    });
+
+    const members = D.members || [];
+
+    const presentCount = members.filter(function(member) {
+      return attendanceMap[String(member.id)] === 'present';
+    }).length;
+
+    const absentCount = members.filter(function(member) {
+      return attendanceMap[String(member.id)] === 'absent';
+    }).length;
+
+    const unrecordedCount =
+      members.length - presentCount - absentCount;
+
+    container.innerHTML = `
+      <div style="
+        margin-top:18px;
+        padding:16px;
+        background:#171a23;
+        border:1px solid #363b48;
+        border-radius:10px;
+      ">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-bottom:12px;
+        ">
+          <strong style="font-size:16px;">
+            Registro presenze
+          </strong>
+
+          <span style="
+            color:#d9b36c;
+            font-size:13px;
+            font-weight:700;
+          ">
+            ${presentCount}/${members.length} presenti
+          </span>
+        </div>
+
+        <div style="
+          display:flex;
+          gap:12px;
+          flex-wrap:wrap;
+          font-size:12px;
+          color:#9ca3b2;
+          margin-bottom:15px;
+        ">
+          <span>Presenti: ${presentCount}</span>
+          <span>Assenti: ${absentCount}</span>
+          <span>Da registrare: ${unrecordedCount}</span>
+        </div>
+
+        <div style="
+          display:flex;
+          flex-direction:column;
+          gap:9px;
+        ">
+
+          ${members.map(function(member) {
+
+            const memberId = String(member.id);
+            const status = attendanceMap[memberId] || '';
+
+            const statusLabel =
+              status === 'present'
+                ? 'Presente'
+                : status === 'absent'
+                  ? 'Assente'
+                  : 'Non registrato';
+
+            const statusColor =
+              status === 'present'
+                ? '#22c55e'
+                : status === 'absent'
+                  ? '#ef4444'
+                  : '#9ca3b2';
+
+            return `
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:10px;
+                flex-wrap:wrap;
+                padding:10px 0;
+                border-bottom:1px solid #2a2f3d;
+              ">
+
+                <div style="
+                  font-weight:600;
+                  min-width:100px;
+                ">
+                  ${esc(member.name)}
+                </div>
+
+                ${
+                  hasManagementAccess()
+                    ? `
+                      <div style="
+                        display:flex;
+                        gap:6px;
+                        flex-wrap:wrap;
+                      ">
+
+                        <button
+                          type="button"
+                          class="btn ${status === 'present' ? 'primary' : ''}"
+                          onclick="saveAttendanceUi('${eventId}', '${memberId}', 'present')"
+                          style="font-size:12px;padding:7px 10px;"
+                        >
+                          Presente
+                        </button>
+
+                        <button
+                          type="button"
+                          class="btn ${status === 'absent' ? 'primary' : ''}"
+                          onclick="saveAttendanceUi('${eventId}', '${memberId}', 'absent')"
+                          style="font-size:12px;padding:7px 10px;"
+                        >
+                          Assente
+                        </button>
+
+                      </div>
+                    `
+                    : `
+                      <span style="
+                        color:${statusColor};
+                        font-size:13px;
+                        font-weight:700;
+                      ">
+                        ${statusLabel}
+                      </span>
+                    `
+                }
+
+              </div>
+            `;
+
+          }).join('')}
+
+        </div>
+
+        ${
+          hasManagementAccess()
+            ? `
+              <div style="
+                color:#9ca3b2;
+                font-size:11px;
+                margin-top:12px;
+              ">
+                Le modifiche vengono salvate automaticamente.
+              </div>
+            `
+            : ''
+        }
+
+      </div>
+    `;
+
+  } catch (error) {
+
+    container.innerHTML = `
+      <div class="muted">
+        Errore nel caricamento delle presenze:
+        ${esc(error.message)}
+      </div>
+    `;
+
+  }
+}
+
+
+async function saveAttendanceUi(eventId, memberId, status) {
+
+  if (!hasManagementAccess()) {
+    alert('Questa funzione è riservata all’Admin.');
+    return;
+  }
+
+  try {
+
+    await api('saveAttendance', [
+      eventId,
+      memberId,
+      status,
+      getManagementToken()
+    ]);
+
+    const event = {
+      filmId: eventId.replace('film:', '')
+    };
+
+    await loadAttendanceRegister(event);
+
+  } catch (error) {
+
+    alert(
+      'Errore durante il salvataggio della presenza: ' +
+      error.message
+    );
+
+  }
+}
   
+
+  
+
 function openCalendarEvent(index) {
 
   const event = calendarEvents[index];
   if (!event) return;
 
-  if (event.type === 'film' && event.filmId) {
-    closeCalendarModal();
-    openFilmModal(event.filmId);
-    return;
-  }
-
   const detail = document.getElementById('calendarEventDetail');
   if (!detail) return;
 
-  
-    detail.innerHTML = `
+  detail.innerHTML = `
     <div style="
       display:block;
       width:100%;
@@ -18622,48 +18858,77 @@ function openCalendarEvent(index) {
       padding:14px;
       box-sizing:border-box;
     ">
+
       <div style="
         font-weight:700;
+        font-size:17px;
         margin-bottom:6px;
-        text-align:left;
-      ">${esc(event.title)}</div>
+      ">
+        ${esc(event.title)}
+      </div>
 
-      <div class="muted" style="text-align:left;">
+      <div class="muted">
         ${formatCalendarDate(event.date)}
       </div>
 
       <div style="
-        display:block;
-        width:100%;
         margin-top:8px;
-        text-align:left;
         line-height:1.45;
         white-space:pre-wrap;
         overflow-wrap:anywhere;
-      ">${esc(String(event.detail || '').trim())}</div>
+      ">
+        ${esc(String(event.detail || '').trim())}
+      </div>
 
-      ${event.type === 'custom' && hasManagementAccess() ? `
-        <div style="
-          display:flex;
-          gap:8px;
-          flex-wrap:wrap;
-          margin-top:14px;
-        ">
-          <button class="btn primary" type="button"
-            onclick="editCalendarEventUi(${index})">
-            Modifica
-          </button>
+      ${
+        event.type === 'film'
+          ? `
+            <button
+              type="button"
+              class="btn"
+              style="margin-top:14px;"
+              onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
+            >
+              Scheda film
+            </button>
 
-          <button class="btn" type="button"
-            onclick="deleteCalendarEventUi(${index})">
-            Elimina
-          </button>
-        </div>
-      ` : ''}
+            <div id="attendanceRegister"></div>
+          `
+          : ''
+      }
+
+      ${
+        event.type === 'custom' && hasManagementAccess()
+          ? `
+            <div style="
+              display:flex;
+              gap:8px;
+              flex-wrap:wrap;
+              margin-top:14px;
+            ">
+
+              <button class="btn primary" type="button"
+                onclick="editCalendarEventUi(${index})">
+                Modifica
+              </button>
+
+              <button class="btn" type="button"
+                onclick="deleteCalendarEventUi(${index})">
+                Elimina
+              </button>
+
+            </div>
+          `
+          : ''
+      }
+
     </div>
   `;
-}
 
+  if (event.type === 'film' && event.filmId) {
+    loadAttendanceRegister(event);
+  }
+}
 
 function closeCalendarModal(event) {
 
