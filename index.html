@@ -19062,39 +19062,37 @@ async function loadAttendanceStatistics() {
           <div class="member">
 
             <div class="row">
-
+          
               <div>
-
+          
                 <div
                   class="name member-progress-name"
                   onclick="openMemberAttendanceModal('${esc(String(item.member.id))}')"
                 >
                   ${esc(item.member.name)}
                 </div>
-
+          
                 <div class="stats">
                   ${item.present} presenti ·
                   ${item.absent} assenti ·
                   ${item.registered} registrate
                 </div>
-
+          
               </div>
-
+          
               <div class="pct">
                 ${percentageLabel}
               </div>
-
+          
             </div>
-
+          
             <div class="bar">
-
               <div
                 class="fill"
                 style="width:${barWidth}%">
               </div>
-
             </div>
-
+          
           </div>
         `;
 
