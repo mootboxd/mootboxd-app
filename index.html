@@ -17787,35 +17787,40 @@ async function openCalendarModal() {
 
 });
 
-  // COMPLEANNI DEI MEMBRI
-(D.members || []).forEach(function(member) {
+    // COMPLEANNI DEI MEMBRI — RICORRENZA ANNUALE
+  (D.members || []).forEach(function(member) {
 
-  const birthday = String(member.birthday || '').trim();
+    const birthday = String(member.birthday || '').trim();
 
-  const match = birthday.match(/^(\d{1,2})\/(\d{1,2})$/);
+    const match = birthday.match(/^(\d{1,2})\/(\d{1,2})$/);
 
-  if (!match) return;
+    if (!match) return;
 
-  const day = Number(match[1]);
-  const month = Number(match[2]);
+    const day = Number(match[1]);
+    const month = Number(match[2]);
 
-  const year = calendarCurrentDate.getFullYear();
+    // Genera il compleanno per un intervallo di anni.
+    const currentYear = calendarCurrentDate.getFullYear();
 
-  const date = new Date(year, month - 1, day);
+    for (let year = currentYear - 5; year <= currentYear + 10; year++) {
 
-  // Verifica che la data sia valida.
-  if (
-    date.getDate() !== day ||
-    date.getMonth() !== month - 1
-  ) return;
+      const date = new Date(year, month - 1, day);
 
-  events.push({
-    date: date,
-    type: 'birthday',
-    title: 'Compleanno di ' + member.name
+      // Verifica che la data sia valida.
+      if (
+        date.getDate() !== day ||
+        date.getMonth() !== month - 1
+      ) continue;
+
+      events.push({
+        date: date,
+        type: 'birthday',
+        title: 'Compleanno di ' + member.name
+      });
+
+    }
+
   });
-
-});
 
 
 // EVENTI PERSONALIZZATI
