@@ -24268,8 +24268,27 @@ async function saveLibraryContent(event) {
 
 /* MI PIACE */
 
-async function toggleLibraryLike(contentId) {
+// Gestisce i Mi piace in modo ottimistico e sequenziale.
+var libraryLikeStates = Object.create(null);
 
+function updateLibraryLikeUi(item, state) {
+  const liked = state.confirmedLiked !==
+    (state.pendingClicks % 2 === 1);
+
+  item.likedByMe = liked;
+
+  item.likesCount = Math.max(
+    0,
+    state.confirmedLikesCount +
+    (liked === state.confirmedLiked
+      ? 0
+      : (liked ? 1 : -1))
+  );
+
+  renderLibraryContent();
+}  
+
+function toggleLibraryLike(contentId) {
   const token = getLibraryToken();
 
   if (!token) {
@@ -24283,32 +24302,83 @@ async function toggleLibraryLike(contentId) {
 
   if (!item) return;
 
-  try {
+  const key = String(contentId);
 
-    const result = await api(
-      'toggleSharedContentLike',
-      [contentId, token]
-    );
+  let state = libraryLikeStates[key];
 
-    item.likedByMe = !!result.liked;
+  if (!state) {
+    state = {
+      confirmedLiked: !!item.likedByMe,
+      confirmedLikesCount: Number(item.likesCount || 0),
+      pendingClicks: 0,
+      queue: Promise.resolve()
+    };
 
-    item.likesCount = Math.max(
-      0,
-      Number(item.likesCount || 0) +
-      (result.liked ? 1 : -1)
-    );
-
-    renderLibraryContent();
-
-  } catch (error) {
-
-    alert(
-      'Errore durante l’aggiornamento del Mi piace: ' +
-      error.message
-    );
-
+    libraryLikeStates[key] = state;
   }
 
+  // Aggiornamento immediato dell'interfaccia.
+  state.pendingClicks++;
+
+  updateLibraryLikeUi(item, state);
+
+  // Le richieste sullo stesso contenuto vengono eseguite
+  // in sequenza, mantenendo l'ordine dei clic.
+  state.queue = state.queue
+    .then(function() {
+      return api(
+        'toggleSharedContentLike',
+        [contentId, token]
+      );
+    })
+    .then(function(result) {
+      const previousLiked = state.confirmedLiked;
+
+      state.confirmedLiked = !!result.liked;
+
+      // Aggiorna il contatore confermato dal backend.
+      if (state.confirmedLiked !== previousLiked) {
+        state.confirmedLikesCount +=
+          state.confirmedLiked ? 1 : -1;
+      }
+
+      state.confirmedLikesCount = Math.max(
+        0,
+        state.confirmedLikesCount
+      );
+
+      state.pendingClicks--;
+
+      // Ricalcola l'interfaccia considerando eventuali
+      // altri clic ancora in attesa.
+      updateLibraryLikeUi(item, state);
+
+      if (state.pendingClicks === 0) {
+        delete libraryLikeStates[key];
+      }
+    })
+    .catch(function(error) {
+      console.error(
+        'Errore aggiornamento Mi piace:',
+        error
+      );
+
+      // Il clic fallito viene annullato.
+      state.pendingClicks--;
+
+      // Ripristina lo stato confermato, mantenendo
+      // eventuali altri clic ancora in coda.
+      updateLibraryLikeUi(item, state);
+
+      if (state.pendingClicks === 0) {
+        delete libraryLikeStates[key];
+      }
+
+      alert(
+        'Errore durante l’aggiornamento del Mi piace: ' +
+        error.message
+      );
+    });
 }
   
 </script>
