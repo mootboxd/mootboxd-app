@@ -17660,9 +17660,51 @@ async function saveSigla(id) {
   }
 }
 
+function updateFilmModalWatchedUi(filmId) {
+  const modal = document.getElementById("filmModal");
 
-async function toggleMyFilm(filmId, askForRating) {
+  if (
+    !modal ||
+    !modal.classList.contains("open") ||
+    modal.dataset.filmId !== String(filmId)
+  ) {
+    return;
+  }
 
+  const film = D.films.find(function(item) {
+    return String(item.id) === String(filmId);
+  });
+
+  if (!film || !session) return;
+
+  const key = session.memberId + "|" + filmId;
+  const watched = !!D.watched[key];
+
+  const status = document.getElementById("filmModalStatus");
+  const action = document.getElementById("filmModalAction");
+
+  if (status) {
+    status.textContent = watched
+      ? "Hai già visto questo film."
+      : "Devi ancora vedere questo film.";
+  }
+
+  if (action) {
+    action.innerHTML = `
+      <button
+        class="btn primary"
+        onclick="toggleMyFilm('${esc(String(film.id))}')">
+        ${watched
+          ? "Segna come non visto"
+          : "Segna come visto"}
+      </button>
+    `;
+  }
+}
+  
+var myWatchedToggleStates = Object.create(null);
+
+function toggleMyFilm(filmId, askForRating) {
   if (!session) {
     showLogin();
     return;
@@ -17678,53 +17720,84 @@ async function toggleMyFilm(filmId, askForRating) {
   const key = session.memberId + "|" + filmId;
   const previous = !!D.watched[key];
 
-  D.watched[key] = !previous;
+  let state = myWatchedToggleStates[key];
+
+  if (!state) {
+    state = {
+      confirmedWatched: previous,
+      desiredWatched: previous,
+      pending: 0,
+      queue: Promise.resolve()
+    };
+
+    myWatchedToggleStates[key] = state;
+  }
+
+  // Aggiornamento immediato.
+  state.desiredWatched = !D.watched[key];
+  D.watched[key] = state.desiredWatched;
+  state.pending++;
 
   render();
-  
-  // Apri immediatamente il modal, senza aspettare il server.
+  updateFilmModalWatchedUi(filmId);
+
+  // Apertura immediata del modulo voto.
   if (askForRating === true && !previous) {
     openQuickRatingModal(filmId);
   }
-  
-  try {
 
-    const result = await api(
-      'toggleMyWatched',
-      [filmId, token]
-    );
+  state.queue = state.queue
+    .catch(function() {})
+    .then(function() {
 
-    D.watched[
-      result.memberId + "|" + result.filmId
-    ] = result.watched;
+      // Se il backend è già nello stato desiderato,
+      // non serve inviare un altro toggle.
+      if (state.confirmedWatched === state.desiredWatched) {
+        return state.confirmedWatched;
+      }
 
-    const filmModal = document.getElementById("filmModal");
+      return api(
+        "toggleMyWatched",
+        [filmId, token]
+      ).then(function(result) {
+        state.confirmedWatched = !!result.watched;
+        return state.confirmedWatched;
+      });
+    })
+    .then(function() {
+      state.pending--;
 
-    if (
-      filmModal &&
-      filmModal.classList.contains("open")
-    ) {
-      openFilmModal(filmId);
-    }
+      if (state.pending === 0) {
+        D.watched[key] = state.confirmedWatched;
 
+        render();
+        updateFilmModalWatchedUi(filmId);
 
-  } catch (error) {
+        delete myWatchedToggleStates[key];
+      }
+    })
+    .catch(function(error) {
+      console.error("Errore aggiornamento film visto:", error);
 
-    if (previous) {
-      D.watched[key] = true;
-    } else {
-      delete D.watched[key];
-    }
+      state.pending--;
 
-    render();
-    if (askForRating === true) {
-    closeQuickRatingModal();
-  }
+      if (state.pending === 0) {
+        D.watched[key] = state.confirmedWatched;
 
-    alert("Errore: " + error.message);
-  }
+        render();
+        updateFilmModalWatchedUi(filmId);
+
+        delete myWatchedToggleStates[key];
+
+        if (askForRating === true) {
+          closeQuickRatingModal();
+        }
+
+        alert("Errore: " + error.message);
+      }
+    });
 }
-
+  
 let quickRatingFilmId = null;
 
 function openQuickRatingModal(filmId) {
@@ -17795,10 +17868,13 @@ async function submitQuickRatingProposal() {
     return;
   }
 
+ if (button.disabled) return;
+
   button.disabled = true;
   button.textContent = 'Invio...';
-
-  message.textContent = '';
+  
+  message.style.color = '';
+  message.textContent = 'Invio della proposta in corso...';
 
   try {
 
@@ -18782,11 +18858,13 @@ function chooseCalendarColor(initialColor) {
   });
 }  
 
-
+  
+let calendarEventMutationInFlight = false;
+  
 // AGGIUNGI EVENTO
 async function addCalendarEventUi() {
-
   if (!hasManagementAccess()) return;
+  if (calendarEventMutationInFlight) return;
 
   const title = prompt('Titolo dell’evento:');
   if (title === null) return;
@@ -18808,19 +18886,52 @@ async function addCalendarEventUi() {
     return;
   }
 
+  const eventDate = parseCalendarDate(date);
+
+  if (!eventDate || isNaN(eventDate.getTime())) {
+    alert('La data inserita non è valida.');
+    return;
+  }
+
   const detail = prompt('Descrizione dell’evento:', '');
   if (detail === null) return;
 
   const color = await chooseCalendarColor('#eab308');
+  if (color === null) return;
 
-if (color === null) return;
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
+    alert('Colore non valido. Usa il formato #RRGGBB.');
+    return;
+  }
 
-if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
-  alert('Colore non valido. Usa il formato #RRGGBB.');
-  return;
-}
+  const previousEvents = calendarEvents.slice();
+  const previousCalendarDate = new Date(calendarCurrentDate);
+
+  const temporaryId = 'pending-' + Date.now();
+
+  const optimisticEvent = {
+    id: temporaryId,
+    customEventId: temporaryId,
+    date: eventDate,
+    type: 'custom',
+    title: title.trim(),
+    detail: detail.trim(),
+    color: color.trim()
+  };
+
+  calendarEventMutationInFlight = true;
 
   try {
+    // Mostra subito l'evento nel mese corrispondente.
+    calendarCurrentDate = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      1
+    );
+
+    renderCalendarEvents(
+      previousEvents.concat(optimisticEvent)
+    );
 
     await api('addCalendarEvent', [
       title.trim(),
@@ -18832,20 +18943,25 @@ if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
 
     alert('Evento aggiunto.');
 
+    // Recupera dal server l'ID definitivo e i dati aggiornati.
     await openCalendarModal();
 
   } catch (error) {
+    // Annulla l'aggiornamento ottimistico.
+    calendarCurrentDate = previousCalendarDate;
+    renderCalendarEvents(previousEvents);
 
     alert('Errore durante l’inserimento: ' + error.message);
 
+  } finally {
+    calendarEventMutationInFlight = false;
   }
 }
 
-
 // MODIFICA EVENTO
 async function editCalendarEventUi(index) {
-
   if (!hasManagementAccess()) return;
+  if (calendarEventMutationInFlight) return;
 
   const event = calendarEvents[index];
 
@@ -18871,6 +18987,13 @@ async function editCalendarEventUi(index) {
     return;
   }
 
+  const eventDate = parseCalendarDate(date);
+
+  if (!eventDate || isNaN(eventDate.getTime())) {
+    alert('La data inserita non è valida.');
+    return;
+  }
+
   const detail = prompt(
     'Descrizione dell’evento:',
     event.detail || ''
@@ -18879,17 +19002,38 @@ async function editCalendarEventUi(index) {
   if (detail === null) return;
 
   const color = await chooseCalendarColor(
-  event.color || '#eab308'
-);
+    event.color || '#eab308'
+  );
 
-if (color === null) return;
+  if (color === null) return;
 
-if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
-  alert('Colore non valido. Usa il formato #RRGGBB.');
-  return;
-}
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
+    alert('Colore non valido. Usa il formato #RRGGBB.');
+    return;
+  }
+
+  const previousEvents = calendarEvents.slice();
+  const previousCalendarDate = new Date(calendarCurrentDate);
+
+  calendarEventMutationInFlight = true;
 
   try {
+    // Aggiornamento immediato dell'evento.
+    Object.assign(event, {
+      title: title.trim(),
+      date: eventDate,
+      detail: detail.trim(),
+      color: color.trim()
+    });
+
+    // Porta il calendario al mese della nuova data.
+    calendarCurrentDate = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      1
+    );
+
+    renderCalendarEvents();
 
     await api('updateCalendarEvent', [
       event.customEventId,
@@ -18900,22 +19044,29 @@ if (!/^#[0-9A-Fa-f]{6}$/.test(color.trim())) {
       color.trim()
     ]);
 
-    alert('Evento modificato.');
-
     await openCalendarModal();
 
+    alert('Evento modificato.');
+
   } catch (error) {
+    // Ripristina evento e mese precedenti.
+    calendarEvents = previousEvents;
+    calendarCurrentDate = previousCalendarDate;
+
+    renderCalendarEvents();
 
     alert('Errore durante la modifica: ' + error.message);
 
+  } finally {
+    calendarEventMutationInFlight = false;
   }
 }
 
 
 // ELIMINA EVENTO
 async function deleteCalendarEventUi(index) {
-
   if (!hasManagementAccess()) return;
+  if (calendarEventMutationInFlight) return;
 
   const event = calendarEvents[index];
 
@@ -18925,24 +19076,39 @@ async function deleteCalendarEventUi(index) {
     'Vuoi eliminare definitivamente questo evento?'
   )) return;
 
+  const previousEvents = calendarEvents.slice();
+
+  calendarEventMutationInFlight = true;
+
   try {
+    // Rimozione immediata dalla vista.
+    calendarEvents.splice(index, 1);
+
+    renderCalendarEvents();
 
     await api('deleteCalendarEvent', [
       event.customEventId,
       getManagementToken()
     ]);
 
-    alert('Evento eliminato.');
-
     await openCalendarModal();
 
+    alert('Evento eliminato.');
+
   } catch (error) {
+    // Ripristina l'elenco originale.
+    calendarEvents = previousEvents;
+
+    renderCalendarEvents();
 
     alert('Errore durante l’eliminazione: ' + error.message);
 
+  } finally {
+    calendarEventMutationInFlight = false;
   }
 }
 
+  
 /* =========================================================
    DASHBOARD - STATISTICHE E STORICO PRESENZE
    ========================================================= */
@@ -19951,6 +20117,8 @@ function openFilmModal(filmId) {
   const modal =
     document.getElementById("filmModal");
 
+  modal.dataset.filmId = String(film.id);
+
   const poster =
     document.getElementById("filmModalPoster");
 
@@ -20500,13 +20668,16 @@ async function submitRatingProposalMemberUi(filmId) {
 
   const button = input.parentElement.querySelector('button');
 
+  if (button && button.disabled) return;
+
   if (button) {
     button.disabled = true;
     button.textContent = 'Invio...';
   }
-
+  
   input.disabled = true;
-  message.textContent = '';
+  message.style.color = '';
+  message.textContent = 'Invio della proposta in corso...';
 
   try {
     const result = await api(
@@ -22143,13 +22314,38 @@ function collectAwardsAnswersUi() {
   return answers;
 }
 
-
+let awardsActionInFlight = false;
+  
 async function saveAwardsDraftUi() {
-  try {
-    if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
-      throw new Error('Nessuna edizione Awards attiva.');
-    }
+  if (awardsActionInFlight) return;
 
+  const actions = document.getElementById('awardsMemberActions');
+  const buttons = actions
+    ? Array.from(actions.querySelectorAll('button'))
+    : [];
+
+  if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
+    awardsSetMemberMessage('Nessuna edizione Awards attiva.', true);
+    return;
+  }
+
+  awardsActionInFlight = true;
+
+  const originalLabels = buttons.map(function(button) {
+    return button.textContent;
+  });
+
+  buttons.forEach(function(button) {
+    button.disabled = true;
+  });
+
+  if (buttons[0]) {
+    buttons[0].textContent = 'Salvataggio...';
+  }
+
+  awardsSetMemberMessage('Salvataggio della bozza in corso...', false);
+
+  try {
     await api('saveAwardsDraft', [
       awardsMemberToken(),
       awardsCurrentStatus.edition,
@@ -22157,34 +22353,98 @@ async function saveAwardsDraftUi() {
     ]);
 
     awardsSetMemberMessage('Bozza salvata.', false);
+
   } catch (error) {
-    awardsSetMemberMessage(error.message || String(error), true);
+    awardsSetMemberMessage(
+      error.message || String(error),
+      true
+    );
+
+  } finally {
+    awardsActionInFlight = false;
+
+    buttons.forEach(function(button, index) {
+      button.disabled = false;
+      button.textContent = originalLabels[index];
+    });
   }
 }
-
+  
 async function submitAwardsVoteUi() {
+  if (awardsActionInFlight) return;
+
+  if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
+    awardsSetMemberMessage('Nessuna edizione Awards attiva.', true);
+    return;
+  }
+
   if (!confirm(
     'Confermi l’invio definitivo? Dopo l’invio non potrai modificare il voto.'
   )) return;
 
-  try {
-    if (!awardsCurrentStatus || !awardsCurrentStatus.edition) {
-      throw new Error('Nessuna edizione Awards attiva.');
-    }
+  const actions = document.getElementById('awardsMemberActions');
+  const questionsBox = document.getElementById('awardsQuestions');
 
+  const buttons = actions
+    ? Array.from(actions.querySelectorAll('button'))
+    : [];
+
+  const inputs = questionsBox
+    ? Array.from(questionsBox.querySelectorAll('input, select, textarea'))
+    : [];
+
+  const originalLabels = buttons.map(function(button) {
+    return button.textContent;
+  });
+
+  const answers = collectAwardsAnswersUi();
+
+  awardsActionInFlight = true;
+
+  buttons.forEach(function(button) {
+    button.disabled = true;
+  });
+
+  inputs.forEach(function(input) {
+    input.disabled = true;
+  });
+
+  if (buttons[1]) {
+    buttons[1].textContent = 'Invio definitivo...';
+  }
+
+  awardsSetMemberMessage('Invio del voto in corso...', false);
+
+  try {
     await api('submitAwardsVote', [
       awardsMemberToken(),
       awardsCurrentStatus.edition,
-      collectAwardsAnswersUi()
+      answers
     ]);
 
     awardsSetMemberMessage('Voto inviato correttamente.', false);
+
     await loadAwardsMemberUi();
+
   } catch (error) {
-    awardsSetMemberMessage(error.message || String(error), true);
+    awardsSetMemberMessage(
+      error.message || String(error),
+      true
+    );
+
+  } finally {
+    awardsActionInFlight = false;
+
+    buttons.forEach(function(button, index) {
+      button.disabled = false;
+      button.textContent = originalLabels[index];
+    });
+
+    inputs.forEach(function(input) {
+      input.disabled = false;
+    });
   }
 }
-
 
 /* =========================================
    MOOTBOXD AWARDS - EDITOR VISUALE
