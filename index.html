@@ -14539,10 +14539,10 @@ function render() {
                   ${esc(member.name)}
                 </div>
 
-                <div class="stats">
-                  ${watchedCount} visti ·
-                  ${filmsCount - watchedCount} mancanti
-                </div>
+               <div class="stats">
+                ${watchedCount} ${watchedCount === 1 ? 'visto' : 'visti'} ·
+                ${filmsCount - watchedCount} ${filmsCount - watchedCount === 1 ? 'mancante' : 'mancanti'}
+              </div>
 
               </div>
 
@@ -19342,10 +19342,10 @@ async function loadAttendanceStatistics() {
                 </div>
           
                 <div class="stats">
-                  ${item.present} presenze ·
-                  ${item.absent} assenze 
+                  ${item.present} ${item.present === 1 ? 'presenza' : 'presenze'} ·
+                  ${item.absent} ${item.absent === 1 ? 'assenza' : 'assenze'}
                 </div>
-          
+                
               </div>
           
               <div class="pct">
