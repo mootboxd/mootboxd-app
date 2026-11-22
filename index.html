@@ -20036,31 +20036,36 @@ function openCalendarEvent(index) {
         ${formatCalendarDate(event.date)}
       </div>
 
-      <div style="
-        margin-top:8px;
-        line-height:1.45;
-        white-space:pre-wrap;
-        overflow-wrap:anywhere;
-      ">
-        ${esc(String(event.detail || '').trim())}
-      </div>
-
       ${
-        event.type === 'film'
+        String(event.detail || '').trim()
           ? `
-            <button
-              type="button"
-              class="btn"
-              style="margin-top:8px;"
-              onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
-            >
-              Scheda film
-            </button>
-
-            <div id="attendanceRegister"></div>
+            <div style="
+              margin-top:8px;
+              line-height:1.45;
+              white-space:pre-wrap;
+              overflow-wrap:anywhere;
+            ">
+              ${esc(String(event.detail).trim())}
+            </div>
           `
           : ''
       }
+            ${
+              event.type === 'film'
+                ? `
+                  <button
+                    type="button"
+                    class="btn"
+                    style="margin-top:8px;"
+                    onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
+                  >
+                    Scheda film
+                  </button>
+      
+                  <div id="attendanceRegister"></div>
+                `
+                : ''
+            }
 
       ${
         event.type === 'custom' && hasManagementAccess()
