@@ -23448,37 +23448,30 @@ function closeRouletteHistoryModal(event) {
    CRONOLOGIA TEMI
    ========================= */
 
+
 async function openThemeHistoryModal() {
 
-  const modal =
-    document.getElementById('themeHistoryModal');
-
-  const content =
-    document.getElementById('themeHistoryContent');
+  const modal = document.getElementById('themeHistoryModal');
+  const content = document.getElementById('themeHistoryContent');
+  const yearSelect = document.getElementById('themeHistoryYear');
+  const orderSelect = document.getElementById('themeHistoryOrder');
 
   modal.style.display = 'flex';
   content.textContent = 'Caricamento cronologia…';
 
   try {
 
-    const history = await api(
-      'getThemeHistory',
-      []
-    );
+    const history = await api('getThemeHistory', []);
 
     if (!Array.isArray(history) || !history.length) {
-
-      content.textContent =
-        'La cronologia dei temi è ancora vuota.';
-
+      content.textContent = 'La cronologia dei temi è ancora vuota.';
+      yearSelect.innerHTML = '<option value="">Tutti gli anni</option>';
       return;
     }
 
     function escapeThemeHistoryHtml(value) {
-
       return String(value == null ? '' : value)
         .replace(/[&<>"']/g, function(char) {
-
           return {
             '&': '&amp;',
             '<': '&lt;',
@@ -23486,118 +23479,254 @@ async function openThemeHistoryModal() {
             '"': '&quot;',
             "'": '&#39;'
           }[char];
-
         });
+    }
+
+    function getThemeDate(value) {
+
+      const date = String(value || '').trim();
+
+      let match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+      if (match) {
+        return new Date(
+          Number(match[1]),
+          Number(match[2]) - 1,
+          Number(match[3])
+        ).getTime();
+      }
+
+      match = date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+      if (match) {
+        return new Date(
+          Number(match[3]),
+          Number(match[2]) - 1,
+          Number(match[1])
+        ).getTime();
+      }
+
+      return 0;
+    }
+
+    function getThemeYear(theme) {
+
+      const date = String(theme.dataInizio || '').trim();
+
+      let match = date.match(/^(\d{4})-/);
+
+      if (match) return match[1];
+
+      match = date.match(/\/(\d{4})$/);
+
+      if (match) return match[1];
+
+      return '';
     }
 
     function formatThemeHistoryDate(value) {
 
       const date = String(value || '').trim();
 
-      const match = date.match(
-        /^(\d{4})-(\d{2})-(\d{2})$/
-      );
+      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 
-      if (!match) return escapeThemeHistoryHtml(date);
+      if (match) {
+        return match[3] + '/' + match[2] + '/' + match[1];
+      }
 
-      return (
-        match[3] + '/' +
-        match[2] + '/' +
-        match[1]
-      );
+      return escapeThemeHistoryHtml(date);
     }
 
-    content.innerHTML = history.map(function(theme) {
+    const years = [...new Set(
+      history.map(getThemeYear).filter(Boolean)
+    )].sort(function(a, b) {
+      return Number(b) - Number(a);
+    });
 
-      const proposals = Array.isArray(theme.proposte)
-        ? theme.proposte
-        : [];
+    yearSelect.innerHTML =
+      '<option value="">Tutti gli anni</option>' +
+      years.map(function(year) {
+        return `<option value="${escapeThemeHistoryHtml(year)}">${escapeThemeHistoryHtml(year)}</option>`;
+      }).join('');
 
-      const filmsHtml = proposals.length
-        ? proposals.map(function(film) {
+    function renderThemeHistory() {
 
-            return `
-              <div style="
-                padding:9px 12px;
-                border-bottom:1px solid var(--border-color, #444);
-                display:flex;
-                justify-content:space-between;
-                align-items:flex-start;
-                gap:12px;
-                flex-wrap:wrap;
-              ">
+      const selectedYear = yearSelect.value;
+      const selectedOrder = orderSelect.value;
 
-                <div style="font-weight:600;">
-                  ${escapeThemeHistoryHtml(film.title)}
-                  (${escapeThemeHistoryHtml(film.year)})
-                </div>
+      let filtered = history.filter(function(theme) {
+        return !selectedYear || getThemeYear(theme) === selectedYear;
+      });
 
+      filtered.sort(function(a, b) {
+
+        const comparison =
+          getThemeDate(a.dataInizio) - getThemeDate(b.dataInizio);
+
+        return selectedOrder === 'oldest'
+          ? comparison
+          : -comparison;
+
+      });
+
+      if (!filtered.length) {
+        content.textContent = 'Nessun tema corrisponde all’anno selezionato.';
+        return;
+      }
+
+      content.innerHTML = filtered.map(function(theme, index) {
+
+        const proposals = Array.isArray(theme.proposte)
+          ? theme.proposte
+          : [];
+
+        const filmsHtml = proposals.length
+          ? proposals.map(function(film) {
+
+              return `
                 <div style="
-                  font-size:12px;
-                  opacity:0.75;
+                  padding:9px 12px;
+                  border-bottom:1px solid var(--border-color, #444);
+                  display:flex;
+                  justify-content:space-between;
+                  align-items:flex-start;
+                  gap:12px;
+                  flex-wrap:wrap;
                 ">
-                  ${escapeThemeHistoryHtml(film.genere)}
-                </div>
 
+                  <div style="font-weight:600;">
+                    ${escapeThemeHistoryHtml(film.title)}
+                    (${escapeThemeHistoryHtml(film.year)})
+                  </div>
+
+                  <div style="font-size:12px;opacity:0.75;">
+                    ${escapeThemeHistoryHtml(film.genere)}
+                  </div>
+
+                </div>
+              `;
+
+            }).join('')
+          : `
+              <div class="muted" style="padding:12px;">
+                Nessun film registrato per questo tema.
               </div>
             `;
 
-          }).join('')
-        : `
-          <div class="muted" style="padding:12px;">
-            Nessun film registrato per questo tema.
+        return `
+          <div style="
+            margin-bottom:10px;
+            border:1px solid var(--border-color, #444);
+            border-radius:10px;
+            overflow:hidden;
+          ">
+
+            <button
+              type="button"
+              class="theme-history-toggle"
+              data-theme-index="${index}"
+              aria-expanded="false"
+              style="
+                width:100%;
+                padding:14px;
+                background:rgba(128,128,128,0.08);
+                color:inherit;
+                border:0;
+                cursor:pointer;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:12px;
+                text-align:left;
+              "
+            >
+
+              <span style="min-width:0;">
+
+                <span style="
+                  display:block;
+                  font-size:16px;
+                  font-weight:800;
+                  margin-bottom:6px;
+                ">
+                  ${escapeThemeHistoryHtml(theme.nome)}
+                </span>
+
+                <span style="
+                  display:block;
+                  font-size:12px;
+                  opacity:0.75;
+                ">
+                  ${formatThemeHistoryDate(theme.dataInizio)}
+                  –
+                  ${formatThemeHistoryDate(theme.dataFine)}
+                </span>
+
+                <span style="
+                  display:block;
+                  font-size:12px;
+                  margin-top:6px;
+                  opacity:0.7;
+                ">
+                  ${proposals.length}
+                  ${proposals.length === 1 ? 'film proposto' : 'film proposti'}
+                </span>
+
+              </span>
+
+              <span
+                class="theme-history-arrow"
+                style="font-size:20px;flex-shrink:0;"
+              >+</span>
+
+            </button>
+
+            <div
+              id="themeHistoryFilms-${index}"
+              hidden
+            >
+              ${filmsHtml}
+            </div>
+
           </div>
         `;
 
-      return `
-        <div style="
-          margin-bottom:18px;
-          border:1px solid var(--border-color, #444);
-          border-radius:10px;
-          overflow:hidden;
-        ">
+      }).join('');
 
-          <div style="
-            padding:14px;
-            background:rgba(128,128,128,0.08);
-          ">
+      content.onclick = function(event) {
 
-            <div style="
-              font-size:16px;
-              font-weight:800;
-              margin-bottom:6px;
-            ">
-              ${escapeThemeHistoryHtml(theme.nome)}
-            </div>
+        const button = event.target.closest('.theme-history-toggle');
 
-            <div style="
-              font-size:12px;
-              opacity:0.75;
-            ">
-              ${formatThemeHistoryDate(theme.dataInizio)}
-              – 
-              ${formatThemeHistoryDate(theme.dataFine)}
-            </div>
+        if (!button || !content.contains(button)) return;
 
-            <div style="
-              font-size:12px;
-              margin-top:6px;
-              opacity:0.7;
-            ">
-              ${proposals.length}
-              ${proposals.length === 1 ? 'film proposto' : 'film proposti'}
-            </div>
+        const index = button.dataset.themeIndex;
 
-          </div>
+        const details = document.getElementById(
+          'themeHistoryFilms-' + index
+        );
 
-          <div>
-            ${filmsHtml}
-          </div>
+        const arrow = button.querySelector('.theme-history-arrow');
 
-        </div>
-      `;
+        const isOpen = button.getAttribute('aria-expanded') === 'true';
 
-    }).join('');
+        button.setAttribute('aria-expanded', String(!isOpen));
+        details.hidden = isOpen;
+        arrow.textContent = isOpen ? '+' : '−';
+
+      };
+
+    }
+
+    if (yearSelect.dataset.historyListener !== 'true') {
+
+      yearSelect.addEventListener('change', renderThemeHistory);
+      orderSelect.addEventListener('change', renderThemeHistory);
+
+      yearSelect.dataset.historyListener = 'true';
+
+    }
+
+    renderThemeHistory();
 
   } catch (error) {
 
@@ -23614,7 +23743,7 @@ async function openThemeHistoryModal() {
 
 }
 
-
+  
 function closeThemeHistoryModal(event) {
 
   const modal =
@@ -25373,9 +25502,30 @@ function toggleLibraryLike(contentId) {
 
     <div class="film-modal-content" style="display:block;">
 
-      <div class="film-modal-title">
-        Cronologia delle settimane a tema
+      
+    <div class="film-modal-title">
+      Cronologia delle settimane a tema
+    </div>
+    
+    <div class="roulette-history-filters proposals-filters">
+    
+      <div class="proposals-filter-field">
+        <label for="themeHistoryYear">Anno</label>
+        <select id="themeHistoryYear">
+          <option value="">Tutti gli anni</option>
+        </select>
       </div>
+    
+      <div class="proposals-filter-field">
+        <label for="themeHistoryOrder">Ordine</label>
+        <select id="themeHistoryOrder">
+          <option value="newest">Più recenti</option>
+          <option value="oldest">Più vecchi</option>
+        </select>
+      </div>
+    
+    </div>
+
 
       <div
         id="themeHistoryContent"
