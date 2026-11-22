@@ -3966,6 +3966,25 @@ input {
     font-size: 11px;
   }
 
+    .weekly-theme-panel .head {
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+  }
+
+  .weekly-theme-panel .head > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .weekly-theme-subtitle-break {
+    display: block;
+  }
+
+  .weekly-theme-panel .head > button {
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
 }
 
 /* =========================================================
@@ -7144,8 +7163,9 @@ input {
         Settimana a tema
       </h2>
 
-      <div class="muted">
-        Proponi un film per la settimana a tema.
+      <div class="muted weekly-theme-subtitle">
+        Proponi un film per la
+        <span class="weekly-theme-subtitle-break">settimana a tema.</span>
       </div>
     </div>
 
