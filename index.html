@@ -7129,7 +7129,7 @@ input {
 
 <div class="panel weekly-theme-panel">
 
-  <div class="head">
+    <div class="head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
 
     <div>
       <h2 id="weeklyThemeTitle">
@@ -7140,6 +7140,39 @@ input {
         Proponi un film per la settimana a tema.
       </div>
     </div>
+
+    <button
+      type="button"
+      class="proposals-filter-button"
+      onclick="openThemeHistoryModal()"
+      aria-label="Apri cronologia temi"
+      title="Cronologia temi"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        aria-hidden="true"
+      >
+        <path
+          d="M3 12a9 9 0 1 0 2.6-6.4L3 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M3 3v5h5M12 7v5l3 2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span>Cronologia</span>
+    </button>
 
   </div>
 
@@ -8391,14 +8424,6 @@ input {
     style="margin-top:32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"
   >
     <h2>Settimana a tema</h2>
-
-    <button
-      type="button"
-      class="btn"
-      onclick="openThemeHistoryModal()"
-    >
-      Cronologia temi
-    </button>
   </div>
   
   <div class="film-admin-form">
@@ -23438,7 +23463,7 @@ async function openThemeHistoryModal() {
 
     const history = await api(
       'getThemeHistory',
-      [getManagementToken()]
+      []
     );
 
     if (!Array.isArray(history) || !history.length) {
