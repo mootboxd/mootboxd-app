@@ -18927,34 +18927,6 @@ async function deleteCalendarEventUi(index) {
 /* =========================================================
    DASHBOARD - STATISTICHE E STORICO PRESENZE
    ========================================================= */
-
-async function getDashboardAttendanceRecords(forceRefresh = false) {
-
-  if (!forceRefresh && dashboardAttendanceRecords !== null) {
-    return dashboardAttendanceRecords;
-  }
-
-  if (!forceRefresh && dashboardAttendancePromise) {
-    return dashboardAttendancePromise;
-  }
-
-  const token = getLibraryToken();
-
-  if (!token) {
-    throw new Error('Sessione non valida.');
-  }
-
-  dashboardAttendancePromise = api('getAttendanceData', [token])
-    .then(function(records) {
-      dashboardAttendanceRecords = records || [];
-      return dashboardAttendanceRecords;
-    })
-    .finally(function() {
-      dashboardAttendancePromise = null;
-    });
-
-  return dashboardAttendancePromise;
-}
   
 let dashboardAttendancePromise = null;
 let dashboardAttendanceToken = null;
