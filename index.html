@@ -8388,11 +8388,19 @@ input {
 <div class="admin-section">  
   <div
     class="head"
-    style="margin-top:32px;"
+    style="margin-top:32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"
   >
     <h2>Settimana a tema</h2>
-  </div>
 
+    <button
+      type="button"
+      class="btn"
+      onclick="openThemeHistoryModal()"
+    >
+      Cronologia temi
+    </button>
+  </div>
+  
   <div class="film-admin-form">
 
     <input
@@ -23411,6 +23419,194 @@ function closeRouletteHistoryModal(event) {
   }
 }  
 
+ /* =========================
+   CRONOLOGIA TEMI
+   ========================= */
+
+async function openThemeHistoryModal() {
+
+  const modal =
+    document.getElementById('themeHistoryModal');
+
+  const content =
+    document.getElementById('themeHistoryContent');
+
+  modal.style.display = 'flex';
+  content.textContent = 'Caricamento cronologia…';
+
+  try {
+
+    const history = await api(
+      'getThemeHistory',
+      [getManagementToken()]
+    );
+
+    if (!Array.isArray(history) || !history.length) {
+
+      content.textContent =
+        'La cronologia dei temi è ancora vuota.';
+
+      return;
+    }
+
+    function escapeThemeHistoryHtml(value) {
+
+      return String(value == null ? '' : value)
+        .replace(/[&<>"']/g, function(char) {
+
+          return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+          }[char];
+
+        });
+    }
+
+    function formatThemeHistoryDate(value) {
+
+      const date = String(value || '').trim();
+
+      const match = date.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/
+      );
+
+      if (!match) return escapeThemeHistoryHtml(date);
+
+      return (
+        match[3] + '/' +
+        match[2] + '/' +
+        match[1]
+      );
+    }
+
+    content.innerHTML = history.map(function(theme) {
+
+      const proposals = Array.isArray(theme.proposte)
+        ? theme.proposte
+        : [];
+
+      const filmsHtml = proposals.length
+        ? proposals.map(function(film) {
+
+            return `
+              <div style="
+                padding:9px 12px;
+                border-bottom:1px solid var(--border-color, #444);
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:12px;
+                flex-wrap:wrap;
+              ">
+
+                <div style="font-weight:600;">
+                  ${escapeThemeHistoryHtml(film.title)}
+                  (${escapeThemeHistoryHtml(film.year)})
+                </div>
+
+                <div style="
+                  font-size:12px;
+                  opacity:0.75;
+                ">
+                  ${escapeThemeHistoryHtml(film.genere)}
+                </div>
+
+              </div>
+            `;
+
+          }).join('')
+        : `
+          <div class="muted" style="padding:12px;">
+            Nessun film registrato per questo tema.
+          </div>
+        `;
+
+      return `
+        <div style="
+          margin-bottom:18px;
+          border:1px solid var(--border-color, #444);
+          border-radius:10px;
+          overflow:hidden;
+        ">
+
+          <div style="
+            padding:14px;
+            background:rgba(128,128,128,0.08);
+          ">
+
+            <div style="
+              font-size:16px;
+              font-weight:800;
+              margin-bottom:6px;
+            ">
+              ${escapeThemeHistoryHtml(theme.nome)}
+            </div>
+
+            <div style="
+              font-size:12px;
+              opacity:0.75;
+            ">
+              ${formatThemeHistoryDate(theme.dataInizio)}
+              – 
+              ${formatThemeHistoryDate(theme.dataFine)}
+            </div>
+
+            <div style="
+              font-size:12px;
+              margin-top:6px;
+              opacity:0.7;
+            ">
+              ${proposals.length}
+              ${proposals.length === 1 ? 'film proposto' : 'film proposti'}
+            </div>
+
+          </div>
+
+          <div>
+            ${filmsHtml}
+          </div>
+
+        </div>
+      `;
+
+    }).join('');
+
+  } catch (error) {
+
+    console.error(
+      'Errore caricamento cronologia temi:',
+      error
+    );
+
+    content.textContent =
+      'Errore durante il caricamento della cronologia: ' +
+      error.message;
+
+  }
+
+}
+
+
+function closeThemeHistoryModal(event) {
+
+  const modal =
+    document.getElementById('themeHistoryModal');
+
+  if (
+    !event ||
+    event.target === modal ||
+    event.target.closest('.film-modal-close')
+  ) {
+
+    modal.style.display = 'none';
+
+  }
+
+} 
+
 
 let rouletteHistoryAdminEntries = [];
 
@@ -25131,6 +25327,42 @@ function toggleLibraryLike(contentId) {
 
   </div>
 </div>
+
+<!-- MODAL CRONOLOGIA TEMI -->
+
+<div
+  id="themeHistoryModal"
+  class="film-modal"
+  onclick="closeThemeHistoryModal(event)"
+>
+  <div class="film-modal-box">
+
+    <button
+      type="button"
+      class="film-modal-close"
+      onclick="closeThemeHistoryModal()"
+      aria-label="Chiudi"
+    >
+      ×
+    </button>
+
+    <div class="film-modal-content" style="display:block;">
+
+      <div class="film-modal-title">
+        Cronologia delle settimane a tema
+      </div>
+
+      <div
+        id="themeHistoryContent"
+        style="margin-top:16px;"
+      >
+        Caricamento cronologia…
+      </div>
+
+    </div>
+
+  </div>
+</div>    
 
 <!-- MODAL AGGIUNTA CONTENUTO -->
 
