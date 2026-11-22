@@ -19633,7 +19633,7 @@ function closeMemberAttendanceModal(event) {
    REGISTRO PRESENZE - CALENDARIO
    ========================================================= */  
 
-async function loadAttendanceRegister(event) {
+async function loadAttendanceRegister(event, shouldScroll = false) {
 
   const container = document.getElementById('attendanceRegister');
   if (!container || !event || !event.filmId) return;
@@ -19676,7 +19676,7 @@ async function loadAttendanceRegister(event) {
 
     container.innerHTML = `
       <div style="
-        margin-top:18px;
+        margin-top:6px;
         padding:16px;
         background:#171a23;
         border:1px solid #363b48;
@@ -19823,6 +19823,13 @@ async function loadAttendanceRegister(event) {
 
       </div>
     `;
+
+        if (shouldScroll) {
+      container.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
 
   } catch (error) {
 
@@ -20042,7 +20049,7 @@ function openCalendarEvent(index) {
             <button
               type="button"
               class="btn"
-              style="margin-top:14px;"
+              style="margin-top:8px;"
               onclick="closeCalendarModal();openFilmModal('${event.filmId}')"
             >
               Scheda film
@@ -20081,8 +20088,8 @@ function openCalendarEvent(index) {
     </div>
   `;
 
-  if (event.type === 'film' && event.filmId) {
-    loadAttendanceRegister(event);
+    if (event.type === 'film' && event.filmId) {
+    loadAttendanceRegister(event, true);
   }
 }
 
