@@ -18928,9 +18928,6 @@ async function deleteCalendarEventUi(index) {
    DASHBOARD - STATISTICHE E STORICO PRESENZE
    ========================================================= */
 
-let dashboardAttendanceRecords = null;
-let dashboardAttendancePromise = null;
-
 async function getDashboardAttendanceRecords(forceRefresh = false) {
 
   if (!forceRefresh && dashboardAttendanceRecords !== null) {
