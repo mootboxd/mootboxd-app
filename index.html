@@ -12971,6 +12971,25 @@ async function logout() {
 async function checkSession() {
 
   const startupStart = performance.now();
+
+  // Precarica le presenze in parallelo al caricamento iniziale.
+const attendancePreloadStart = performance.now();
+
+getDashboardAttendanceData()
+  .then(function() {
+    console.log(
+      "[STARTUP] Precaricamento Presenze:",
+      Math.round(performance.now() - attendancePreloadStart),
+      "ms"
+    );
+  })
+  .catch(function(error) {
+    console.warn(
+      "[STARTUP] Precaricamento Presenze non riuscito:",
+      error.message
+    );
+  });
+  
 console.log("[STARTUP] Avvio controllo sessione");
 
  const adminToken =
