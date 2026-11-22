@@ -19673,58 +19673,166 @@ async function loadAttendanceRegister(event) {
 }
 
 
-async function saveAttendanceUi(eventId, memberId, status) {
+// Gestisce i salvataggi in sequenza per ogni membro e discussione.
+var attendanceSaveStates = Object.create(null);
+
+function updateAttendanceRecordInMemory(eventId, memberId, record) {
+
+  if (!Array.isArray(dashboardAttendanceRecords)) {
+    dashboardAttendanceRecords = [];
+  }
+
+  const index = dashboardAttendanceRecords.findIndex(function(item) {
+    return (
+      String(item.eventId) === String(eventId) &&
+      String(item.memberId) === String(memberId)
+    );
+  });
+
+  if (record) {
+    if (index >= 0) {
+      dashboardAttendanceRecords[index] = record;
+    } else {
+      dashboardAttendanceRecords.push(record);
+    }
+  } else if (index >= 0) {
+    dashboardAttendanceRecords.splice(index, 1);
+  }
+}
+
+  
+
+function saveAttendanceUi(eventId, memberId, status) {
 
   if (!hasManagementAccess()) {
     alert('Questa funzione è riservata all’Admin.');
     return;
   }
 
-  try {
+  const token = getManagementToken();
 
-    const savedRecord = await api('saveAttendance', [
-  eventId,
-  memberId,
-  status,
-  getManagementToken()
-]);
+  if (!token) {
+    alert('Sessione Admin non disponibile.');
+    return;
+  }
 
-// Aggiorna subito i dati in memoria.
-if (Array.isArray(dashboardAttendanceRecords)) {
+  if (!Array.isArray(dashboardAttendanceRecords)) {
+    alert('Registro presenze non ancora disponibile. Riprova tra poco.');
+    return;
+  }
 
-  const index = dashboardAttendanceRecords.findIndex(function(record) {
+  const event = {
+    filmId: String(eventId).replace('film:', '')
+  };
+
+  const key = String(eventId) + '::' + String(memberId);
+  let state = attendanceSaveStates[key];
+
+  const currentRecord = dashboardAttendanceRecords.find(function(record) {
     return (
       String(record.eventId) === String(eventId) &&
       String(record.memberId) === String(memberId)
     );
-  });
+  }) || null;
 
-  if (index >= 0) {
-    dashboardAttendanceRecords[index] = savedRecord;
-  } else {
-    dashboardAttendanceRecords.push(savedRecord);
+  if (currentRecord && String(currentRecord.status) === String(status)) {
+    return;
   }
 
-}
-    
-    const event = {
-      filmId: eventId.replace('film:', '')
+  if (!state) {
+    state = {
+      sequence: 0,
+      confirmedRecord: currentRecord
+        ? Object.assign({}, currentRecord)
+        : null,
+      queue: Promise.resolve()
     };
 
-    await loadAttendanceRegister(event);
-
-  } catch (error) {
-
-    alert(
-      'Errore durante il salvataggio della presenza: ' +
-      error.message
-    );
-
+    attendanceSaveStates[key] = state;
   }
-}
-  
 
-  
+  state.sequence += 1;
+  const requestSequence = state.sequence;
+
+  // 1. AGGIORNAMENTO IMMEDIATO DELL'INTERFACCIA
+
+  const optimisticRecord = Object.assign({}, currentRecord || {}, {
+    eventId: String(eventId),
+    memberId: String(memberId),
+    status: status,
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'Admin'
+  });
+
+  updateAttendanceRecordInMemory(
+    eventId,
+    memberId,
+    optimisticRecord
+  );
+
+  // Ridisegna subito il registro usando esclusivamente i dati locali.
+  loadAttendanceRegister(event);
+
+  // 2. SALVATAGGIO IN BACKGROUND
+
+  state.queue = state.queue
+    .catch(function() {})
+    .then(function() {
+
+      return api('saveAttendance', [
+        eventId,
+        memberId,
+        status,
+        token
+      ]);
+
+    })
+    .then(function(savedRecord) {
+
+      state.confirmedRecord = savedRecord;
+
+      // Evita che una risposta precedente sovrascriva un click successivo.
+      if (state.sequence === requestSequence) {
+
+        updateAttendanceRecordInMemory(
+          eventId,
+          memberId,
+          savedRecord
+        );
+
+        delete attendanceSaveStates[key];
+
+      }
+
+    })
+    .catch(function(error) {
+
+      console.error('Errore salvataggio presenza:', error);
+
+      // Ripristina solo se non ci sono state modifiche successive.
+      if (state.sequence === requestSequence) {
+
+        updateAttendanceRecordInMemory(
+          eventId,
+          memberId,
+          state.confirmedRecord
+        );
+
+        delete attendanceSaveStates[key];
+
+        loadAttendanceRegister(event);
+
+        alert(
+          'Errore durante il salvataggio della presenza: ' +
+          error.message
+        );
+
+      }
+
+    });
+
+}
+
 
 function openCalendarEvent(index) {
 
