@@ -7721,13 +7721,12 @@ input {
         <h2>Presenze alle discussioni</h2>
       </div>
 
-      <div
-        id="attendanceStats"
-        class="muted"
-      >
-        Seleziona questa scheda per caricare le statistiche.
+      <div id="attendanceStats">
+        <div class="muted">
+          Seleziona questa scheda per caricare le statistiche.
+        </div>
       </div>
-
+      
     </div>
 
   </section>
@@ -19343,9 +19342,8 @@ async function loadAttendanceStatistics() {
                 </div>
           
                 <div class="stats">
-                  ${item.present} presenti ·
-                  ${item.absent} assenti ·
-                  ${item.registered} registrate
+                  ${item.present} presenze ·
+                  ${item.absent} assenze 
                 </div>
           
               </div>
@@ -19536,11 +19534,11 @@ async function openMemberAttendanceModal(memberId) {
         <div style="text-align:right;">
 
           <div style="font-weight:750;">
-            ${present} presenti
+            ${present} presenze
           </div>
 
           <div class="member-attendance-summary-label">
-            ${absent} assenti su ${registered} registrate
+            ${absent} assenze su ${registered} discussioni registrate
           </div>
 
         </div>
